@@ -1,0 +1,224 @@
+/* ── Widget Pensées ─────────────────────────────────────────────────────────── */
+
+.widget-pensees {
+  background: rgba(255,255,255,0.65);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(221,214,254,0.35);
+  border-radius: 18px;
+  padding: 14px 12px;
+  border-top: 2px solid rgba(209,190,255,0.5);
+}
+
+.widget-pensees__header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+  cursor: pointer;
+}
+
+.widget-pensees__icon { font-size: 1rem; }
+
+.widget-pensees__title {
+  flex: 1;
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: #6D28D9;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.widget-pensees__count {
+  background: rgba(221,214,254,0.6);
+  color: #5B21B6;
+  border-radius: 999px;
+  padding: 2px 8px;
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+
+.widget-pensees__list { display: flex; flex-direction: column; gap: 6px; }
+
+.widget-pensee-item {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  padding: 8px 9px;
+  background: rgba(245,243,255,0.6);
+  border-radius: 10px;
+  border: 1px solid rgba(221,214,254,0.2);
+}
+
+.widget-pensee-item__top {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.widget-pensee-item__cat { font-size: 0.9rem; flex-shrink: 0; margin-top: 1px; }
+
+.widget-pensee-item__contenu {
+  flex: 1;
+  font-size: 0.79rem;
+  color: var(--color-text, #1A1A2E);
+  line-height: 1.35;
+  min-width: 0;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+
+.widget-pensee-item__check {
+  width: 22px; height: 22px;
+  border-radius: 6px; border: none;
+  background: rgba(167,243,208,0.3);
+  color: #065F46; cursor: pointer;
+  font-size: 0.7rem;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+  transition: background 0.15s ease;
+}
+.widget-pensee-item__check:hover { background: rgba(167,243,208,0.6); }
+
+/* Pensée en cours de traitement — animation rayé 2s */
+.widget-pensee-item--traitee {
+  opacity: 0.45;
+  transition: opacity 0.3s ease;
+}
+.widget-pensee-item--traitee .widget-pensee-item__contenu {
+  text-decoration: line-through;
+  color: var(--color-muted, #9CA3AF);
+}
+.widget-pensee-item__traitee-label {
+  font-size: 10px;
+  font-weight: 600;
+  color: #65A96A;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+/* Pensée marquée À faire */
+.widget-pensee-item--afaire {
+  border-left: 3px solid #6395DD;
+  background: rgba(239,246,255,0.6);
+}
+
+.widget-pensee-item__afaire-badge {
+  font-size: 10px;
+  font-weight: 700;
+  color: #1E3A5F;
+  background: rgba(99,149,221,0.15);
+  border: 1px solid rgba(99,149,221,0.3);
+  border-radius: 999px;
+  padding: 2px 7px;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+/* ── Boutons de transformation ── */
+.widget-pensee-item__actions {
+  display: flex;
+  gap: 5px;
+  padding-left: 22px;
+}
+
+.widget-pensee-item__chip {
+  font-size: 11px; font-weight: 600;
+  padding: 3px 9px; border-radius: 999px;
+  border: 1px solid; cursor: pointer;
+  transition: opacity 0.12s ease;
+  white-space: nowrap;
+}
+.widget-pensee-item__chip:active { opacity: 0.7; }
+
+.widget-pensee-item__chip--tache {
+  color: hsl(262, 45%, 44%);
+  border-color: hsl(262, 40%, 80%);
+  background: hsl(262, 55%, 96%);
+}
+.widget-pensee-item__chip--achat {
+  color: hsl(142, 45%, 32%);
+  border-color: hsl(142, 40%, 80%);
+  background: hsl(142, 50%, 95%);
+}
+.widget-pensee-item__chip--cal {
+  color: hsl(208, 50%, 36%);
+  border-color: hsl(208, 45%, 80%);
+  background: hsl(208, 60%, 95%);
+}
+
+/* ── Sélecteur date planifier ── */
+.widget-pensee-item__planifier {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding-left: 22px;
+}
+
+.widget-pensee-item__date-input {
+  flex: 1;
+  font-size: 11px;
+  padding: 4px 8px;
+  border: 1px solid rgba(99,149,221,0.4);
+  border-radius: 8px;
+  background: rgba(239,246,255,0.8);
+  color: #1E3A5F;
+  outline: none;
+  min-width: 0;
+}
+.widget-pensee-item__date-input:focus {
+  border-color: rgba(99,149,221,0.8);
+}
+
+.widget-pensee-item__chip--annuler {
+  color: #9CA3AF;
+  border-color: rgba(156,163,175,0.3);
+  background: transparent;
+  padding: 3px 7px;
+}
+
+/* ── État vide ── */
+.widget-pensees__empty {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 4px;
+}
+
+.widget-pensees__empty-text {
+  font-size: 0.8rem;
+  color: var(--color-muted, #9CA3AF);
+}
+
+.widget-pensees__empty-add {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: #6D28D9;
+  background: rgba(221,214,254,0.2);
+  border: 1px solid rgba(221,214,254,0.4);
+  border-radius: 999px;
+  padding: 4px 12px;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.widget-pensees__empty-add:hover {
+  background: rgba(221,214,254,0.35);
+}
+
+.widget-pensees__voir-plus {
+  margin-top: 10px;
+  width: 100%;
+  padding: 7px;
+  border: 1.5px dashed rgba(180,160,210,0.3);
+  border-radius: 8px;
+  background: transparent;
+  font-size: 0.78rem;
+  color: var(--color-muted, #7A7A9A);
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.widget-pensees__voir-plus:hover { background: rgba(201,184,232,0.1); }

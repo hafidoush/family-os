@@ -1,0 +1,205 @@
+/**
+ * FAMILY OS — Badge.module.css
+ * Tokens uniquement.
+ * Architecture : base → variants → sizes → shapes → modifiers
+ */
+
+/* ─── BASE ───────────────────────────────────────────────────────────────────── */
+
+.badge {
+  display:         inline-flex;
+  align-items:     center;
+  gap:             var(--space-1);
+  flex-shrink:     0;
+
+  /* Taille md par défaut */
+  height:          20px;
+  padding-inline:  var(--space-2);
+
+  /* Typographie */
+  font-family:     var(--font-body);
+  font-size:       var(--text-xs);
+  font-weight:     var(--font-weight-semibold);
+  letter-spacing:  var(--tracking-caps);
+  line-height:     var(--leading-none);
+  white-space:     nowrap;
+
+  /* Forme */
+  border-radius:   var(--radius-badge);
+  border:          var(--border-width-thin) solid transparent;
+}
+
+/* ─── INDICATEUR DOT ─────────────────────────────────────────────────────────── */
+
+.dot {
+  width:         6px;
+  height:        6px;
+  border-radius: var(--radius-full);
+  background:    currentColor;
+  flex-shrink:   0;
+  opacity:       0.75;
+}
+
+/* ─── ICÔNE ──────────────────────────────────────────────────────────────────── */
+
+.icon {
+  display:     inline-flex;
+  align-items: center;
+  font-size:   1.1em;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+/* ─── LABEL ──────────────────────────────────────────────────────────────────── */
+
+.label {
+  /* Hérite du badge — rien de spécial */
+}
+
+/* ─── BOUTON × (chip) ────────────────────────────────────────────────────────── */
+
+.remove {
+  display:         inline-flex;
+  align-items:     center;
+  justify-content: center;
+  width:           14px;
+  height:          14px;
+  padding:         0;
+  margin-left:     var(--space-0-5);
+  border:          none;
+  border-radius:   var(--radius-full);
+  background:      transparent;
+  color:           inherit;
+  cursor:          pointer;
+  opacity:         0.65;
+  transition:      opacity var(--duration-fast) var(--ease-out),
+                   background-color var(--duration-fast) var(--ease-out),
+                   transform var(--duration-fast) var(--ease-spring);
+  -webkit-tap-highlight-color: transparent;
+  flex-shrink:     0;
+}
+
+.remove:hover {
+  opacity:    1;
+  background: hsla(0, 0%, 0%, 0.12);
+}
+
+.remove:active {
+  transform: scale(0.88);
+}
+
+.remove:focus-visible {
+  outline:        var(--border-width-thick) solid currentColor;
+  outline-offset: 1px;
+  opacity:        1;
+}
+
+/* ─── VARIANT : DEFAULT ──────────────────────────────────────────────────────── */
+
+.badge--default {
+  background:   var(--color-neutral-100);
+  color:        var(--text-secondary);
+  border-color: var(--border-subtle);
+}
+
+/* ─── VARIANT : PRIMARY ──────────────────────────────────────────────────────── */
+
+.badge--primary {
+  background:   rgba(210, 173, 235, 0.12);
+  color:        #8B5BAE;
+  border-color: rgba(210, 173, 235, 0.35);
+}
+
+/* ─── VARIANT : SUCCESS ──────────────────────────────────────────────────────── */
+
+.badge--success {
+  background:   var(--status-success-bg);
+  color:        var(--status-success-text);
+  border-color: hsla(142, 45%, 45%, 0.20);
+}
+
+/* ─── VARIANT : WARNING ──────────────────────────────────────────────────────── */
+
+.badge--warning {
+  background:   rgba(254, 195, 85, 0.15);
+  color:        #9E6A10;
+  border-color: rgba(254, 195, 85, 0.30);
+}
+
+/* ─── VARIANT : DANGER ───────────────────────────────────────────────────────── */
+
+.badge--danger {
+  background:   rgba(253, 119, 70, 0.10);
+  color:        #C04F25;
+  border-color: rgba(253, 119, 70, 0.20);
+}
+
+/* ─── VARIANT : INFO ─────────────────────────────────────────────────────────── */
+
+.badge--info {
+  background:   rgba(111, 126, 214, 0.10);
+  color:        #4A5AB5;
+  border-color: rgba(111, 126, 214, 0.22);
+}
+
+/* ─── VARIANTS MODULE ────────────────────────────────────────────────────────── */
+
+.badge--enfants  { background: rgba(210,173,235,.12); color: #8B5BAE; border-color: rgba(210,173,235,.30); }
+.badge--cuisine  { background: rgba(253,119,70,.10);  color: #C04F25; border-color: rgba(253,119,70,.18);  }
+.badge--maison   { background: rgba(111,126,214,.10); color: #4A5AB5; border-color: rgba(111,126,214,.20); }
+.badge--famille  { background: rgba(210,173,235,.12); color: #8B5BAE; border-color: rgba(210,173,235,.30); }
+.badge--myself   { background: rgba(254,195,85,.15);  color: #9E6A10; border-color: rgba(254,195,85,.28);  }
+.badge--achats   { background: rgba(253,119,70,.10);  color: #C04F25; border-color: rgba(253,119,70,.18);  }
+
+/* ─── TAILLES ────────────────────────────────────────────────────────────────── */
+
+.badge--sm {
+  height:         16px;
+  padding-inline: var(--space-1-5);
+  font-size:      10px;
+  letter-spacing: var(--tracking-wide);
+  gap:            var(--space-0-5);
+}
+
+.badge--sm .dot {
+  width:  5px;
+  height: 5px;
+}
+
+.badge--sm .remove {
+  width:     12px;
+  height:    12px;
+  margin-left: var(--space-0-5);
+}
+
+/* md = base (déjà défini dans .badge) */
+
+.badge--lg {
+  height:         26px;
+  padding-inline: var(--space-3);
+  font-size:      var(--text-sm);
+  gap:            var(--space-1-5);
+}
+
+.badge--lg .dot {
+  width:  7px;
+  height: 7px;
+}
+
+.badge--lg .remove {
+  width:  16px;
+  height: 16px;
+}
+
+/* ─── FORME CARRÉE ───────────────────────────────────────────────────────────── */
+
+.badge--square {
+  border-radius: var(--radius-xs);
+}
+
+/* ─── CHIP (avec suppression) ────────────────────────────────────────────────── */
+
+.badge--chip {
+  /* Légèrement plus de padding-right pour équilibrer le bouton × */
+  padding-inline-end: var(--space-1);
+}

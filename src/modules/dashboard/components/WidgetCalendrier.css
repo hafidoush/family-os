@@ -1,0 +1,240 @@
+/* ══════════════════════════════════════════════════════
+   WIDGET CALENDRIER + PRÉVISIONS
+   Effet : fond continu, glass pleine largeur, débordement
+   ══════════════════════════════════════════════════════ */
+
+/* ── Wrapper groupe ──────────────────────────────────── */
+.calendrier-groupe {
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  border-radius: var(--radius-2xl);
+  overflow: visible;
+
+}
+
+/* ── Carte principale : glass ───────────────── */
+.widget-card--fused-top {
+  background:    rgba(255, 255, 255, 0.92) !important;
+  backdrop-filter: blur(20px) saturate(140%) !important;
+  -webkit-backdrop-filter: blur(20px) saturate(140%) !important;
+
+  border-radius: var(--radius-2xl) !important;
+  border:        1px solid rgba(255, 255, 255, 0.60) !important;
+}
+
+/* ── Carte glass : déborde vers le bas, entièrement transparente ── */
+.widget-previsions {
+  background:    rgba(255, 255, 255, 0.00);
+  backdrop-filter: blur(12px) saturate(130%);
+  -webkit-backdrop-filter: blur(12px) saturate(130%);
+  border:        1.5px solid rgba(255, 255, 255, 0.70);
+  outline:       1px solid rgba(180, 165, 210, 0.25);
+
+  border-radius: var(--radius-2xl);
+
+  /* Chevauche le bas de la carte Aujourd'hui */
+  margin: -38px 0 0;
+
+  padding: 13px var(--space-5) 18px;
+
+  position: relative;
+  z-index: 2;
+}
+
+/* Header ligne */
+.widget-previsions__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  margin-bottom: 6px;
+}
+
+.widget-previsions__titre {
+  font-family: var(--font-body, system-ui);
+  font-size: var(--text-sm, 13px);
+  font-weight: 600;
+  color: hsla(262, 45%, 18%, 0.80);
+  letter-spacing: 0.01em;
+}
+
+/* ── Liste tâches ── */
+.widget-previsions__list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.widget-previsions__item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 5px var(--space-1);
+  border-radius: var(--radius-md);
+  transition: background 0.12s ease;
+}
+.widget-previsions__item:hover { background: rgba(255,255,255,0.28); }
+
+.widget-previsions__check {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  border: 1.5px solid rgba(255,255,255,0.65);
+  background: rgba(255,255,255,0.22);
+  color: hsla(262, 45%, 22%, 0.80);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: background 0.14s ease, border-color 0.14s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+.widget-previsions__check:hover {
+  background: rgba(255,255,255,0.55);
+  border-color: rgba(255,255,255,0.85);
+}
+
+.widget-previsions__text {
+  font-size: var(--text-sm, 13px);
+  font-weight: 500;
+  color: hsla(262, 40%, 16%, 0.85);
+  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ── Input ajout ── */
+.widget-previsions__add-row { margin-top: 6px; }
+
+.widget-previsions__input {
+  width: 100%;
+  height: 34px;
+  padding: 0 12px;
+  border: 1.5px solid rgba(255,255,255,0.55);
+  border-radius: var(--radius-md);
+  font-family: var(--font-body, system-ui);
+  font-size: var(--text-sm, 13px);
+  color: hsl(262, 40%, 16%);
+  background: rgba(255,255,255,0.42);
+  backdrop-filter: blur(8px);
+  outline: none;
+  box-sizing: border-box;
+}
+.widget-previsions__input::placeholder { color: hsla(262, 30%, 38%, 0.55); }
+.widget-previsions__input:focus {
+  background: rgba(255,255,255,0.65);
+  border-color: rgba(255,255,255,0.80);
+}
+
+.widget-previsions__empty {
+  font-size: 11px;
+  color: hsla(262, 40%, 26%, 0.55);
+  text-align: center;
+  padding: 2px 0;
+  margin: 0;
+}
+
+/* ═══════════════════════════════════════════
+   Calendrier events
+   ═══════════════════════════════════════════ */
+
+/* Titre widget */
+.widget-card--fused-top .widget-title {
+  color: hsl(262, 45%, 18%);
+}
+
+/* Empty state */
+.widget-calendrier .widget-empty-icon {
+  color: hsl(38, 80%, 52%);
+  opacity: 0.85;
+}
+.widget-calendrier .widget-empty {
+  gap: var(--space-2-5);
+}
+/* Texte état vide sur fond coloré */
+.widget-calendrier .widget-empty span:last-child {
+  color: hsl(262, 35%, 28%);
+  opacity: 0.75;
+}
+
+.widget-calendrier__list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  max-height: 220px;
+  overflow-y: auto;
+}
+
+.widget-calendrier__item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2);
+  border-radius: var(--radius-lg);
+  min-height: 44px;
+  transition: background 0.12s ease;
+}
+.widget-calendrier__item:hover { background: rgba(255,255,255,0.32); }
+.widget-calendrier__item:hover .widget-calendrier__delete { opacity: 1; }
+
+.widget-calendrier__delete {
+  flex-shrink: 0;
+  margin-left: auto;
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  background: transparent;
+  border-radius: 8px;
+  color: #9CA3AF;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.15s ease, background 0.12s ease, color 0.12s ease;
+}
+.widget-calendrier__delete:hover {
+  background: rgba(239, 68, 68, 0.1);
+  color: #EF4444;
+}
+
+.widget-calendrier__type-icon {
+  width: 26px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: hsl(262, 50%, 40%);
+  opacity: 0.70;
+}
+
+.widget-calendrier__info {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+}
+
+.widget-calendrier__titre {
+  font-size: var(--text-base, 15px);
+  color: hsl(262, 40%, 16%);
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.widget-calendrier__heure {
+  font-size: var(--text-xs, 11px);
+  color: hsla(262, 35%, 28%, 0.70);
+  font-variant-numeric: tabular-nums;
+}

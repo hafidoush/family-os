@@ -1,0 +1,237 @@
+/* ─── MenusList v2 ────────────────────────────────────────────────────────── */
+
+.menus-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 20px 16px calc(20px + 80px);
+}
+
+/* ── Header ── */
+.menus-list__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 4px;
+}
+
+.menus-list__title {
+  font-size: 22px;
+  font-weight: 700;
+  color: #1E1432;
+  margin: 0;
+}
+
+.menus-list__subtitle {
+  font-size: 13px;
+  color: #9B8DB5;
+  margin: 2px 0 0;
+}
+
+.menus-list__btn-new {
+  padding: 8px 16px;
+  background: rgba(124, 106, 247, 0.12);
+  color: #5B4CC4;
+  border: none;
+  border-radius: 999px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s ease;
+  white-space: nowrap;
+}
+
+.menus-list__btn-new:hover { background: rgba(124, 106, 247, 0.2); }
+
+/* ── Liste ── */
+.menus-list__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* ── Skeleton ── */
+.menus-list__skeleton {
+  height: 140px;
+  background: linear-gradient(90deg, #F0EDF8 25%, #E8E4F4 50%, #F0EDF8 75%);
+  background-size: 200% 100%;
+  animation: menus-shimmer 1.4s infinite;
+  border-radius: 20px;
+}
+
+@keyframes menus-shimmer {
+  0%   { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* ── Empty state ── */
+.menus-list__empty {
+  text-align: center;
+  padding: 48px 24px;
+  color: #9B8DB5;
+}
+
+.menus-list__empty-icon {
+  font-size: 48px;
+  margin-bottom: 12px;
+}
+
+.menus-list__empty p {
+  font-size: 15px;
+  margin: 0 0 20px;
+}
+
+.menus-list__empty-cta {
+  padding: 12px 28px;
+  background: linear-gradient(135deg, #7C6AF7, #9B6AF7);
+  color: white;
+  border: none;
+  border-radius: 999px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+/* ─── Sheet création ──────────────────────────────────────────────────────── */
+
+.menus-sheet__overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(30, 20, 50, 0.45);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  z-index: 200;
+  display: flex;
+  align-items: flex-end;
+}
+
+.menus-sheet {
+  width: 100%;
+  background: #F0EFEB;
+  border-radius: 24px 24px 0 0;
+  padding: 12px 20px 36px;
+  animation: menus-slide-up 0.26s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes menus-slide-up {
+  from { transform: translateY(100%); opacity: 0; }
+  to   { transform: translateY(0);    opacity: 1; }
+}
+
+.menus-sheet__handle {
+  width: 36px;
+  height: 4px;
+  background: rgba(180, 165, 210, 0.4);
+  border-radius: 999px;
+  margin: 0 auto 20px;
+}
+
+.menus-sheet__title {
+  font-size: 19px;
+  font-weight: 700;
+  color: #1E1432;
+  margin: 0 0 20px;
+}
+
+.menus-sheet__label {
+  font-size: 13px;
+  font-weight: 600;
+  color: #6B5E8A;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin: 0 0 8px;
+}
+
+/* Options semaines */
+.menus-sheet__options {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 20px;
+}
+
+.menus-sheet__option {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 13px 16px;
+  background: rgba(180, 165, 210, 0.10);
+  border: 1.5px solid transparent;
+  border-radius: 14px;
+  cursor: pointer;
+  text-align: left;
+  transition: all 0.15s ease;
+}
+
+.menus-sheet__option--selected {
+  background: rgba(124, 106, 247, 0.12);
+  border-color: rgba(124, 106, 247, 0.4);
+}
+
+.menus-sheet__opt-label {
+  font-size: 15px;
+  font-weight: 600;
+  color: #1E1432;
+}
+
+.menus-sheet__opt-date {
+  font-size: 13px;
+  color: #9B8DB5;
+}
+
+/* Input nom */
+.menus-sheet__input {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 13px 16px;
+  background: rgba(180, 165, 210, 0.10);
+  border: 1.5px solid rgba(180, 165, 210, 0.25);
+  border-radius: 14px;
+  font-size: 15px;
+  color: #1E1432;
+  outline: none;
+  margin-bottom: 20px;
+  font-family: var(--font-body, system-ui);
+}
+
+.menus-sheet__input:focus {
+  border-color: rgba(124, 106, 247, 0.5);
+}
+
+.menus-sheet__input::placeholder { color: #C0B4D8; }
+
+/* Footer */
+.menus-sheet__footer {
+  display: flex;
+  gap: 10px;
+}
+
+.menus-sheet__btn-cancel {
+  flex: 1;
+  padding: 14px;
+  border-radius: 14px;
+  border: 1.5px solid rgba(180, 165, 210, 0.35);
+  background: transparent;
+  color: #6B5E8A;
+  font-size: 15px;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.menus-sheet__btn-create {
+  flex: 2;
+  padding: 14px;
+  border-radius: 14px;
+  border: none;
+  background: linear-gradient(135deg, #7C6AF7 0%, #9B6AF7 100%);
+  color: white;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity 0.15s ease;
+}
+
+.menus-sheet__btn-create:disabled { opacity: 0.4; cursor: default; }

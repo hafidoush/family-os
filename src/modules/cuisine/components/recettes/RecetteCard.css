@@ -1,0 +1,281 @@
+.recette-card {
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  cursor: pointer;
+  transition: transform var(--transition-fast), box-shadow var(--transition-fast);
+  position: relative;
+  aspect-ratio: 3 / 4;
+}
+
+.recette-card:hover,
+.recette-card:focus-visible {
+  transform: translateY(-3px) scale(1.01);
+  outline: none;
+}
+
+.recette-card:active {
+  transform: translateY(0) scale(1);
+}
+
+/* Image plein cadre */
+.recette-card__image {
+  position: absolute;
+  inset: 0;
+}
+
+.recette-card__image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.4s ease;
+}
+
+.recette-card:hover .recette-card__image img {
+  transform: scale(1.04);
+}
+
+.recette-card__image-placeholder {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 3rem;
+  background: linear-gradient(145deg, #d8d0e8 0%, #e8d8e0 100%);
+}
+
+/*
+  Panneau glass : backdrop-filter blur l'image en dessous.
+  Le masque en dégradé fait "fondre" l'effet depuis le milieu vers le bas
+  — transparent en haut, opaque en bas. Pas de rectangle délimité.
+*/
+.recette-card__glass {
+  position: absolute;
+  inset: 0;
+  backdrop-filter: blur(18px) saturate(1.4);
+  -webkit-backdrop-filter: blur(18px) saturate(1.4);
+  background: linear-gradient(
+    to bottom,
+    rgba(15, 10, 30, 0)    0%,
+    rgba(15, 10, 30, 0.28) 60%,
+    rgba(15, 10, 30, 0.48) 100%
+  );
+  /* Le masque contrôle où le blur est visible */
+  -webkit-mask-image: linear-gradient(
+    to bottom,
+    transparent  0%,
+    transparent 40%,
+    black       75%,
+    black      100%
+  );
+  mask-image: linear-gradient(
+    to bottom,
+    transparent  0%,
+    transparent 40%,
+    black       75%,
+    black      100%
+  );
+  pointer-events: none;
+}
+
+/* Favori */
+/* Bouton Kids Favorite */
+.recette-card__kids-btn {
+  position: absolute;
+  top: 10px;
+  right: 52px;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: rgba(255, 255, 255, 0.6);
+  transition: transform var(--transition-fast), background var(--transition-fast), color var(--transition-fast);
+  z-index: 3;
+}
+
+.recette-card__kids-btn--active {
+  background: rgba(251, 191, 36, 0.35);
+  color: rgba(251, 191, 36, 1);
+}
+
+.recette-card__kids-btn:hover {
+  transform: scale(1.15);
+  background: rgba(251, 191, 36, 0.25);
+  color: rgba(251, 191, 36, 0.9);
+}
+
+.recette-card__favori {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: rgba(255, 255, 255, 0.6);
+  transition: transform var(--transition-fast), background var(--transition-fast), color var(--transition-fast);
+  z-index: 3;
+}
+
+.recette-card__favori--active {
+  background: rgba(239, 68, 68, 0.35);
+  color: rgba(239, 68, 68, 1);
+}
+
+.recette-card__favori:hover {
+  transform: scale(1.15);
+  background: rgba(239, 68, 68, 0.25);
+  color: rgba(239, 68, 68, 0.9);
+}
+
+/* Texte posé sur le panneau glass */
+.recette-card__body {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 12px 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  z-index: 2;
+}
+
+.recette-card__nom {
+  font-family: var(--font-heading);
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #fff;
+  margin: 0;
+  line-height: 1.3;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-shadow: 0 1px 6px rgba(0, 0, 0, 0.4);
+}
+
+.recette-card__categorie {
+  font-size: 0.7rem;
+  color: rgba(255, 255, 255, 0.75);
+  font-weight: 500;
+}
+
+.recette-card__meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  margin-top: 2px;
+}
+
+.recette-card__meta-item {
+  font-size: 0.68rem;
+  background: rgba(255, 255, 255, 0.18);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  border-radius: 20px;
+  padding: 2px 8px;
+  color: rgba(255, 255, 255, 0.95);
+  white-space: nowrap;
+}
+
+/* ── Bouton "Ajouter au menu" ── */
+.recette-card__add-menu {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(255, 255, 255, 0.18);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.85rem;
+  transition: transform 0.18s ease, background 0.18s ease;
+  z-index: 3;
+  color: white;
+}
+
+.recette-card__add-menu:hover {
+  transform: scale(1.15);
+  background: rgba(255, 255, 255, 0.35);
+}
+
+.recette-card__add-menu--done {
+  background: rgba(74, 222, 128, 0.45);
+  color: #fff;
+}
+
+/* ── Overlay sélection batch ── */
+.recette-card__batch-overlay {
+  position: absolute;
+  inset: 0;
+  border-radius: var(--radius-lg);
+  border: 3px solid transparent;
+  transition: border-color 0.18s ease, background 0.18s ease;
+  z-index: 4;
+  pointer-events: none;
+}
+
+.recette-card--batch-selected .recette-card__batch-overlay {
+  border-color: #9A5CA3;
+  background: rgba(154, 92, 163, 0.18);
+}
+
+.recette-card__batch-check {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  border: 2.5px solid white;
+  background: transparent;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.7rem;
+  color: white;
+  transition: background 0.15s ease, border-color 0.15s ease;
+  z-index: 5;
+  pointer-events: none;
+}
+
+.recette-card--batch-selected .recette-card__batch-check {
+  background: #9A5CA3;
+  border-color: #9A5CA3;
+}
+
+.recette-card__kids-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 2px 8px;
+  background: rgba(251, 191, 36, 0.9);
+  color: #78350f;
+  border-radius: 20px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+}

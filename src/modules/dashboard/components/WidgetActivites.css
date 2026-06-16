@@ -1,0 +1,202 @@
+.widget-activites__list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.widget-activites__item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-2);
+  border-radius: var(--radius-lg);
+  min-height: 52px;
+  transition: background var(--transition-fast);
+}
+
+.widget-activites__item:hover {
+  background: rgba(0,0,0,0.03);
+}
+
+.widget-activites__membre-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.widget-activites__info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.widget-activites__membre-prenom {
+  font-size: var(--text-xs);
+  font-weight: 600;
+  color: var(--color-text-secondary);
+}
+
+.widget-activites__nom {
+  font-size: var(--text-base);
+  color: var(--color-text-primary);
+  font-weight: 500;
+}
+
+.widget-activites__heure {
+  font-size: var(--text-sm);
+  color: var(--color-text-tertiary);
+  font-variant-numeric: tabular-nums;
+  flex-shrink: 0;
+}
+
+/* Empty state accent — ton vert calme pour "Journée tranquille" */
+.widget-activites .widget-empty-icon {
+  color: hsl(168, 50%, 48%);
+  opacity: 0.65;
+}
+
+.widget-activites__check-btn {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  border: 1.5px solid var(--primary-light, hsl(262, 65%, 75%));
+  background: none;
+  color: var(--primary-light, hsl(262, 65%, 75%));
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+  flex-shrink: 0;
+}
+
+.widget-activites__check-btn:hover {
+  background: var(--primary, hsl(262, 60%, 62%));
+  border-color: var(--primary, hsl(262, 60%, 62%));
+  color: white;
+}
+.widget-activites__item--clickable {
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.widget-activites__item--clickable:active {
+  background: rgba(154,92,163,0.06);
+  transform: scale(0.98);
+}
+
+.widget-activites__arrow {
+  font-size: 1.2rem;
+  color: var(--color-muted, #7A7A9A);
+  flex-shrink: 0;
+  opacity: 0.5;
+}
+
+/* ── État fait ── */
+.widget-activites__item--done {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.widget-activites__check-done {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: rgba(74, 222, 128, 0.25);
+  color: #16A34A;
+  font-size: 0.75rem;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.widget-activites__dot-empty {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: rgba(180,160,210,0.3);
+  flex-shrink: 0;
+}
+
+.widget-activites__nom--done {
+  text-decoration: line-through;
+  color: var(--color-muted, #7A7A9A);
+}
+
+.widget-activites__score {
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: rgba(74, 222, 128, 0.15);
+  color: #16A34A;
+}
+
+/* ── Summary layout (vue condensée) ── */
+.wa-summary {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 4px 0 2px;
+}
+
+.wa-ring {
+  position: relative;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.wa-ring__text {
+  position: absolute;
+  font-size: 12px;
+  font-weight: 800;
+  color: #5B4A82;
+  line-height: 1;
+}
+
+.wa-ring__total {
+  font-size: 10px;
+  font-weight: 500;
+  color: #9B8DB5;
+}
+
+.wa-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.wa-info__label {
+  font-size: 13px;
+  font-weight: 600;
+  color: #3B2F5E;
+}
+
+.wa-info__next {
+  font-size: 12px;
+  color: #7C6FA0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.wa-info__heure {
+  font-variant-numeric: tabular-nums;
+  color: #9B8DB5;
+}
+
+.wa-chevron {
+  font-size: 1.4rem;
+  color: rgba(167,139,250,0.5);
+  flex-shrink: 0;
+}

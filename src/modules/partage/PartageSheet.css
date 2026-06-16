@@ -1,0 +1,240 @@
+/* ============================================================
+   PARTAGE SHEET
+   ============================================================ */
+
+.ps-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  backdrop-filter: blur(4px);
+  z-index: 500;
+  display: flex;
+  align-items: flex-end;
+  animation: ps-fade-in 0.15s ease;
+}
+
+@keyframes ps-fade-in {
+  from { opacity: 0 }
+  to   { opacity: 1 }
+}
+
+.ps-sheet {
+  width: 100%;
+  background: #F0EFEB;
+  border-radius: 24px 24px 0 0;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  animation: ps-slide-up 0.28s cubic-bezier(0.25, 1, 0.5, 1);
+}
+
+@keyframes ps-slide-up {
+  from { transform: translateY(100%) }
+  to   { transform: translateY(0) }
+}
+
+.ps-handle {
+  width: 40px;
+  height: 4px;
+  border-radius: 2px;
+  background: rgba(0, 0, 0, 0.12);
+  margin: 10px auto 0;
+}
+
+/* ── Header ── */
+.ps-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px 20px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+.ps-close {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(0, 0, 0, 0.06);
+  font-size: 18px;
+  color: #6B7280;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.ps-header__title {
+  font-family: var(--font-body);
+  font-size: 16px;
+  font-weight: 700;
+  color: #1F2937;
+}
+
+/* ── Body ── */
+.ps-body {
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.ps-preview-titre {
+  font-family: var(--font-body);
+  font-size: 17px;
+  font-weight: 800;
+  color: #1F2937;
+  letter-spacing: -0.01em;
+}
+
+.ps-items-preview {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 12px 14px;
+  background: rgba(0, 0, 0, 0.03);
+  border-radius: 12px;
+}
+
+.ps-preview-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.ps-preview-item__dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #A78BFA;
+  flex-shrink: 0;
+}
+
+.ps-preview-item__label {
+  font-family: var(--font-body);
+  font-size: 13px;
+  color: #374151;
+}
+
+.ps-preview-more {
+  font-family: var(--font-body);
+  font-size: 12px;
+  color: #9CA3AF;
+  padding-left: 16px;
+}
+
+.ps-info {
+  font-family: var(--font-body);
+  font-size: 13px;
+  color: #6B7280;
+  line-height: 1.5;
+  margin: 0;
+}
+
+/* ── Succès ── */
+.ps-success-icon {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  background: rgba(34, 197, 94, 0.12);
+  color: #16A34A;
+  font-size: 22px;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto;
+}
+
+.ps-success-text {
+  font-family: var(--font-body);
+  font-size: 14px;
+  color: #374151;
+  line-height: 1.5;
+  margin: 0;
+  text-align: center;
+}
+
+.ps-url-box {
+  background: rgba(167, 139, 250, 0.08);
+  border: 1.5px solid rgba(167, 139, 250, 0.2);
+  border-radius: 12px;
+  padding: 12px 14px;
+}
+
+.ps-url-text {
+  font-family: monospace;
+  font-size: 11px;
+  color: #7C3AED;
+  word-break: break-all;
+}
+
+/* ── Erreur ── */
+.ps-error-text {
+  font-family: var(--font-body);
+  font-size: 14px;
+  color: #DC2626;
+  text-align: center;
+  margin: 0;
+}
+
+/* ── Loading ── */
+.ps-loading {
+  padding: 48px 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  font-family: var(--font-body);
+  font-size: 14px;
+  color: #9CA3AF;
+}
+
+.ps-spinner {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 3px solid rgba(167, 139, 250, 0.2);
+  border-top-color: #A78BFA;
+  animation: ps-spin 0.7s linear infinite;
+}
+
+@keyframes ps-spin {
+  to { transform: rotate(360deg); }
+}
+
+/* ── Footer ── */
+.ps-footer {
+  padding: 16px 20px 32px;
+  border-top: 1px solid rgba(0, 0, 0, 0.06);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.ps-btn {
+  width: 100%;
+  padding: 14px;
+  border-radius: 14px;
+  border: none;
+  font-family: var(--font-body);
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: all 0.15s ease;
+}
+
+.ps-btn--primary {
+  background: linear-gradient(135deg, #A78BFA, #7C3AED);
+  color: white;
+  box-shadow: 0 4px 16px rgba(124, 58, 237, 0.25);
+}
+
+.ps-btn--ghost {
+  background: rgba(0, 0, 0, 0.04);
+  color: #6B7280;
+}

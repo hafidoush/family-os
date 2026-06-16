@@ -1,0 +1,29 @@
+.seg-control {
+  display: flex;
+  background: #F7F6F4;
+  border-radius: 999px;
+  padding: 4px;
+  width: 100%;
+}
+
+.seg-item {
+  flex: 1;
+  text-align: center;
+  padding: 9px 8px;
+  border-radius: 999px;
+  border: none;
+  background: transparent;
+  font-family: 'Roobert', sans-serif;
+  font-size: 13px;
+  font-weight: 500;
+  color: #A9A6B8;
+  cursor: pointer;
+  transition: all 0.18s ease;
+  white-space: nowrap;
+}
+
+.seg-item--active {
+  background: #D2ADEB;
+  color: white;
+  font-weight: 600;
+}

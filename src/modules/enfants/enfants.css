@@ -1,0 +1,360 @@
+/* ============================================
+   MODULE ENFANTS — Styles
+   Palette : rose (Manel) · vert (Nawfel)
+   Style : doux, ludique, Wellness Premium
+   ============================================ */
+
+/* Tokens module */
+:root {
+  --color-enfants-activites:   #A78BFA;
+  --color-enfants-planning:    #60A5FA;
+  --color-enfants-competences: #FBBF24;
+  --color-enfants-religion:    #34D399;
+
+  --enfants-manel:  #F9A8D4;
+  --enfants-nawfel: #86EFAC;
+
+  --enfants-radius: 20px;
+  --enfants-card-radius: 16px;
+}
+
+/* ── Page wrapper ── */
+.enfants-page {
+  min-height: 100%;
+  padding: 0 0 80px;
+  background: transparent;
+}
+
+/* ── Header sélecteur enfants ── */
+.enfants-header {
+  padding: 24px 20px 0;
+}
+
+.enfants-header__title {
+  font-family: var(--font-body);
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--color-text-tertiary, #9CA3AF);
+  margin-bottom: 16px;
+}
+
+/* ── Sélecteur enfants (pills) ── */
+.enfants-selector {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 24px;
+}
+
+.enfants-selector__card {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  border-radius: var(--enfants-radius);
+  border: 2px solid transparent;
+  background: rgba(255, 255, 255, 0.6);
+  backdrop-filter: blur(12px);
+  cursor: pointer;
+  transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+  position: relative;
+  overflow: hidden;
+}
+
+.enfants-selector__card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  transition: opacity 0.25s ease;
+  border-radius: inherit;
+}
+
+.enfants-selector__card--manel::before  { background: linear-gradient(135deg, #F9A8D420, #F472B610); }
+.enfants-selector__card--nawfel::before { background: linear-gradient(135deg, #86EFAC20, #34D39910); }
+
+.enfants-selector__card--active {
+  border-color: var(--enfants-card-accent);
+  transform: translateY(-2px);
+}
+
+.enfants-selector__card--active::before {
+  opacity: 1;
+}
+
+.enfants-selector__card--manel {
+  --enfants-card-accent: #F9A8D4;
+  --enfants-card-shadow: #F9A8D440;
+}
+
+.enfants-selector__card--nawfel {
+  --enfants-card-accent: #86EFAC;
+  --enfants-card-shadow: #86EFAC40;
+}
+
+.enfants-selector__avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-body);
+  font-weight: 700;
+  font-size: 16px;
+  color: white;
+  flex-shrink: 0;
+  position: relative;
+  z-index: 1;
+}
+
+.enfants-selector__avatar--manel  { background: linear-gradient(135deg, #F9A8D4, #F472B6); }
+.enfants-selector__avatar--nawfel { background: linear-gradient(135deg, #86EFAC, #34D399); }
+
+.enfants-selector__info {
+  flex: 1;
+  position: relative;
+  z-index: 1;
+}
+
+.enfants-selector__name {
+  font-family: var(--font-body);
+  font-weight: 600;
+  font-size: 15px;
+  color: var(--color-text-primary, #1F2937);
+  display: block;
+}
+
+.enfants-selector__age {
+  font-family: var(--font-body);
+  font-size: 12px;
+  color: var(--color-text-tertiary, #9CA3AF);
+  display: block;
+  margin-top: 1px;
+}
+
+.enfants-selector__indicator {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--enfants-card-accent);
+  opacity: 0;
+  transition: opacity 0.2s ease;
+  position: relative;
+  z-index: 1;
+}
+
+.enfants-selector__card--active .enfants-selector__indicator {
+  opacity: 1;
+}
+
+/* ── Tabs navigation ── */
+.enfants-tabs {
+  display: flex;
+  gap: 0;
+  background: #F7F6F4;
+  border-radius: 999px;
+  margin: 12px 20px 16px;
+  padding: 4px;
+  flex-shrink: 0;
+}
+
+.enfants-tabs::-webkit-scrollbar { display: none; }
+
+.enfants-tab {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 9px 8px;
+  border-radius: 999px;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.18s ease;
+  font-family: var(--font-body);
+  font-size: 13px;
+  font-weight: 500;
+  color: #A9A6B8;
+}
+
+.enfants-tab--active {
+  background: #D2ADEB;
+  color: white;
+  font-weight: 600;
+}
+
+.enfants-tab__icon {
+  font-size: 14px;
+}
+
+/* ── Section content ── */
+.enfants-section {
+  padding: 0 20px;
+  animation: sectionIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes sectionIn {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ── Section header ── */
+.enfants-section__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+
+.enfants-section__title {
+  font-family: var(--font-body);
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--color-text-primary, #1F2937);
+}
+
+.enfants-section__title span {
+  font-style: normal;
+  color: inherit;
+}
+
+/* ── Bouton ajouter ── */
+.enfants-add-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  border-radius: 100px;
+  border: none;
+  background: var(--enfant-active-color, #F9A8D4);
+  color: white;
+  font-family: var(--font-body);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.enfants-add-btn:active {
+  transform: scale(0.96);
+}
+
+/* ── Cards activité ── */
+.activite-card {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 16px;
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(12px);
+  border-radius: var(--enfants-card-radius);
+  margin-bottom: 10px;
+  border: 1px solid rgba(255,255,255,0.8);
+  transition: all 0.2s ease;
+}
+
+.activite-card:active {
+  transform: scale(0.98);
+}
+
+.activite-card__color-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.activite-card__content {
+  flex: 1;
+}
+
+.activite-card__name {
+  font-family: var(--font-body);
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--color-text-primary, #1F2937);
+}
+
+.activite-card__meta {
+  font-family: var(--font-body);
+  font-size: 12px;
+  color: var(--color-text-tertiary, #9CA3AF);
+  margin-top: 2px;
+}
+
+.activite-card__badge {
+  padding: 4px 10px;
+  border-radius: 100px;
+  font-family: var(--font-body);
+  font-size: 11px;
+  font-weight: 600;
+}
+
+/* Avatars groupés Manel + Nawfel */
+.activite-card__avatars {
+  display: flex;
+  flex-direction: row;
+}
+
+.activite-card__avatar {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-body);
+  font-weight: 700;
+  font-size: 10px;
+  color: white;
+  border: 2px solid white;
+  margin-left: -6px;
+  flex-shrink: 0;
+}
+
+.activite-card__avatars .activite-card__avatar:first-child {
+  margin-left: 0;
+}
+
+.activite-card__badge--planifiee  { background: #EFF6FF; color: #3B82F6; }
+.activite-card__badge--realisee   { background: #F0FDF4; color: #22C55E; }
+.activite-card__badge--annulee    { background: #F9FAFB; color: #9CA3AF; }
+
+/* ── Empty state ── */
+.enfants-empty {
+  text-align: center;
+  padding: 48px 24px;
+}
+
+.enfants-empty__icon {
+  font-size: 48px;
+  margin-bottom: 12px;
+  display: block;
+  opacity: 0.5;
+}
+
+.enfants-empty__text {
+  font-family: var(--font-body);
+  font-size: 14px;
+  color: var(--color-text-tertiary, #9CA3AF);
+}
+
+/* ── Skeleton loader ── */
+.enfants-skeleton {
+  border-radius: var(--enfants-card-radius);
+  background: linear-gradient(90deg, rgba(255,255,255,0.4) 25%, rgba(255,255,255,0.7) 50%, rgba(255,255,255,0.4) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+  height: 68px;
+  margin-bottom: 10px;
+}
+
+@keyframes shimmer {
+  0%   { background-position: -200% 0; }
+  100% { background-position:  200% 0; }
+}

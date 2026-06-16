@@ -1,0 +1,350 @@
+/* ============================================
+   MODULE ENFANTS — Formulaires & Stats
+   ============================================ */
+
+/* ── Formulaire inline ── */
+.enfants-form {
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(16px);
+  border-radius: var(--enfants-card-radius);
+  padding: 16px;
+  margin-bottom: 16px;
+  border: 1px solid rgba(255,255,255,0.9);
+  animation: sectionIn 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.enfants-form__field {
+  margin-bottom: 12px;
+}
+
+.enfants-form__row {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.enfants-form__row .enfants-form__field {
+  flex: 1;
+  margin-bottom: 0;
+}
+
+.enfants-form__label {
+  display: block;
+  font-family: var(--font-body);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--color-text-tertiary, #9CA3AF);
+  margin-bottom: 6px;
+}
+
+.enfants-form__input,
+.enfants-form__select,
+.enfants-form__textarea {
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1.5px solid rgba(0,0,0,0.08);
+  background: rgba(255,255,255,0.7);
+  font-family: var(--font-body);
+  font-size: 14px;
+  color: var(--color-text-primary, #1F2937);
+  outline: none;
+  transition: border-color 0.2s ease;
+  box-sizing: border-box;
+}
+
+.enfants-form__input:focus,
+.enfants-form__select:focus,
+.enfants-form__textarea:focus {
+  border-color: var(--enfant-active-color, #F9A8D4);
+}
+
+.enfants-form__textarea {
+  resize: vertical;
+  min-height: 80px;
+}
+
+.enfants-form__actions {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+  margin-top: 4px;
+}
+
+.enfants-form__btn-cancel {
+  padding: 9px 16px;
+  border-radius: 100px;
+  border: 1.5px solid rgba(0,0,0,0.08);
+  background: transparent;
+  font-family: var(--font-body);
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--color-text-secondary, #6B7280);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.enfants-form__btn-save {
+  padding: 9px 20px;
+  border-radius: 100px;
+  border: none;
+  background: #6F7ED6;
+  color: white;
+  font-family: var(--font-body);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.enfants-form__btn-save:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.enfants-form__btn-save:active:not(:disabled) {
+  transform: scale(0.96);
+}
+
+/* ── Stats compétences ── */
+.competences-stats {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+.competences-stat {
+  flex: 1;
+  background: rgba(255,255,255,0.6);
+  backdrop-filter: blur(8px);
+  border-radius: 12px;
+  padding: 12px 10px;
+  text-align: center;
+  border: 1px solid rgba(255,255,255,0.8);
+}
+
+.competences-stat__value {
+  display: block;
+  font-family: var(--font-body);
+  font-size: 22px;
+  font-weight: 700;
+  line-height: 1;
+  margin-bottom: 4px;
+}
+
+.competences-stat__label {
+  display: block;
+  font-family: var(--font-body);
+  font-size: 11px;
+  color: var(--color-text-tertiary, #9CA3AF);
+}
+
+/* ── Planning ── */
+.planning-group {
+  margin-bottom: 20px;
+}
+
+.planning-group__title {
+  font-family: var(--font-body);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--color-text-tertiary, #9CA3AF);
+  margin-bottom: 10px;
+  padding: 0 2px;
+}
+
+/* ── Religion ── */
+.religion-categories {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 20px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  padding-bottom: 2px;
+}
+
+.religion-categories::-webkit-scrollbar { display: none; }
+
+.religion-cat-btn {
+  padding: 9px 18px;
+  border-radius: 999px;
+  border: 1.5px solid rgba(210,173,235,.20);
+  background: #F7F6F4;
+  font-family: var(--font-body);
+  font-size: 13px;
+  font-weight: 500;
+  color: #6B6880;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.15s ease;
+}
+
+.religion-cat-btn:hover:not(.religion-cat-btn--active) {
+  border-color: rgba(210,173,235,.45);
+  color: #B98FD4;
+}
+
+.religion-cat-btn--active {
+  background: #4A4660;
+  border-color: transparent;
+  color: white;
+  font-weight: 600;
+}
+
+.religion-item {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 16px;
+  background: rgba(255,255,255,0.7);
+  backdrop-filter: blur(12px);
+  border-radius: var(--enfants-card-radius);
+  margin-bottom: 8px;
+  border: 1px solid rgba(255,255,255,0.8);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.religion-item:active { transform: scale(0.98); }
+
+.religion-item__icon {
+  font-size: 22px;
+  flex-shrink: 0;
+  width: 36px;
+  text-align: center;
+}
+
+.religion-item__content { flex: 1; }
+
+.religion-item__nom {
+  font-family: var(--font-body);
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--color-text-primary, #1F2937);
+}
+
+.religion-item__sub {
+  font-family: var(--font-body);
+  font-size: 12px;
+  color: var(--color-text-tertiary, #9CA3AF);
+  margin-top: 2px;
+}
+
+.religion-item__statuts {
+  display: flex;
+  gap: 4px;
+}
+
+.religion-statut-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  border: 1.5px solid currentColor;
+  transition: background 0.2s ease;
+}
+
+.religion-statut-dot--filled { background: currentColor; }
+
+/* ── Quiz ── */
+.quiz-card {
+  background: linear-gradient(135deg, rgba(52,211,153,0.12), rgba(16,185,129,0.06));
+  border: 1.5px solid rgba(52,211,153,0.3);
+  border-radius: var(--enfants-card-radius);
+  padding: 16px;
+  margin-bottom: 10px;
+}
+
+.quiz-card__question {
+  font-family: var(--font-body);
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--color-text-primary, #1F2937);
+  margin-bottom: 12px;
+  line-height: 1.5;
+}
+
+.quiz-card__options {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.quiz-option {
+  padding: 10px 14px;
+  border-radius: 10px;
+  border: 1.5px solid rgba(0,0,0,0.08);
+  background: rgba(255,255,255,0.7);
+  font-family: var(--font-body);
+  font-size: 13px;
+  color: var(--color-text-primary, #1F2937);
+  cursor: pointer;
+  text-align: left;
+  transition: all 0.2s ease;
+}
+
+.quiz-option--correct {
+  background: #F0FDF4;
+  border-color: #22C55E;
+  color: #166534;
+}
+
+.quiz-option--wrong {
+  background: #FEF2F2;
+  border-color: #EF4444;
+  color: #991B1B;
+}
+
+.quiz-option:active:not(.quiz-option--correct):not(.quiz-option--wrong) {
+  transform: scale(0.98);
+}
+
+.quiz-result {
+  text-align: center;
+  padding: 16px;
+  font-family: var(--font-body);
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.quiz-result--correct { color: #22C55E; }
+.quiz-result--wrong   { color: #EF4444; }
+
+/* ── Header domaine compétences ─────────────────────────────────────────── */
+
+.competences-domaine-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 14px 4px 6px;
+  margin-top: 8px;
+  border-bottom: 1.5px solid rgba(167, 139, 250, 0.15);
+}
+
+.competences-domaine-header__icon {
+  font-size: 1.125rem;
+}
+
+.competences-domaine-header__label {
+  flex: 1;
+  font-family: var(--font-body);
+  font-size: 0.8125rem;
+  font-weight: 700;
+  color: var(--color-text);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.competences-domaine-header__count {
+  font-family: var(--font-body);
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--color-muted);
+  background: rgba(167, 139, 250, 0.1);
+  padding: 2px 8px;
+  border-radius: 20px;
+}

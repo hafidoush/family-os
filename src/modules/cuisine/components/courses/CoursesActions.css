@@ -1,0 +1,188 @@
+/* Barre d'actions sticky en bas */
+.courses-actions {
+  position: sticky;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 12px 16px 20px;
+  background: linear-gradient(to bottom, transparent, hsl(40, 28%, 96%) 30%);
+  pointer-events: none;
+  z-index: 10;
+}
+
+.courses-actions__bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  pointer-events: all;
+}
+
+/* Bouton Ajouter — pill principal */
+.courses-actions__btn-primary {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 20px;
+  height: 44px;
+  background: #7C6AF7;
+  color: white;
+  border: none;
+  border-radius: 22px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: transform 0.15s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.15s ease;
+  letter-spacing: -0.01em;
+}
+
+.courses-actions__btn-primary:active {
+  transform: scale(0.96);
+}
+
+/* Bouton secondaire — Depuis un menu */
+.courses-actions__btn-secondary {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 16px;
+  height: 44px;
+  background: rgba(255, 255, 255, 0.9);
+  color: #5B5B7B;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  border-radius: 22px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  white-space: nowrap;
+  backdrop-filter: blur(8px);
+  transition: transform 0.15s ease, background 0.15s ease;
+  letter-spacing: -0.01em;
+}
+
+.courses-actions__btn-secondary:active {
+  transform: scale(0.97);
+}
+
+.courses-actions__btn-secondary:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* Bouton Archiver — pill discret à droite */
+.courses-actions__btn-archive {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 0 14px;
+  height: 36px;
+  background: transparent;
+  color: #9B9BAD;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  border-radius: 18px;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  white-space: nowrap;
+  margin-left: auto;
+  transition: color 0.15s ease, border-color 0.15s ease;
+}
+
+.courses-actions__btn-archive:hover {
+  color: #EF4444;
+  border-color: rgba(239, 68, 68, 0.2);
+}
+
+/* Feedback toast */
+.courses-actions__feedback {
+  position: absolute;
+  top: -44px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(30, 30, 40, 0.88);
+  color: white;
+  font-size: 13px;
+  font-weight: 500;
+  padding: 8px 16px;
+  border-radius: 20px;
+  white-space: nowrap;
+  pointer-events: none;
+  backdrop-filter: blur(8px);
+  animation: courses-feedback-in 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+  z-index: 10;
+}
+
+@keyframes courses-feedback-in {
+  from { opacity: 0; transform: translateX(-50%) translateY(8px); }
+  to { opacity: 1; transform: translateX(-50%) translateY(0); }
+}
+
+/* Dropdown menu */
+.courses-actions__menu-picker-wrapper {
+  position: relative;
+}
+
+.courses-actions__menu-dropdown {
+  position: absolute;
+  bottom: calc(100% + 8px);
+  left: 0;
+  min-width: 220px;
+  background: #F0EFEB;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  border-radius: 14px;
+  z-index: 100;
+  overflow: hidden;
+  animation: dropdown-up 0.18s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes dropdown-up {
+  from { opacity: 0; transform: translateY(8px) scale(0.96); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.courses-actions__menu-option {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  width: 100%;
+  padding: 12px 16px;
+  background: transparent;
+  border: none;
+  text-align: left;
+  cursor: pointer;
+  transition: background 0.12s ease;
+}
+
+.courses-actions__menu-option:hover {
+  background: rgba(0, 0, 0, 0.03);
+}
+
+.courses-actions__menu-option:not(:last-child) {
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.courses-actions__menu-name {
+  font-size: 14px;
+  font-weight: 500;
+  color: #1a1a2e;
+}
+
+.courses-actions__menu-date {
+  font-size: 12px;
+  color: #9B9BAD;
+}
+
+/* Spinner */
+.courses-actions__spinner {
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  border: 2px solid rgba(255,255,255,0.4);
+  border-top-color: white;
+  border-radius: 50%;
+  animation: spin 0.6s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}

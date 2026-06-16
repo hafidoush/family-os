@@ -1,0 +1,195 @@
+.courses-item-wrapper {
+  position: relative;
+  overflow: hidden;
+  border-radius: var(--radius-lg);
+  margin-bottom: var(--spacing-2);
+}
+
+.courses-item-wrapper--deleting {
+  animation: item-exit 0.32s cubic-bezier(0.4, 0, 1, 1) forwards;
+}
+
+@keyframes item-exit {
+  0%   { opacity: 1; transform: translateX(0) scaleY(1); max-height: 80px; }
+  40%  { opacity: 0; transform: translateX(24px) scaleY(1); max-height: 80px; }
+  100% { opacity: 0; transform: translateX(24px) scaleY(0); max-height: 0; margin-bottom: 0; }
+}
+
+/* Zone de suppression (swipe) */
+.courses-item__delete-zone {
+  position: absolute;
+  inset: 0;
+  background: #EF4444;
+  border-radius: var(--radius-lg);
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding-right: 20px;
+  pointer-events: none;
+}
+
+/* Item principal */
+.courses-item {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 14px;
+  background: var(--color-surface);
+  border-radius: 12px;
+  min-height: 56px;
+  position: relative;
+  will-change: transform;
+}
+
+/* Checkbox */
+.courses-item__checkbox {
+  flex-shrink: 0;
+  width: 26px;
+  height: 26px;
+  border-radius: var(--radius-full);
+  border: 2px solid var(--color-border);
+  background: transparent;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  transition:
+    background 0.2s ease,
+    border-color 0.2s ease,
+    transform 0.15s cubic-bezier(0.34, 1.56, 0.64, 1),
+    box-shadow 0.2s ease;
+}
+
+.courses-item__checkbox:active {
+  transform: scale(0.82);
+}
+
+.courses-item--coche .courses-item__checkbox {
+  background: #7C6AF7;
+  border-color: #7C6AF7;
+}
+
+/* Checkmark SVG animé */
+.courses-item__check-svg {
+  opacity: 0;
+  transform: scale(0.4) rotate(-10deg);
+  transition:
+    opacity 0.18s ease,
+    transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.courses-item--coche .courses-item__check-svg {
+  opacity: 1;
+  transform: scale(1) rotate(0deg);
+}
+
+/* Contenu */
+.courses-item__content {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.courses-item__nom {
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--color-text-primary);
+  line-height: 1.3;
+  position: relative;
+  width: fit-content;
+  max-width: 100%;
+  transition: color 0.2s ease, opacity 0.2s ease;
+}
+
+/* Strikethrough animé via pseudo-element */
+.courses-item__nom::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 50%;
+  height: 1.5px;
+  background: var(--color-text-tertiary);
+  width: 0;
+  transition: width 0.28s cubic-bezier(0.4, 0, 0.2, 1);
+  border-radius: 1px;
+}
+
+.courses-item--coche .courses-item__nom::after {
+  width: 100%;
+}
+
+.courses-item--coche .courses-item__nom {
+  opacity: 0.38;
+}
+
+.courses-item--coche .courses-item__content {
+  opacity: 0.5;
+}
+
+.courses-item__quantite {
+  font-size: 13px;
+  color: var(--color-text-secondary);
+}
+
+.courses-item__notes {
+  font-size: 12px;
+  color: var(--color-text-tertiary);
+  font-style: italic;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Badge "Depuis un menu" */
+.courses-item__origine {
+  display: inline-flex;
+  align-items: center;
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.01em;
+  color: #7C6AF7;
+  background: rgba(124, 106, 247, 0.08);
+  padding: 2px 7px;
+  border-radius: 4px;
+  width: fit-content;
+  margin-top: 3px;
+}
+
+/* Bouton de suppression — desktop uniquement */
+.courses-item__delete {
+  flex-shrink: 0;
+  width: 30px;
+  height: 30px;
+  border: none;
+  background: transparent;
+  color: var(--color-text-tertiary);
+  cursor: pointer;
+  border-radius: var(--radius-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  opacity: 0;
+  transition: opacity 0.15s ease, color 0.15s ease, background 0.15s ease;
+}
+
+.courses-item:hover .courses-item__delete,
+.courses-item:focus-within .courses-item__delete {
+  opacity: 1;
+}
+
+.courses-item__delete:hover {
+  color: #EF4444;
+  background: rgba(239, 68, 68, 0.08);
+  opacity: 1;
+}
+
+/* Mobile : cacher le bouton × — le swipe prend le relais */
+@media (max-width: 768px) {
+  .courses-item__delete {
+    display: none;
+  }
+}

@@ -1,0 +1,151 @@
+/**
+ * Drawer — Bottom Sheet / Side Drawer
+ * Utilisé notamment par HumeurSaisieSheet.
+ * Convention : CSS plain — C-04
+ */
+
+/* Backdrop */
+.drawer-backdrop {
+  position: fixed;
+  inset: 0;
+  background: var(--surface-overlay);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  z-index: var(--z-overlay);
+  animation: drawer-backdrop-in var(--duration-normal) var(--ease-out) forwards;
+}
+
+.drawer-backdrop--closing {
+  animation: drawer-backdrop-out var(--duration-slow) var(--ease-in) forwards;
+}
+
+@keyframes drawer-backdrop-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes drawer-backdrop-out {
+  from { opacity: 1; }
+  to   { opacity: 0; }
+}
+
+/* Conteneur du drawer */
+.drawer {
+  position: fixed;
+  z-index: var(--z-modal);
+  background:   var(--glass-bg-strong);
+  border:       1px solid var(--glass-border-strong);
+  backdrop-filter: var(--glass-blur-strong);
+  -webkit-backdrop-filter: var(--glass-blur-strong);
+}
+
+/* ── Position bottom (bottom sheet) ────────────────────────── */
+.drawer--bottom {
+  bottom: var(--bottom-bar-h, 80px);
+  left: 0;
+  right: 0;
+  border-radius: var(--radius-2xl) var(--radius-2xl) 0 0;
+  max-height: calc(90dvh - var(--bottom-bar-h, 80px));
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  overscroll-behavior: contain;
+  animation: drawer-bottom-in var(--duration-slow) var(--ease-spring) forwards;
+}
+
+.drawer--bottom.drawer--closing {
+  animation: drawer-bottom-out var(--duration-normal) var(--ease-in) forwards;
+}
+
+@keyframes drawer-bottom-in {
+  from { transform: translateY(100%); }
+  to   { transform: translateY(0); }
+}
+
+@keyframes drawer-bottom-out {
+  from { transform: translateY(0); }
+  to   { transform: translateY(100%); }
+}
+
+/* ── Position right (side panel) ────────────────────────────── */
+.drawer--right {
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: min(400px, 90vw);
+  border-radius: var(--radius-2xl) 0 0 var(--radius-2xl);
+  overflow-y: auto;
+  animation: drawer-right-in var(--duration-slow) var(--ease-spring) forwards;
+}
+
+.drawer--right.drawer--closing {
+  animation: drawer-right-out var(--duration-normal) var(--ease-in) forwards;
+}
+
+@keyframes drawer-right-in {
+  from { transform: translateX(100%); }
+  to   { transform: translateX(0); }
+}
+
+@keyframes drawer-right-out {
+  from { transform: translateX(0); }
+  to   { transform: translateX(100%); }
+}
+
+/* Handle de drag (indicateur visuel) */
+.drawer__handle {
+  width: 40px;
+  height: 4px;
+  background: var(--border-default);
+  border-radius: var(--radius-full);
+  margin: var(--space-3) auto var(--space-2);
+  flex-shrink: 0;
+}
+
+/* En-tête du drawer */
+.drawer__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-4) var(--space-5) var(--space-3);
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.drawer__title {
+  font-family: var(--font-display);
+  font-size: var(--text-lg);
+  font-weight: var(--font-weight-semibold);
+  color: var(--text-primary);
+}
+
+.drawer__close {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-full);
+  border: none;
+  background: var(--bg-sunken);
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: var(--transition-interactive);
+  font-size: var(--text-base);
+  min-width: 32px;
+}
+
+.drawer__close:hover {
+  background: var(--border-subtle);
+  color: var(--text-primary);
+}
+
+/* Corps du drawer */
+.drawer__body {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+  padding: var(--space-5);
+  padding-bottom: calc(var(--space-6) + var(--safe-bottom));
+}

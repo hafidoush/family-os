@@ -1,0 +1,507 @@
+/**
+ * FAMILY OS — Utilitaires CSS
+ * Classes utilitaires transversales utilisables dans tous les composants.
+ * Complète les classes typographiques de typography.css.
+ */
+
+
+/* ─── LAYOUT ──────────────────────────────────────────────────────────────── */
+
+/* Flexbox courants */
+.flex         { display: flex; }
+.flex-col     { display: flex; flex-direction: column; }
+.flex-row     { display: flex; flex-direction: row; }
+.flex-wrap    { flex-wrap: wrap; }
+.flex-nowrap  { flex-wrap: nowrap; }
+.flex-1       { flex: 1; }
+.flex-auto    { flex: auto; }
+.flex-none    { flex: none; }
+.flex-shrink-0 { flex-shrink: 0; }
+
+.items-start    { align-items: flex-start; }
+.items-center   { align-items: center; }
+.items-end      { align-items: flex-end; }
+.items-stretch  { align-items: stretch; }
+.items-baseline { align-items: baseline; }
+
+.justify-start   { justify-content: flex-start; }
+.justify-center  { justify-content: center; }
+.justify-end     { justify-content: flex-end; }
+.justify-between { justify-content: space-between; }
+.justify-around  { justify-content: space-around; }
+.justify-evenly  { justify-content: space-evenly; }
+
+/* Gaps */
+.gap-1   { gap: var(--space-1); }
+.gap-2   { gap: var(--space-2); }
+.gap-3   { gap: var(--space-3); }
+.gap-4   { gap: var(--space-4); }
+.gap-5   { gap: var(--space-5); }
+.gap-6   { gap: var(--space-6); }
+.gap-8   { gap: var(--space-8); }
+.gap-10  { gap: var(--space-10); }
+.gap-12  { gap: var(--space-12); }
+
+/* Grid */
+.grid         { display: grid; }
+.grid-cols-2  { grid-template-columns: repeat(2, 1fr); }
+.grid-cols-3  { grid-template-columns: repeat(3, 1fr); }
+.grid-cols-4  { grid-template-columns: repeat(4, 1fr); }
+
+/* Position */
+.relative { position: relative; }
+.absolute { position: absolute; }
+.fixed    { position: fixed; }
+.sticky   { position: sticky; }
+
+.inset-0    { inset: 0; }
+.top-0      { top: 0; }
+.bottom-0   { bottom: 0; }
+.left-0     { left: 0; }
+.right-0    { right: 0; }
+
+/* Overflow */
+.overflow-hidden  { overflow: hidden; }
+.overflow-auto    { overflow: auto; }
+.overflow-x-auto  { overflow-x: auto; }
+.overflow-y-auto  { overflow-y: auto; }
+.overflow-scroll  { overflow-y: scroll; -webkit-overflow-scrolling: touch; }
+
+/* Width / Height */
+.w-full       { width: 100%; }
+.h-full       { height: 100%; }
+.min-h-screen { min-height: 100dvh; }
+.min-w-0      { min-width: 0; } /* permet le truncate dans les flex */
+
+
+/* ─── ESPACEMENT (padding / margin utilitaires) ───────────────────────────── */
+
+.p-0   { padding: var(--space-0); }
+.p-2   { padding: var(--space-2); }
+.p-3   { padding: var(--space-3); }
+.p-4   { padding: var(--space-4); }
+.p-5   { padding: var(--space-5); }
+.p-6   { padding: var(--space-6); }
+.p-8   { padding: var(--space-8); }
+
+.px-2  { padding-inline: var(--space-2); }
+.px-3  { padding-inline: var(--space-3); }
+.px-4  { padding-inline: var(--space-4); }
+.px-5  { padding-inline: var(--space-5); }
+.px-6  { padding-inline: var(--space-6); }
+
+.py-2  { padding-block: var(--space-2); }
+.py-3  { padding-block: var(--space-3); }
+.py-4  { padding-block: var(--space-4); }
+.py-5  { padding-block: var(--space-5); }
+.py-6  { padding-block: var(--space-6); }
+
+.mt-auto { margin-top: auto; }
+.ml-auto { margin-left: auto; }
+.mr-auto { margin-right: auto; }
+.mx-auto { margin-inline: auto; }
+
+
+/* ─── SURFACES & GLASSMORPHISM ────────────────────────────────────────────── */
+
+/*
+ * Classes à appliquer sur les éléments conteneurs.
+ * Nécessitent un fond avec gradient/couleur pour que l'effet verre soit visible.
+ */
+
+.glass-light {
+  background: var(--glass-bg-light);
+  backdrop-filter: var(--glass-blur-light);
+  -webkit-backdrop-filter: var(--glass-blur-light);
+  border: var(--border-width-thin) solid var(--glass-border-light);
+}
+
+.glass {
+  background: var(--glass-bg);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border: var(--border-width-thin) solid var(--glass-border);
+}
+
+.glass-strong {
+  background: var(--glass-bg-strong);
+  backdrop-filter: var(--glass-blur-strong);
+  -webkit-backdrop-filter: var(--glass-blur-strong);
+  border: var(--border-width-thin) solid var(--glass-border-strong);
+}
+
+.glass-tinted {
+  background: var(--glass-bg-tinted);
+  backdrop-filter: var(--glass-blur-tinted);
+  -webkit-backdrop-filter: var(--glass-blur-tinted);
+  border: var(--border-width-thin) solid var(--glass-border-tinted);
+}
+
+/* Carte standard — glass + rayon + padding */
+.card {
+  background: var(--card-bg);
+  backdrop-filter: var(--card-blur);
+  -webkit-backdrop-filter: var(--card-blur);
+  border: var(--border-width-thin) solid var(--card-border);
+  border-radius: var(--card-radius);
+  padding: var(--card-padding);
+  transition: var(--transition-shadow);
+}
+
+.card:hover {
+}
+
+/* Surface solide (sans blur, pour les appareils qui ne supportent pas backdrop-filter) */
+.surface-1 { background: var(--surface-1); }
+.surface-2 { background: var(--surface-2); }
+.surface-3 { background: var(--surface-3); }
+
+
+/* ─── RAYONS ──────────────────────────────────────────────────────────────── */
+
+.rounded-xs   { border-radius: var(--radius-xs); }
+.rounded-sm   { border-radius: var(--radius-sm); }
+.rounded-md   { border-radius: var(--radius-md); }
+.rounded-lg   { border-radius: var(--radius-lg); }
+.rounded-xl   { border-radius: var(--radius-xl); }
+.rounded-2xl  { border-radius: var(--radius-2xl); }
+.rounded-3xl  { border-radius: var(--radius-3xl); }
+.rounded-full { border-radius: var(--radius-full); }
+
+
+/* ─── OMBRES ──────────────────────────────────────────────────────────────── */
+
+.shadow-xs    { }
+.shadow-sm    { }
+.shadow-md    { }
+.shadow-lg    { }
+.shadow-xl    { }
+.shadow-2xl   { }
+.shadow-brand { }
+.shadow-none  { }
+
+
+/* ─── COULEURS DE FOND ────────────────────────────────────────────────────── */
+
+.bg-app      { background-color: var(--bg-app); }
+.bg-base     { background-color: var(--bg-base); }
+.bg-elevated { background-color: var(--bg-elevated); }
+.bg-sunken   { background-color: var(--bg-sunken); }
+.bg-primary  { background-color: var(--primary); }
+.bg-primary-subtle { background-color: var(--primary-subtle); }
+.bg-gradient { background: var(--bg-gradient-app); }
+
+/* Couleurs par module */
+.bg-module-dashboard { background-color: var(--module-dashboard); }
+.bg-module-cuisine   { background-color: var(--module-cuisine); }
+.bg-module-enfants   { background-color: var(--module-enfants); }
+.bg-module-myself    { background-color: var(--module-myself); }
+.bg-module-maison    { background-color: var(--module-maison); }
+.bg-module-famille   { background-color: var(--module-famille); }
+.bg-module-achats    { background-color: var(--module-achats); }
+
+/* Statuts */
+.bg-success { background-color: var(--status-success-bg); }
+.bg-warning { background-color: var(--status-warning-bg); }
+.bg-danger  { background-color: var(--status-danger-bg); }
+.bg-info    { background-color: var(--status-info-bg); }
+
+
+/* ─── VISIBILITÉ & DISPLAY ────────────────────────────────────────────────── */
+
+.hidden        { display: none; }
+.invisible     { visibility: hidden; }
+.opacity-0     { opacity: 0; }
+.opacity-50    { opacity: 0.5; }
+.opacity-100   { opacity: 1; }
+
+.pointer-events-none { pointer-events: none; }
+.pointer-events-auto { pointer-events: auto; }
+.select-none { user-select: none; -webkit-user-select: none; }
+
+
+/* ─── ANIMATIONS ──────────────────────────────────────────────────────────── */
+
+/* Keyframes */
+
+@keyframes fade-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes fade-in-up {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fade-in-down {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes scale-in {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes slide-up {
+  from { transform: translateY(100%); }
+  to   { transform: translateY(0); }
+}
+
+@keyframes slide-down {
+  from { transform: translateY(0); }
+  to   { transform: translateY(100%); }
+}
+
+@keyframes slide-in-right {
+  from { transform: translateX(100%); }
+  to   { transform: translateX(0); }
+}
+
+@keyframes slide-in-left {
+  from { transform: translateX(-100%); }
+  to   { transform: translateX(0); }
+}
+
+@keyframes pulse-soft {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.6; }
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+
+@keyframes bounce-gentle {
+  0%, 100% { transform: translateY(0); }
+  50%       { transform: translateY(-4px); }
+}
+
+/* Classes d'animation */
+
+.animate-fade-in {
+  animation: fade-in var(--duration-normal) var(--ease-out) both;
+}
+
+.animate-fade-in-up {
+  animation: fade-in-up var(--duration-normal) var(--ease-out) both;
+}
+
+.animate-fade-in-down {
+  animation: fade-in-down var(--duration-normal) var(--ease-out) both;
+}
+
+.animate-scale-in {
+  animation: scale-in var(--duration-normal) var(--ease-spring) both;
+}
+
+.animate-slide-up {
+  animation: slide-up var(--duration-slow) var(--ease-snappy) both;
+}
+
+.animate-slide-down {
+  animation: slide-down var(--duration-slow) var(--ease-snappy) both;
+}
+
+.animate-slide-in-right {
+  animation: slide-in-right var(--duration-slow) var(--ease-snappy) both;
+}
+
+.animate-slide-in-left {
+  animation: slide-in-left var(--duration-slow) var(--ease-snappy) both;
+}
+
+.animate-pulse-soft {
+  animation: pulse-soft 2s var(--ease-in-out) infinite;
+}
+
+.animate-spin {
+  animation: spin 1s var(--ease-linear) infinite;
+}
+
+.animate-bounce-gentle {
+  animation: bounce-gentle 2s var(--ease-in-out) infinite;
+}
+
+/* Délais d'animation (pour les entrées en cascade) */
+.delay-0   { animation-delay: 0ms; }
+.delay-50  { animation-delay: 50ms; }
+.delay-100 { animation-delay: 100ms; }
+.delay-150 { animation-delay: 150ms; }
+.delay-200 { animation-delay: 200ms; }
+.delay-300 { animation-delay: 300ms; }
+.delay-400 { animation-delay: 400ms; }
+.delay-500 { animation-delay: 500ms; }
+
+
+/* ─── TRANSITIONS ─────────────────────────────────────────────────────────── */
+
+.transition-none        { transition: none; }
+.transition-color       { transition: var(--transition-color); }
+.transition-opacity     { transition: var(--transition-opacity); }
+.transition-shadow      { transition: var(--transition-shadow); }
+.transition-transform   { transition: var(--transition-transform); }
+.transition-all         { transition: var(--transition-all); }
+.transition-interactive { transition: var(--transition-interactive); }
+
+
+/* ─── EFFETS INTERACTIFS ──────────────────────────────────────────────────── */
+
+/* Pression tactile — feedback visuel immédiat sur mobile */
+.press-effect {
+  transition: var(--transition-interactive);
+}
+.press-effect:active {
+  transform: scale(0.97);
+  opacity: 0.85;
+}
+
+/* Hover lift — légère élévation au survol */
+.hover-lift {
+  transition: transform var(--duration-normal) var(--ease-spring),
+              box-shadow var(--duration-normal) var(--ease-out);
+}
+.hover-lift:hover {
+  transform: translateY(-2px);
+}
+
+/* Focus ring personnalisé */
+.focus-ring:focus-visible {
+  outline: none;
+}
+
+
+/* ─── SCROLLBAR ───────────────────────────────────────────────────────────── */
+
+/* Scrollbar fine et discrète sur les éléments défilants */
+.scrollbar-thin {
+  scrollbar-width: thin;
+  scrollbar-color: var(--border-default) transparent;
+}
+
+.scrollbar-thin::-webkit-scrollbar {
+  width: 4px;
+  height: 4px;
+}
+
+.scrollbar-thin::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.scrollbar-thin::-webkit-scrollbar-thumb {
+  background: var(--border-default);
+  border-radius: var(--radius-full);
+}
+
+.scrollbar-none {
+  scrollbar-width: none;
+}
+.scrollbar-none::-webkit-scrollbar {
+  display: none;
+}
+
+
+/* ─── SÉPARATEURS ─────────────────────────────────────────────────────────── */
+
+.divider {
+  width: 100%;
+  height: var(--border-width);
+  background: var(--border-subtle);
+}
+
+.divider-vertical {
+  width: var(--border-width);
+  height: 100%;
+  background: var(--border-subtle);
+}
+
+
+/* ─── SAFE AREAS iOS ──────────────────────────────────────────────────────── */
+
+/* Padding tenant compte du notch et de la home indicator */
+.safe-top    { padding-top:    var(--safe-top); }
+.safe-bottom { padding-bottom: var(--safe-bottom); }
+.safe-left   { padding-left:   var(--safe-left); }
+.safe-right  { padding-right:  var(--safe-right); }
+
+.safe-x {
+  padding-left:  var(--safe-left);
+  padding-right: var(--safe-right);
+}
+
+.safe-inset {
+  padding-top:    var(--safe-top);
+  padding-bottom: var(--safe-bottom);
+  padding-left:   var(--safe-left);
+  padding-right:  var(--safe-right);
+}
+
+
+/* ─── UTILITAIRES DE DEBUG (à supprimer en production) ───────────────────── */
+
+/*
+.debug * {
+  outline: 1px solid hsl(0, 80%, 60%);
+}
+*/
+
+/* ─── SEG-TABS — SegmentedControl global ─────────────────────────────────── */
+
+.seg-tabs {
+  display: flex;
+  gap: 0;
+  background: #F7F6F4;
+  border-radius: 999px;
+  margin: 12px 16px 0;
+  padding: 4px;
+  flex-shrink: 0;
+}
+
+.seg-tabs--scroll {
+  overflow-x: auto;
+  scrollbar-width: none;
+  border-radius: 999px;
+}
+.seg-tabs--scroll::-webkit-scrollbar { display: none; }
+
+.seg-tab {
+  flex: 1;
+  text-align: center;
+  padding: 9px 10px;
+  border-radius: 999px;
+  border: none;
+  background: transparent;
+  font-family: 'Roobert', sans-serif;
+  font-size: 13px;
+  font-weight: 500;
+  color: #A9A6B8;
+  cursor: pointer;
+  transition: all 0.18s ease;
+  white-space: nowrap;
+}
+
+.seg-tab--active {
+  background: #D2ADEB;
+  color: white;
+  font-weight: 600;
+}

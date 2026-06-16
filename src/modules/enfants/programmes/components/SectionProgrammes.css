@@ -1,0 +1,389 @@
+/* ============================================================
+   SECTION PROGRAMMES PÉDAGOGIQUES
+   ============================================================ */
+
+.programmes-section {
+  padding: 0 20px 100px;
+}
+
+/* ── Onglets internes ── */
+.programmes-inner-tabs {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 20px;
+  background: rgba(0,0,0,0.04);
+  border-radius: 12px;
+  padding: 4px;
+}
+
+.programmes-inner-tab {
+  flex: 1;
+  padding: 8px 12px;
+  border-radius: 9px;
+  border: none;
+  background: transparent;
+  font-family: var(--font-body);
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--color-text-secondary, #6B7280);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+.programmes-inner-tab--active {
+  background: #F0EFEB;
+  color: var(--color-text-primary, #1F2937);
+  font-weight: 600;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+}
+
+.programmes-badge-urgent {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  border-radius: 999px;
+  background: #EF4444;
+  color: white;
+  font-size: 10px;
+  font-weight: 700;
+}
+
+/* ── Bouton créer ── */
+.programmes-create-btn {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 16px 18px;
+  border-radius: 18px;
+  border: 1.5px dashed rgba(124, 58, 237, 0.3);
+  background: linear-gradient(135deg, rgba(167,139,250,0.08), rgba(124,58,237,0.04));
+  cursor: pointer;
+  margin-bottom: 20px;
+  text-align: left;
+  transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.programmes-create-btn:active { transform: scale(0.98); }
+
+.programmes-create-btn__icon {
+  font-size: 22px;
+  flex-shrink: 0;
+}
+
+.programmes-create-btn__text {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.programmes-create-btn__title {
+  font-family: var(--font-body);
+  font-size: 14px;
+  font-weight: 700;
+  color: #6D28D9;
+}
+
+.programmes-create-btn__sub {
+  font-family: var(--font-body);
+  font-size: 12px;
+  color: #9CA3AF;
+}
+
+.programmes-create-btn__arrow {
+  font-size: 16px;
+  color: #A78BFA;
+  flex-shrink: 0;
+}
+
+/* ── État vide ── */
+.programmes-empty {
+  text-align: center;
+  padding: 48px 20px;
+}
+
+.programmes-empty__icon {
+  font-size: 40px;
+  margin-bottom: 12px;
+}
+
+.programmes-empty__title {
+  font-family: var(--font-body);
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--color-text-primary, #1F2937);
+  margin-bottom: 8px;
+}
+
+.programmes-empty__sub {
+  font-family: var(--font-body);
+  font-size: 13px;
+  color: var(--color-text-tertiary, #9CA3AF);
+  line-height: 1.6;
+  max-width: 280px;
+  margin: 0 auto;
+}
+
+/* ── Liste programmes ── */
+.programmes-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* ── Carte programme ── */
+.programme-card {
+  background: rgba(255,255,255,0.8);
+  backdrop-filter: blur(12px);
+  border-radius: 18px;
+  border: 1.5px solid rgba(255,255,255,0.9);
+  padding: 16px;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+  box-shadow: 0 2px 12px rgba(0,0,0,0.05);
+}
+
+.programme-card:active { transform: scale(0.99); }
+
+.programme-card--selected {
+  border-color: rgba(167,139,250,0.4);
+  box-shadow: 0 4px 20px rgba(124,58,237,0.12);
+}
+
+.programme-card__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+
+.programme-card__meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.programme-card__statut {
+  font-family: var(--font-body);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.programme-card__ia-badge {
+  padding: 2px 7px;
+  border-radius: 999px;
+  background: rgba(167,139,250,0.15);
+  font-family: var(--font-body);
+  font-size: 10px;
+  font-weight: 700;
+  color: #7C3AED;
+  letter-spacing: 0.04em;
+}
+
+.programme-card__progress-ring {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: conic-gradient(
+    #A78BFA var(--prog, 0%),
+    rgba(0,0,0,0.06) var(--prog, 0%)
+  );
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.programme-card__pct {
+  font-family: var(--font-body);
+  font-size: 10px;
+  font-weight: 700;
+  color: #6D28D9;
+  background: #F0EFEB;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.programme-card__titre {
+  font-family: var(--font-body);
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--color-text-primary, #1F2937);
+  margin: 0 0 6px;
+  letter-spacing: -0.01em;
+}
+
+.programme-card__dates {
+  font-family: var(--font-body);
+  font-size: 12px;
+  color: var(--color-text-tertiary, #9CA3AF);
+  margin-bottom: 12px;
+}
+
+.programme-card__bar-wrap {
+  height: 4px;
+  background: rgba(0,0,0,0.06);
+  border-radius: 2px;
+  overflow: hidden;
+  margin-bottom: 10px;
+}
+
+.programme-card__bar {
+  height: 100%;
+  background: linear-gradient(90deg, #A78BFA, #7C3AED);
+  border-radius: 2px;
+  transition: width 0.6s cubic-bezier(0.25,1,0.5,1);
+}
+
+.programme-card__footer {
+  display: flex;
+  gap: 12px;
+}
+
+.programme-card__semaines,
+.programme-card__freq {
+  font-family: var(--font-body);
+  font-size: 12px;
+  color: var(--color-text-tertiary, #9CA3AF);
+}
+
+.programme-card__actions {
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px solid rgba(0,0,0,0.06);
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+}
+
+.programme-card__action {
+  padding: 8px 16px;
+  border-radius: 999px;
+  border: 1.5px solid transparent;
+  font-family: var(--font-body);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.programme-card__action--danger {
+  border-color: rgba(239,68,68,0.2);
+  background: rgba(239,68,68,0.06);
+  color: #DC2626;
+}
+
+/* ── Section À préparer ── */
+.preparer-section {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.preparer-loading {
+  text-align: center;
+  padding: 40px;
+  font-family: var(--font-body);
+  font-size: 14px;
+  color: var(--color-text-tertiary, #9CA3AF);
+}
+
+.preparer-group {
+  margin-bottom: 8px;
+}
+
+.preparer-group__header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 2px 10px;
+}
+
+.preparer-group__dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.preparer-group__label {
+  font-family: var(--font-body);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  flex: 1;
+}
+
+.preparer-group__action {
+  padding: 5px 12px;
+  border-radius: 999px;
+  border: 1.5px solid rgba(124,58,237,0.25);
+  background: rgba(167,139,250,0.08);
+  font-family: var(--font-body);
+  font-size: 12px;
+  font-weight: 600;
+  color: #7C3AED;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.preparer-tache {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  border-radius: 14px;
+  margin-bottom: 8px;
+  border: 1px solid rgba(0,0,0,0.04);
+}
+
+.preparer-tache__icone {
+  font-size: 18px;
+  flex-shrink: 0;
+  width: 28px;
+  text-align: center;
+}
+
+.preparer-tache__body {
+  flex: 1;
+  min-width: 0;
+}
+
+.preparer-tache__titre {
+  font-family: var(--font-body);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-text-primary, #1F2937);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.preparer-tache__meta {
+  font-family: var(--font-body);
+  font-size: 11px;
+  color: var(--color-text-tertiary, #9CA3AF);
+  margin-top: 2px;
+}
+
+.preparer-tache__done {
+  font-family: var(--font-body);
+  font-size: 13px;
+  font-weight: 700;
+  color: #22C55E;
+  flex-shrink: 0;
+}

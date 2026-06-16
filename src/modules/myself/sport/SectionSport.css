@@ -1,0 +1,48 @@
+/* ── Section Sport ───────────────────────────────────────────────────────────── */
+
+.sport-section {
+  display: flex;
+  flex-direction: column;
+  min-height: 100%;
+}
+
+/* ── Tabs — même style que le reste de l'app ─────────────────────────────── */
+
+.sport-tabs {
+  display: flex;
+  gap: 0;
+  margin: 12px 16px 0;
+  background: #F7F6F4;
+  border-radius: var(--radius-full, 9999px);
+  padding: 4px;
+  flex-shrink: 0;
+}
+
+.sport-tab {
+  flex: 1;
+  padding: 9px 8px;
+  border: none;
+  background: transparent;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #A9A6B8;
+  cursor: pointer;
+  border-radius: var(--radius-full, 9999px);
+  transition: background var(--duration-fast) var(--ease-out),
+              color var(--duration-fast) var(--ease-out);
+  white-space: nowrap;
+  text-align: center;
+}
+
+.sport-tab--active {
+  background: #D2ADEB;
+  color: white;
+  font-weight: 600;
+}
+
+/* ── Vue ─────────────────────────────────────────────────────────────────── */
+
+.sport-view {
+  flex: 1;
+  padding: 16px 16px 80px;
+}

@@ -1,0 +1,364 @@
+/**
+ * FAMILY OS — Typographie
+ * Chargement des polices + classes utilitaires de texte.
+ *
+ * Polices :
+ *   - Cormorant Garamond (display) — via Google Fonts
+ *   - Playfair Display (titres)    — via Google Fonts
+ *   - Manrope (corps)              — via Google Fonts
+ *
+ * Import dans main.tsx :
+ *   import '@styles/typography.css';
+ */
+
+/* ─── Import Google Fonts ─────────────────────────────────────────────────── */
+/*
+ * Chargement via @import CSS pour compatibilité PWA/offline.
+ * Ces polices seront mises en cache par le Service Worker via Workbox
+ * avec la stratégie StaleWhileRevalidate.
+ *
+ * Note : en production, préférer des <link rel="preconnect"> dans index.html
+ * pour améliorer les performances de chargement initial.
+ */
+
+/* ─── Roobert (police principale — auto-hébergée) ─────────────────────────── */
+
+@font-face {
+  font-family: 'Roobert';
+  src: url('../assets/fonts/Roobert-Regular.otf') format('opentype');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Roobert';
+  src: url('../assets/fonts/Roobert-Medium.otf') format('opentype');
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Roobert';
+  src: url('../assets/fonts/Roobert-SemiBold.otf') format('opentype');
+  font-weight: 600;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Roobert';
+  src: url('../assets/fonts/Roobert-Bold.otf') format('opentype');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Roobert';
+  src: url('../assets/fonts/Roobert-Heavy.otf') format('opentype');
+  font-weight: 800;
+  font-style: normal;
+  font-display: swap;
+}
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400;1,500&family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&family=Manrope:wght@300;400;500;600;700;800&display=swap');
+
+
+/* ─── Hiérarchie typographique ────────────────────────────────────────────── */
+
+/*
+ * Tailles et styles des headings HTML natifs.
+ * Correspondent aux usecase UI réels de Family OS.
+ */
+
+h1 {
+  font-family: var(--font-heading);
+  font-size: var(--text-4xl);    /* 34px — titre de module */
+  font-weight: var(--font-weight-bold);
+  letter-spacing: var(--tracking-tight);
+  line-height: var(--leading-tight);
+}
+
+h2 {
+  font-family: var(--font-heading);
+  font-size: var(--text-2xl);    /* 24px — titre de section */
+  font-weight: var(--font-weight-semibold);
+  letter-spacing: var(--tracking-tight);
+  line-height: var(--leading-snug);
+}
+
+h3 {
+  font-family: var(--font-body);
+  font-size: var(--text-xl);     /* 20px — titre de carte */
+  font-weight: var(--font-weight-semibold);
+  letter-spacing: var(--tracking-normal);
+  line-height: var(--leading-snug);
+}
+
+h4 {
+  font-family: var(--font-body);
+  font-size: var(--text-lg);     /* 18px — sous-titre */
+  font-weight: var(--font-weight-medium);
+  letter-spacing: var(--tracking-normal);
+  line-height: var(--leading-snug);
+}
+
+h5 {
+  font-family: var(--font-body);
+  font-size: var(--text-base);   /* 15px — label fort */
+  font-weight: var(--font-weight-semibold);
+  letter-spacing: var(--tracking-normal);
+  line-height: var(--leading-normal);
+}
+
+h6 {
+  font-family: var(--font-body);
+  font-size: var(--text-sm);     /* 13px — micro-label */
+  font-weight: var(--font-weight-semibold);
+  letter-spacing: var(--tracking-wide);
+  line-height: var(--leading-normal);
+}
+
+
+/* ─── Classes utilitaires — famille de police ─────────────────────────────── */
+
+.font-display  { font-family: var(--font-display); }
+.font-heading  { font-family: var(--font-heading); }
+.font-body     { font-family: var(--font-body); }
+.font-mono     { font-family: var(--font-mono); }
+
+
+/* ─── Classes utilitaires — taille ───────────────────────────────────────── */
+
+.text-xs   { font-size: var(--text-xs); }
+.text-sm   { font-size: var(--text-sm); }
+.text-base { font-size: var(--text-base); }
+.text-md   { font-size: var(--text-md); }
+.text-lg   { font-size: var(--text-lg); }
+.text-xl   { font-size: var(--text-xl); }
+.text-2xl  { font-size: var(--text-2xl); }
+.text-3xl  { font-size: var(--text-3xl); }
+.text-4xl  { font-size: var(--text-4xl); }
+.text-5xl  { font-size: var(--text-5xl); }
+.text-6xl  { font-size: var(--text-6xl); }
+
+
+/* ─── Classes utilitaires — poids ─────────────────────────────────────────── */
+
+.font-light     { font-weight: var(--font-weight-light); }
+.font-regular   { font-weight: var(--font-weight-regular); }
+.font-medium    { font-weight: var(--font-weight-medium); }
+.font-semibold  { font-weight: var(--font-weight-semibold); }
+.font-bold      { font-weight: var(--font-weight-bold); }
+.font-extrabold { font-weight: var(--font-weight-extrabold); }
+
+
+/* ─── Classes utilitaires — couleur ──────────────────────────────────────── */
+
+.text-primary   { color: var(--text-primary); }
+.text-secondary { color: var(--text-secondary); }
+.text-tertiary  { color: var(--text-tertiary); }
+.text-disabled  { color: var(--text-disabled); }
+.text-inverse   { color: var(--text-inverse); }
+.text-brand     { color: var(--text-brand); }
+.text-link      { color: var(--text-link); }
+
+.text-success   { color: var(--status-success-text); }
+.text-warning   { color: var(--status-warning-text); }
+.text-danger    { color: var(--status-danger-text); }
+.text-info      { color: var(--status-info-text); }
+
+
+/* ─── Classes utilitaires — alignement ───────────────────────────────────── */
+
+.text-left    { text-align: left; }
+.text-center  { text-align: center; }
+.text-right   { text-align: right; }
+
+
+/* ─── Classes utilitaires — style ────────────────────────────────────────── */
+
+.italic   { font-style: italic; }
+.not-italic { font-style: normal; }
+.uppercase  { text-transform: uppercase; letter-spacing: var(--tracking-caps); }
+.capitalize { text-transform: capitalize; }
+.lowercase  { text-transform: lowercase; }
+
+
+/* ─── Classes utilitaires — troncature ───────────────────────────────────── */
+
+.truncate {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.line-clamp-1,
+.line-clamp-2,
+.line-clamp-3 {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.line-clamp-1 { -webkit-line-clamp: 1; }
+.line-clamp-2 { -webkit-line-clamp: 2; }
+.line-clamp-3 { -webkit-line-clamp: 3; }
+
+
+/* ─── Styles typographiques sémantiques ──────────────────────────────────── */
+
+/*
+ * Ces classes correspondent aux rôles UI réels dans Family OS.
+ * Utiliser ces classes plutôt que les classes utilitaires brutes.
+ */
+
+/* Titre de module (ex. "Cuisine", "Dashboard") */
+.type-module-title {
+  font-family: var(--font-heading);
+  font-size: var(--text-3xl);
+  font-weight: var(--font-weight-bold);
+  letter-spacing: var(--tracking-tight);
+  line-height: var(--leading-tight);
+  color: var(--text-primary);
+}
+
+/* Titre de section dans un module */
+.type-section-title {
+  font-family: var(--font-heading);
+  font-size: var(--text-xl);
+  font-weight: var(--font-weight-semibold);
+  letter-spacing: var(--tracking-tight);
+  line-height: var(--leading-snug);
+  color: var(--text-primary);
+}
+
+/* Titre d'une carte */
+.type-card-title {
+  font-family: var(--font-body);
+  font-size: var(--text-md);
+  font-weight: var(--font-weight-semibold);
+  letter-spacing: var(--tracking-normal);
+  line-height: var(--leading-snug);
+  color: var(--text-primary);
+}
+
+/* Corps de texte standard */
+.type-body {
+  font-family: var(--font-body);
+  font-size: var(--text-base);
+  font-weight: var(--font-weight-regular);
+  line-height: var(--leading-relaxed);
+  color: var(--text-primary);
+}
+
+/* Corps secondaire (descriptions, métadonnées) */
+.type-body-sm {
+  font-family: var(--font-body);
+  font-size: var(--text-sm);
+  font-weight: var(--font-weight-regular);
+  line-height: var(--leading-relaxed);
+  color: var(--text-secondary);
+}
+
+/* Label de formulaire */
+.type-label {
+  font-family: var(--font-body);
+  font-size: var(--text-sm);
+  font-weight: var(--font-weight-semibold);
+  letter-spacing: var(--tracking-wide);
+  line-height: var(--leading-normal);
+  color: var(--text-secondary);
+}
+
+/* Label uppercase (catégories, en-têtes de section) */
+.type-overline {
+  font-family: var(--font-body);
+  font-size: var(--text-xs);
+  font-weight: var(--font-weight-semibold);
+  letter-spacing: var(--tracking-caps);
+  text-transform: uppercase;
+  line-height: var(--leading-normal);
+  color: var(--text-tertiary);
+}
+
+/* Chiffre / métrique (dashboard widget, score) */
+.type-metric {
+  font-family: var(--font-display);
+  font-size: var(--text-5xl);
+  font-weight: var(--font-weight-light);
+  letter-spacing: var(--tracking-tighter);
+  line-height: var(--leading-none);
+  color: var(--text-primary);
+}
+
+.type-metric-sm {
+  font-family: var(--font-display);
+  font-size: var(--text-3xl);
+  font-weight: var(--font-weight-light);
+  letter-spacing: var(--tracking-tight);
+  line-height: var(--leading-none);
+  color: var(--text-primary);
+}
+
+/* Citation / moment fort (module Famille) */
+.type-quote {
+  font-family: var(--font-display);
+  font-style: italic;
+  font-size: var(--text-xl);
+  font-weight: var(--font-weight-light);
+  letter-spacing: var(--tracking-normal);
+  line-height: var(--leading-relaxed);
+  color: var(--text-secondary);
+}
+
+/* Texte arabe (module Religion) */
+.type-arabic {
+  font-family: 'Amiri', 'Traditional Arabic', serif;
+  font-size: var(--text-2xl);
+  line-height: var(--leading-loose);
+  direction: rtl;
+  text-align: right;
+  color: var(--text-primary);
+}
+
+/* Heure / date (widgets Dashboard) */
+.type-time {
+  font-family: var(--font-display);
+  font-size: var(--text-6xl);
+  font-weight: var(--font-weight-light);
+  letter-spacing: var(--tracking-tighter);
+  line-height: var(--leading-none);
+  color: var(--text-primary);
+}
+
+.type-date {
+  font-family: var(--font-body);
+  font-size: var(--text-md);
+  font-weight: var(--font-weight-medium);
+  letter-spacing: var(--tracking-wide);
+  color: var(--text-secondary);
+}
+
+/* Navigation item */
+.type-nav-label {
+  font-family: var(--font-body);
+  font-size: var(--text-xs);
+  font-weight: var(--font-weight-medium);
+  letter-spacing: var(--tracking-wide);
+  line-height: var(--leading-none);
+}
+
+/* Texte de bouton */
+.type-button {
+  font-family: var(--font-body);
+  font-size: var(--text-base);
+  font-weight: var(--font-weight-semibold);
+  letter-spacing: var(--tracking-wide);
+  line-height: var(--leading-none);
+}
+
+.type-button-sm {
+  font-family: var(--font-body);
+  font-size: var(--text-sm);
+  font-weight: var(--font-weight-semibold);
+  letter-spacing: var(--tracking-wide);
+  line-height: var(--leading-none);
+}

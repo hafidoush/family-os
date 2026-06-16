@@ -1,0 +1,157 @@
+.vue-nutrition {
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.vue-nutrition__title { font-size: 22px; font-weight: 800; }
+
+.nutr-modes {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+}
+
+.nutr-mode {
+  background: var(--bp-card);
+  border: 2px solid var(--bp-border);
+  border-radius: var(--bp-radius);
+  padding: 16px;
+  cursor: pointer;
+  text-align: center;
+  transition: all 0.15s;
+}
+
+.nutr-mode--active {
+  border-color: var(--bp-purple-mid);
+  background: linear-gradient(135deg, rgba(167,139,250,0.12), rgba(244,114,182,0.08));
+}
+
+.nutr-mode__label { font-size: 14px; font-weight: 700; color: var(--bp-text); margin-bottom: 4px; }
+.nutr-mode__desc { font-size: 11px; color: var(--bp-muted); margin-bottom: 8px; }
+.nutr-mode__kcal { font-size: 18px; font-weight: 800; color: var(--bp-purple-deep); }
+
+.nutr-card {
+  background: var(--bp-card);
+  border-radius: var(--bp-radius);
+  padding: 20px;
+  border: 1px solid var(--bp-border);
+}
+
+.nutr-card__title { font-size: 16px; font-weight: 700; margin-bottom: 16px; }
+
+.nutr-totals {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+.nutr-total { text-align: center; }
+.nutr-total__val { font-size: 20px; font-weight: 800; color: var(--bp-purple-deep); }
+.nutr-total__label { font-size: 11px; color: var(--bp-muted); }
+
+.nutr-macro-bar {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 20px;
+}
+
+.nutr-macro-row { display: flex; align-items: center; gap: 10px; }
+.nutr-macro-row__label { width: 80px; font-size: 12px; font-weight: 600; color: var(--bp-muted); }
+.nutr-macro-row__bar { flex: 1; height: 8px; background: var(--bp-border); border-radius: 100px; overflow: hidden; }
+.nutr-macro-row__fill { height: 100%; border-radius: 100px; transition: width 0.4s; }
+.nutr-macro-row__val { width: 60px; text-align: right; font-size: 12px; color: var(--bp-text); }
+
+.nutr-foods-list { display: flex; flex-direction: column; gap: 8px; margin-bottom: 14px; }
+
+.nutr-food-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  background: var(--bp-bg);
+  border-radius: var(--bp-radius-sm);
+}
+
+.nutr-food-item__name { flex: 1; font-size: 13px; font-weight: 600; }
+.nutr-food-item__kcal { font-size: 12px; color: var(--bp-purple-deep); font-weight: 700; }
+.nutr-food-item__macros { font-size: 11px; color: var(--bp-muted); }
+
+.nutr-food-del {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--bp-muted);
+  font-size: 16px;
+  padding: 2px 4px;
+}
+
+.nutr-add-form {
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr 1fr 1fr auto;
+  gap: 8px;
+  align-items: center;
+}
+
+.nutr-add-form input {
+  border: 1.5px solid var(--bp-border);
+  border-radius: 8px;
+  padding: 8px 10px;
+  font-size: 13px;
+  background: var(--bp-bg);
+  color: var(--bp-text);
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.nutr-add-form input:focus { outline: none; border-color: var(--bp-purple-mid); }
+
+.nutr-add-btn {
+  background: var(--bp-purple-mid);
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 8px 14px;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+/* Eau */
+.nutr-water { display: flex; flex-direction: column; gap: 12px; }
+
+.nutr-water__display {
+  font-size: 32px;
+  font-weight: 800;
+  color: var(--bp-cyan-deep);
+  text-align: center;
+}
+
+.nutr-water__bar { height: 12px; background: var(--bp-border); border-radius: 100px; overflow: hidden; }
+.nutr-water__fill { height: 100%; background: linear-gradient(90deg, var(--bp-cyan), var(--bp-cyan-deep)); border-radius: 100px; transition: width 0.4s; }
+
+.nutr-water__btns { display: flex; gap: 8px; justify-content: center; }
+
+.nutr-water__btn {
+  background: var(--bp-bg);
+  border: 1.5px solid var(--bp-border);
+  border-radius: 10px;
+  padding: 10px 18px;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  color: var(--bp-cyan-deep);
+  transition: background 0.15s;
+}
+
+.nutr-water__btn:hover { background: rgba(103,232,249,0.15); }
+
+@media (max-width: 767px) {
+  .nutr-modes { grid-template-columns: 1fr; }
+  .nutr-add-form { grid-template-columns: 1fr 1fr; }
+  .nutr-totals { grid-template-columns: repeat(2, 1fr); }
+}

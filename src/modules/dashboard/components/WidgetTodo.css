@@ -1,0 +1,418 @@
+/* ═══════════════════════════════════════════════════════════════
+   Widget Missions du jour — Design exact ThriveEcho
+   Couleur : jaune-orangé  hsl(35,92%,58%) → hsl(24,88%,54%)
+   ═══════════════════════════════════════════════════════════════ */
+
+:root {
+  --mission-orange:      hsl(262, 38%, 87%);
+  --mission-orange-dark: hsl(262, 30%, 91%);
+  --mission-text:        hsl(262, 42%, 20%);
+  --radius-blob:         22px;
+}
+
+/* ── Conteneur pleine largeur ─────────────────────────────────── */
+
+.widget-missions {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  background: transparent;
+  border: none;
+  padding: 0;
+}
+
+/* ── Header ───────────────────────────────────────────────────── */
+
+.missions-header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  padding: 0 2px var(--space-3, 12px);
+}
+
+.missions-header__title {
+  font-family: var(--font-display, system-ui);
+  font-size: 17px;
+  font-weight: 700;
+  color: var(--text-primary);
+  letter-spacing: -0.02em;
+}
+
+.missions-header__counter {
+  font-size: var(--text-sm, 14px);
+  font-weight: 500;
+  color: var(--text-tertiary);
+  font-family: var(--font-body);
+}
+
+.missions-header__done {
+  color: hsl(35, 70%, 40%);
+  font-weight: 700;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   BANDE DES JOURS — pills individuelles style ThriveEcho
+   ═══════════════════════════════════════════════════════════════ */
+
+.missions-week {
+  display: flex;
+  gap: 6px;
+  position: relative;
+  z-index: 2;
+  margin-bottom: 6px;
+}
+
+/* ── Pill de base — portrait, 4 coins ronds, style ThriveEcho ── */
+
+.day-pill {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  padding: 10px 4px 12px;
+  border: none;
+  background: #F0EFEB;
+  /* 4 coins arrondis — portrait */
+  border-radius: 14px;
+  cursor: pointer;
+  position: relative;
+  z-index: 1;
+  transition: transform 0.12s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.day-pill:hover:not(.day-pill--selected) {
+  transform: translateY(-2px);
+}
+.day-pill:active { transform: scale(0.95); }
+.day-pill--selected:active,
+.day-pill--selected:focus {
+  transform: none;
+  transition: none;
+  outline: none;
+}
+
+.day-pill__label {
+  font-family: var(--font-body);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: hsl(240, 6%, 55%);
+  line-height: 1;
+}
+
+.day-pill__num {
+  font-family: var(--font-display, system-ui);
+  font-size: 17px;
+  font-weight: 800;
+  color: hsl(240, 12%, 16%);
+  line-height: 1;
+}
+
+/* ── Aujourd'hui ──────────────────────────────────────────────── */
+
+.day-pill--today .day-pill__num {
+  color: hsl(262, 50%, 62%);
+}
+
+/* ── Jour SÉLECTIONNÉ ─────────────────────────────────────────── */
+.day-pill--selected {
+  background: var(--mission-orange);
+  border-radius: 24px 24px 0 0;
+  z-index: 10;
+  margin-bottom: -6px;
+  padding-bottom: calc(12px + 6px);
+  overflow: visible;
+  position: relative;
+}
+
+.day-pill--selected .day-pill__label { color: hsl(262, 38%, 42%); opacity: 1; }
+.day-pill--selected .day-pill__num   { color: hsl(262, 45%, 22%); font-weight: 900; }
+
+/* Raccords concaves : éléments transparents avec border-radius + box-shadow.
+   Le shadow orange remplit la jonction, le border-radius découpe la courbe concave. */
+.day-pill--selected::before,
+.day-pill--selected::after {
+  content: '';
+  position: absolute;
+  bottom: -3px;
+  width: 32px;
+  height: 32px;
+  background: transparent;
+  pointer-events: none;
+  z-index: 11;
+}
+
+.day-pill--selected::before {
+  left: -25px;
+  border-bottom-right-radius: 32px;
+}
+
+/* Bords gauche/droit : le raccord déborderait hors du widget.
+   On supprime le pseudo-element ET on carre le coin de la card pour éviter le trou. */
+.day-pill--selected:first-child::before { display: none; }
+.day-pill--selected:last-child::after   { display: none; }
+
+.missions--edge-left  .missions-card { border-top-left-radius:  0; }
+.missions--edge-right .missions-card { border-top-right-radius: 0; }
+
+.day-pill--selected::after {
+  right: -25px;
+  border-bottom-left-radius: 32px;
+}
+
+
+/* ═══════════════════════════════════════════════════════════════
+   CARTE MISSIONS — bulle organique
+   ═══════════════════════════════════════════════════════════════ */
+
+.missions-card {
+  background:
+    radial-gradient(ellipse 75% 60% at 100% 100%, hsla(38, 82%, 84%, 0.72) 0%, transparent 62%),
+    var(--mission-orange);
+  border-radius: var(--radius-blob);
+  padding: var(--space-4, 16px) var(--space-4, 16px) var(--space-3, 12px);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2, 8px);
+  min-height: 110px;
+  position: relative;
+  z-index: 1;
+}
+
+/* ── Liste des missions ───────────────────────────────────────── */
+
+.missions-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+/* ── Séparateur accompli ──────────────────────────────────────── */
+
+.missions-sep {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-1) 0;
+}
+
+.missions-sep::before,
+.missions-sep::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: rgba(0,0,0,0.12);
+}
+
+.missions-sep span {
+  font-size: 10px;
+  font-weight: 600;
+  color: rgba(0,0,0,0.45);
+  font-family: var(--font-body);
+  white-space: nowrap;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+/* ── Ligne de mission ─────────────────────────────────────────── */
+
+.mission-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 9px var(--space-2, 8px);
+  border-radius: 12px;
+  transition: background 0.12s ease;
+}
+
+.mission-row:hover { background: rgba(0,0,0,0.06); }
+.mission-row--done { opacity: 0.5; }
+
+.mission-row__check {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  border: 2.5px solid rgba(0,0,0,0.25);
+  background: transparent;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  padding: 0;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+.mission-row--done .mission-row__check {
+  background: rgba(0,0,0,0.15);
+  border-color: transparent;
+}
+
+.mission-row__tick {
+  color: var(--mission-orange);
+  font-size: 13px;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.mission-row__titre {
+  flex: 1;
+  font-family: var(--font-body);
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--mission-text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
+}
+
+.mission-row--done .mission-row__titre { text-decoration: line-through; }
+
+.mission-row__heure {
+  font-size: 11px;
+  font-weight: 500;
+  color: rgba(0,0,0,0.4);
+  flex-shrink: 0;
+  font-variant-numeric: tabular-nums;
+  font-family: var(--font-body);
+}
+
+/* ── État vide ────────────────────────────────────────────────── */
+
+.missions-card__empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: var(--space-5, 20px) 0 var(--space-3, 12px);
+  text-align: center;
+}
+
+.missions-card__empty-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: hsl(262, 42%, 48%);
+  opacity: 0.65;
+}
+.missions-card__empty-icon svg {
+  width: 30px;
+  height: 30px;
+}
+
+.missions-card__empty-text {
+  font-family: var(--font-body);
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--mission-text);
+  margin: 0;
+}
+
+/* ── Skeletons ────────────────────────────────────────────────── */
+
+.missions-card__loading {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: var(--space-2) 0;
+}
+
+.missions-skel {
+  height: 14px;
+  border-radius: 6px;
+  background: rgba(0,0,0,0.12);
+  animation: skel-pulse 1.3s ease infinite alternate;
+}
+
+@keyframes skel-pulse {
+  from { opacity: 0.3; }
+  to   { opacity: 0.7; }
+}
+
+/* ── Bouton ajouter ───────────────────────────────────────────── */
+
+.missions-add-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 9px var(--space-2, 8px);
+  border: none;
+  background: hsla(0, 0%, 100%, 0.45);
+  border-radius: 999px;
+  cursor: pointer;
+  font-family: var(--font-body);
+  font-size: 14px;
+  font-weight: 500;
+  color: hsl(262, 38%, 42%);
+  transition: background 0.14s ease;
+  -webkit-tap-highlight-color: transparent;
+  margin-top: 2px;
+}
+
+.missions-add-btn:hover { background: hsla(0, 0%, 100%, 0.72); }
+
+.missions-add-btn__plus {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: hsla(262, 55%, 55%, 0.18);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  font-weight: 600;
+  color: hsl(262, 48%, 44%);
+  flex-shrink: 0;
+  line-height: 1;
+}
+
+/* ── Input ajout rapide ───────────────────────────────────────── */
+
+.missions-add-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin-top: 2px;
+}
+
+.missions-add-input {
+  flex: 1;
+  border: 1.5px solid rgba(0,0,0,0.15);
+  border-radius: 12px;
+  padding: 9px 14px;
+  font-family: var(--font-body);
+  font-size: 14px;
+  background: rgba(255,255,255,0.4);
+  color: var(--mission-text);
+  outline: none;
+}
+
+.missions-add-input::placeholder { color: rgba(0,0,0,0.35); }
+
+.missions-add-confirm {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  border: none;
+  background: var(--mission-text);
+  color: var(--mission-orange);
+  font-size: 17px;
+  font-weight: 800;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: transform 0.15s ease;
+}
+
+.missions-add-confirm:active { transform: scale(0.9); }

@@ -1,0 +1,405 @@
+/* ── Module Pensées ─────────────────────────────────────────────────────────── */
+
+.pensees-module {
+  padding: 20px 16px 120px;
+  max-width: 680px;
+  margin: 0 auto;
+}
+
+.pensees-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 20px;
+}
+
+.pensees-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--text-primary, #1A1A2E);
+  letter-spacing: -0.02em;
+  margin: 0;
+}
+
+.pensees-subtitle {
+  font-size: 0.85rem;
+  color: var(--color-muted, #7A7A9A);
+  margin: 4px 0 0;
+}
+
+.pensees-badge {
+  background: #DDD6FE;
+  color: #5B21B6;
+  border-radius: 999px;
+  padding: 2px 10px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+/* ── Filtres ── */
+.pensees-filtres {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 20px;
+}
+
+.pensees-filtre {
+  padding: 7px 16px;
+  border-radius: var(--radius-full, 9999px);
+  border: 1.5px solid var(--border-default, #d1d5db);
+  background: var(--surface-1, #fff);
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: var(--text-secondary, #6B7280);
+  cursor: pointer;
+  transition: background var(--duration-fast, 100ms) ease,
+              color var(--duration-fast, 100ms) ease,
+              border-color var(--duration-fast, 100ms) ease;
+}
+
+.pensees-filtre--active {
+  background: #D2ADEB;
+  border-color: transparent;
+  color: #fff;
+  font-weight: 600;
+}
+
+/* ── Groupes ── */
+.pensees-groupe {
+  margin-bottom: 20px;
+}
+
+.pensees-groupe__header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--cat-color, #DDD6FE) 20%, white);
+  margin-bottom: 8px;
+}
+
+.pensees-groupe__emoji { font-size: 1rem; }
+
+.pensees-groupe__label {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--color-text, #1A1A2E);
+  flex: 1;
+}
+
+.pensees-groupe__count {
+  font-size: 0.75rem;
+  color: var(--color-muted, #7A7A9A);
+  background: #F0EFEB;
+  border-radius: 999px;
+  padding: 1px 8px;
+}
+
+/* ── Carte pensée ── */
+.pensees-groupe__list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.pensee-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 12px 14px;
+  background: rgba(255,255,255,0.7);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255,255,255,0.6);
+  border-left: 3px solid var(--cat-color, #DDD6FE);
+  border-radius: 10px;
+  transition: opacity 0.2s ease;
+}
+
+.pensee-card--traitee {
+  opacity: 0.5;
+}
+
+.pensee-card--traitee .pensee-card__contenu {
+  text-decoration: line-through;
+}
+
+.pensee-card__body { flex: 1; min-width: 0; }
+
+.pensee-card__contenu {
+  font-size: 0.9rem;
+  color: var(--color-text, #1A1A2E);
+  margin: 0 0 4px;
+  line-height: 1.4;
+}
+
+.pensee-card__hints {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.pensee-card__action,
+.pensee-card__date {
+  font-size: 0.75rem;
+  color: var(--color-muted, #7A7A9A);
+  background: rgba(240,236,255,0.6);
+  padding: 2px 8px;
+  border-radius: 6px;
+}
+
+.pensee-card__actions {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+.pensee-card__btn {
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  border: none;
+  background: rgba(240,236,255,0.5);
+  cursor: pointer;
+  font-size: 0.75rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s ease;
+}
+
+.pensee-card__btn--traiter:hover { background: #DCFCE7; }
+.pensee-card__btn--suppr:hover   { background: #FEE2E2; }
+
+/* ── Boutons transformation (page complète) ── */
+.pensee-card__transform {
+  display: flex;
+  gap: 5px;
+  padding-top: 8px;
+  border-top: 1px solid rgba(180,160,210,0.12);
+}
+
+.pensee-card__chip {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: 999px;
+  border: 1px solid;
+  cursor: pointer;
+  transition: opacity 0.12s ease;
+  white-space: nowrap;
+  flex: 1;
+}
+.pensee-card__chip:active { opacity: 0.7; }
+
+.pensee-card__chip--tache {
+  color: hsl(262, 45%, 44%);
+  border-color: hsl(262, 40%, 80%);
+  background: hsl(262, 55%, 96%);
+}
+.pensee-card__chip--achat {
+  color: hsl(142, 45%, 32%);
+  border-color: hsl(142, 40%, 80%);
+  background: hsl(142, 50%, 95%);
+}
+.pensee-card__chip--cal {
+  color: hsl(208, 50%, 36%);
+  border-color: hsl(208, 45%, 80%);
+  background: hsl(208, 60%, 95%);
+}
+
+.pensee-card__chip--active {
+  font-weight: 700;
+  background: rgba(99,149,221,0.18);
+  border-color: rgba(99,149,221,0.5);
+  color: #1E3A5F;
+}
+
+/* ── Saisie modale ── */
+.pensees-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.3);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  z-index: 800;
+  display: flex;
+  align-items: flex-end;
+}
+
+.pensees-modal {
+  width: 100%;
+  max-width: 680px;
+  margin: 0 auto;
+  background: rgba(255,255,255,0.92);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border-radius: 20px 20px 0 0;
+  padding: 16px 20px 32px;
+  border: 1px solid rgba(255,255,255,0.8);
+}
+
+.pensees-modal__handle {
+  width: 36px;
+  height: 4px;
+  border-radius: 999px;
+  background: rgba(180,160,210,0.4);
+  margin: 0 auto 16px;
+}
+
+.pensees-modal__hint {
+  font-size: 0.9rem;
+  color: var(--color-muted, #7A7A9A);
+  text-align: center;
+  margin-bottom: 12px;
+}
+
+.pensees-saisie {
+  width: 100%;
+  background: rgba(250,248,245,0.8);
+  border: 1.5px solid rgba(180,160,210,0.3);
+  border-radius: 12px;
+  padding: 12px 14px;
+  font-size: 0.95rem;
+  font-family: inherit;
+  color: var(--color-text, #1A1A2E);
+  resize: none;
+  line-height: 1.5;
+  box-sizing: border-box;
+  outline: none;
+  transition: border-color 0.15s ease;
+}
+
+.pensees-saisie:focus {
+  border-color: rgba(150,120,200,0.6);
+}
+
+.pensees-auto-detect {
+  font-size: 0.8rem;
+  color: #6D28D9;
+  margin: 8px 0;
+  padding: 6px 10px;
+  background: rgba(221,214,254,0.3);
+  border-radius: 8px;
+}
+
+.pensees-categories {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 12px 0;
+}
+
+.pensees-cat-btn {
+  padding: 5px 12px;
+  border-radius: 999px;
+  border: 1.5px solid rgba(180,160,210,0.3);
+  background: transparent;
+  font-size: 0.78rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  color: var(--color-text, #1A1A2E);
+}
+
+.pensees-cat-btn--active {
+  background: color-mix(in srgb, var(--cat-color, #DDD6FE) 35%, white);
+  border-color: color-mix(in srgb, var(--cat-color, #DDD6FE) 70%, transparent);
+}
+
+.pensees-modal__actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 16px;
+}
+
+.pensees-btn {
+  flex: 1;
+  padding: 12px;
+  border-radius: 12px;
+  border: none;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.pensees-btn--cancel {
+  background: rgba(240,236,255,0.6);
+  color: var(--color-muted, #7A7A9A);
+}
+
+.pensees-btn--save {
+  background: #6F7ED6;
+  color: white;
+}
+
+.pensees-btn--save:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* ── FAB ── */
+.pensees-fab {
+  position: fixed;
+  bottom: 100px;
+  right: 20px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 20px;
+  background: #6F7ED6;
+  color: white;
+  border: none;
+  border-radius: 999px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform 0.2s cubic-bezier(0.34,1.56,0.64,1);
+  z-index: 200;
+}
+
+.pensees-fab:active { transform: scale(0.94); }
+
+.pensees-fab__icon { font-size: 1.1rem; }
+
+/* ── Empty / Skeleton ── */
+.pensees-empty {
+  text-align: center;
+  padding: 48px 20px;
+}
+
+.pensees-empty__icon {
+  font-size: 3rem;
+  display: block;
+  margin-bottom: 12px;
+}
+
+.pensees-empty__title {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--color-text, #1A1A2E);
+  margin-bottom: 6px;
+}
+
+.pensees-empty__sub {
+  font-size: 0.85rem;
+  color: var(--color-muted, #7A7A9A);
+}
+
+.pensees-skeleton {
+  height: 80px;
+  background: linear-gradient(90deg, rgba(240,236,255,0.5) 25%, rgba(255,255,255,0.6) 50%, rgba(240,236,255,0.5) 75%);
+  background-size: 200% 100%;
+  border-radius: 12px;
+  animation: pensees-shimmer 1.5s infinite;
+  margin-bottom: 12px;
+}
+
+@keyframes pensees-shimmer {
+  0%   { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}

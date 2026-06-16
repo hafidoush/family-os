@@ -1,0 +1,161 @@
+.vue-seance {
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.seance-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--bp-dark);
+  border-radius: var(--bp-radius);
+  padding: 20px;
+  color: #fff;
+}
+
+.seance-header__jour {
+  font-size: 20px;
+  font-weight: 800;
+}
+
+.seance-header__sub {
+  font-size: 13px;
+  color: rgba(255,255,255,0.5);
+  margin-top: 4px;
+}
+
+.seance-header__cancel {
+  background: rgba(255,255,255,0.1);
+  border: none;
+  border-radius: 8px;
+  color: rgba(255,255,255,0.7);
+  padding: 8px 14px;
+  cursor: pointer;
+  font-size: 13px;
+  transition: background 0.15s;
+}
+
+.seance-header__cancel:hover { background: rgba(255,255,255,0.18); }
+
+.seance-progress {
+  height: 8px;
+  background: var(--bp-border);
+  border-radius: 100px;
+  overflow: hidden;
+}
+
+.seance-progress__fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--bp-pink-deep), var(--bp-purple-mid));
+  border-radius: 100px;
+  transition: width 0.4s ease;
+}
+
+.seance-exercises {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.seance-ex-card {
+  background: var(--bp-card);
+  border-radius: var(--bp-radius);
+  padding: 20px;
+  border: 1px solid var(--bp-border);
+}
+
+.seance-ex-card__name {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--bp-text);
+  margin-bottom: 12px;
+}
+
+.seance-sets-header {
+  display: grid;
+  grid-template-columns: 36px 1fr 1fr 36px;
+  gap: 8px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--bp-muted);
+  text-align: center;
+  margin-bottom: 6px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.seance-set-row {
+  display: grid;
+  grid-template-columns: 36px 1fr 1fr 36px;
+  gap: 8px;
+  align-items: center;
+  padding: 6px 0;
+  border-radius: 8px;
+  transition: background 0.15s;
+}
+
+.seance-set-row--done { background: rgba(167,139,250,0.08); }
+
+.seance-set-row__num {
+  text-align: center;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--bp-muted);
+}
+
+.seance-set-row__input {
+  border: 1.5px solid var(--bp-border);
+  border-radius: 8px;
+  padding: 7px 10px;
+  font-size: 14px;
+  text-align: center;
+  background: var(--bp-bg);
+  color: var(--bp-text);
+  width: 100%;
+  box-sizing: border-box;
+  transition: border-color 0.15s;
+}
+
+.seance-set-row__input:focus {
+  outline: none;
+  border-color: var(--bp-purple-mid);
+}
+
+.seance-set-check {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 2px solid var(--bp-border);
+  background: none;
+  cursor: pointer;
+  font-size: 15px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s;
+  margin: auto;
+}
+
+.seance-set-check--done {
+  background: var(--bp-purple-mid);
+  border-color: var(--bp-purple-mid);
+  color: #fff;
+}
+
+.seance-finish-btn {
+  background: #6F7ED6;
+  color: #fff;
+  border: none;
+  border-radius: var(--bp-radius);
+  padding: 18px;
+  font-size: 16px;
+  font-weight: 700;
+  cursor: pointer;
+  width: 100%;
+  margin-top: 8px;
+  transition: opacity 0.15s;
+}
+
+.seance-finish-btn:disabled { opacity: 0.6; cursor: not-allowed; }

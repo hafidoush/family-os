@@ -1,0 +1,455 @@
+/**
+ * FAMILY OS — DatePicker.css
+ * Calendrier custom avec glassmorphism.
+ * Tokens uniquement — aucune valeur brute.
+ */
+
+/* ─── Wrapper ─────────────────────────────────────────────────────────────── */
+
+.fos-dp-wrapper {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1-5, 6px);
+  width: 100%;
+}
+
+/* ─── Label ───────────────────────────────────────────────────────────────── */
+
+.fos-dp__label {
+  font-family: var(--font-body);
+  font-size: var(--text-sm);
+  font-weight: var(--font-weight-medium);
+  line-height: var(--leading-tight);
+  color: var(--text-secondary);
+  letter-spacing: 0.01em;
+  transition: color var(--duration-fast) var(--ease-out);
+  cursor: pointer;
+}
+
+.fos-dp--open   .fos-dp__label { color: var(--text-brand); }
+.fos-dp--error  .fos-dp__label { color: var(--status-danger-text); }
+.fos-dp--success .fos-dp__label { color: var(--status-success-text); }
+.fos-dp--disabled .fos-dp__label { color: var(--text-disabled); cursor: not-allowed; }
+
+/* ─── Field wrap ──────────────────────────────────────────────────────────── */
+
+.fos-dp__field-wrap {
+  position: relative;
+}
+
+/* ─── Trigger (bouton-champ) ──────────────────────────────────────────────── */
+
+.fos-dp__trigger {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  background: var(--input-bg);
+  border: 1.5px solid var(--input-border);
+  border-radius: var(--radius-input, var(--radius-md));
+  color: var(--text-primary);
+  font-family: var(--font-body);
+  cursor: pointer;
+  text-align: left;
+  transition: var(--transition-interactive);
+}
+
+/* Tailles */
+.fos-dp--sm .fos-dp__trigger {
+  height: var(--height-input-sm, 36px);
+  padding: 0 var(--space-3);
+  font-size: var(--text-sm);
+}
+.fos-dp--md .fos-dp__trigger {
+  height: var(--height-input, 44px);
+  padding: 0 var(--space-3-5, 14px);
+  font-size: var(--text-base);
+}
+.fos-dp--lg .fos-dp__trigger {
+  height: var(--height-input-lg, 52px);
+  padding: 0 var(--space-4);
+  font-size: var(--text-lg);
+}
+
+/* Variants */
+.fos-dp--filled .fos-dp__trigger {
+  background: var(--color-lavender-50);
+  border-color: transparent;
+}
+.fos-dp--ghost .fos-dp__trigger {
+  background: transparent;
+  border-color: transparent;
+  border-bottom-color: var(--border-default);
+  border-radius: 0;
+}
+
+/* États */
+.fos-dp--open .fos-dp__trigger,
+.fos-dp__trigger:focus-visible {
+  outline: none;
+  background: var(--input-focus-bg);
+  border-color: var(--input-focus-border);
+}
+
+.fos-dp--error .fos-dp__trigger {
+  border-color: var(--status-danger-icon);
+  background: var(--status-danger-bg);
+}
+.fos-dp--success .fos-dp__trigger {
+  border-color: var(--status-success-icon);
+  background: var(--status-success-bg);
+}
+.fos-dp--disabled .fos-dp__trigger {
+  background: var(--bg-sunken);
+  border-color: var(--border-subtle);
+  color: var(--text-disabled);
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+/* Icône calendrier */
+.fos-dp__calendar-icon {
+  display: flex;
+  align-items: center;
+  color: var(--text-tertiary);
+  flex-shrink: 0;
+  transition: color var(--duration-fast) var(--ease-out);
+}
+.fos-dp--open .fos-dp__calendar-icon    { color: var(--primary); }
+.fos-dp--error .fos-dp__calendar-icon   { color: var(--status-danger-icon); }
+.fos-dp--success .fos-dp__calendar-icon { color: var(--status-success-icon); }
+
+/* Valeur / placeholder */
+.fos-dp__value {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.fos-dp__value--placeholder {
+  color: var(--input-placeholder);
+}
+
+/* Clear button */
+.fos-dp__clear {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  border-radius: var(--radius-full);
+  color: var(--text-tertiary);
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: var(--transition-interactive);
+}
+.fos-dp__clear:hover {
+  color: var(--text-primary);
+  background: var(--color-neutral-200);
+}
+
+/* Chevron */
+.fos-dp__chevron {
+  display: flex;
+  align-items: center;
+  color: var(--text-tertiary);
+  flex-shrink: 0;
+  transition: transform var(--duration-normal) var(--ease-spring), color var(--duration-fast) var(--ease-out);
+}
+.fos-dp--open .fos-dp__chevron {
+  transform: rotate(180deg);
+  color: var(--primary);
+}
+
+/* ─── Popover ─────────────────────────────────────────────────────────────── */
+
+.fos-dp__popover {
+  position: absolute;
+  top: calc(100% + var(--space-2));
+  left: 0;
+  z-index: var(--z-dropdown);
+  width: 296px;
+
+  background: var(--glass-bg-strong);
+  backdrop-filter: var(--glass-blur-strong);
+  -webkit-backdrop-filter: var(--glass-blur-strong);
+  border: 1px solid var(--glass-border-strong);
+  border-radius: var(--radius-xl, 16px);
+  padding: var(--space-4);
+
+  animation: fos-dp-popover-in var(--duration-normal) var(--ease-spring);
+  transform-origin: top left;
+}
+
+@keyframes fos-dp-popover-in {
+  from {
+    opacity: 0;
+    transform: scale(0.95) translateY(-6px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+/* Positionnement automatique si débordement à droite */
+@media (max-width: 480px) {
+  .fos-dp__popover {
+    width: calc(100vw - var(--space-8, 32px));
+    left: 50%;
+    transform: translateX(-50%);
+  }
+  @keyframes fos-dp-popover-in {
+    from { opacity: 0; transform: translateX(-50%) translateY(-6px) scale(0.96); }
+    to   { opacity: 1; transform: translateX(-50%) translateY(0) scale(1); }
+  }
+}
+
+/* ─── Navigation mois ─────────────────────────────────────────────────────── */
+
+.fos-dp__nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--space-3);
+}
+
+.fos-dp__nav-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-md);
+  border: none;
+  background: transparent;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: var(--transition-interactive);
+  flex-shrink: 0;
+}
+.fos-dp__nav-btn:hover {
+  background: var(--color-lavender-100);
+  color: var(--primary);
+}
+.fos-dp__nav-btn:active {
+  transform: scale(0.92);
+}
+
+.fos-dp__month-label {
+  font-family: var(--font-display);
+  font-size: var(--text-sm);
+  font-weight: var(--font-weight-semibold);
+  color: var(--text-primary);
+  text-transform: capitalize;
+  letter-spacing: 0.02em;
+}
+
+/* ─── Grille calendrier ───────────────────────────────────────────────────── */
+
+.fos-dp__grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 2px;
+}
+
+/* En-têtes jours */
+.fos-dp__day-header {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 32px;
+  font-family: var(--font-body);
+  font-size: var(--text-xs);
+  font-weight: var(--font-weight-semibold);
+  color: var(--text-tertiary);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  margin-bottom: var(--space-1);
+}
+
+/* Boutons jours */
+.fos-dp__day {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  aspect-ratio: 1;
+  border: none;
+  border-radius: var(--radius-md);
+  background: transparent;
+  color: var(--text-primary);
+  font-family: var(--font-body);
+  font-size: var(--text-sm);
+  font-weight: var(--font-weight-regular);
+  cursor: pointer;
+  transition: var(--transition-interactive);
+  padding: 0;
+}
+
+.fos-dp__day:hover:not(.fos-dp__day--disabled):not(.fos-dp__day--selected) {
+  background: var(--color-lavender-100);
+  color: var(--primary);
+}
+
+.fos-dp__day:active:not(.fos-dp__day--disabled) {
+  transform: scale(0.88);
+}
+
+/* Hors du mois courant */
+.fos-dp__day--outside {
+  color: var(--text-disabled);
+  opacity: 0.5;
+}
+
+/* Aujourd'hui */
+.fos-dp__day--today .fos-dp__day-inner {
+  font-weight: var(--font-weight-semibold);
+  color: var(--primary);
+}
+
+.fos-dp__today-dot {
+  position: absolute;
+  bottom: 3px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 4px;
+  height: 4px;
+  border-radius: var(--radius-full);
+  background: var(--primary);
+  opacity: 0.7;
+}
+
+/* Sélectionné */
+.fos-dp__day--selected {
+  background: var(--primary);
+  color: var(--primary-text);
+  font-weight: var(--font-weight-semibold);
+}
+.fos-dp__day--selected:hover {
+  background: var(--primary-dark);
+  color: var(--primary-text);
+}
+.fos-dp__day--selected .fos-dp__today-dot {
+  background: var(--primary-text);
+  opacity: 0.6;
+}
+
+/* Disabled */
+.fos-dp__day--disabled {
+  color: var(--text-disabled);
+  cursor: not-allowed;
+  opacity: 0.4;
+}
+
+/* Focus clavier */
+.fos-dp__day--focused:not(.fos-dp__day--selected) {
+  outline: 2px solid var(--primary);
+  outline-offset: 1px;
+}
+
+.fos-dp__day-inner {
+  line-height: 1;
+}
+
+/* ─── Sélecteur d'heure ───────────────────────────────────────────────────── */
+
+.fos-dp__time {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding-top: var(--space-3);
+  margin-top: var(--space-3);
+  border-top: 1px solid var(--border-subtle);
+}
+
+.fos-dp__time-label {
+  font-family: var(--font-body);
+  font-size: var(--text-xs);
+  font-weight: var(--font-weight-medium);
+  color: var(--text-tertiary);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  flex-shrink: 0;
+}
+
+.fos-dp__time-inputs {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  flex: 1;
+}
+
+.fos-dp__time-input {
+  width: 44px;
+  height: 34px;
+  text-align: center;
+  font-family: var(--font-body);
+  font-size: var(--text-sm);
+  font-weight: var(--font-weight-medium);
+  color: var(--text-primary);
+  background: var(--input-bg);
+  border: 1.5px solid var(--input-border);
+  border-radius: var(--radius-md);
+  outline: none;
+  -moz-appearance: textfield;
+  transition: var(--transition-interactive);
+}
+.fos-dp__time-input::-webkit-outer-spin-button,
+.fos-dp__time-input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+.fos-dp__time-input:focus {
+  border-color: var(--primary);
+}
+
+.fos-dp__time-sep {
+  font-family: var(--font-body);
+  font-size: var(--text-sm);
+  font-weight: var(--font-weight-semibold);
+  color: var(--text-tertiary);
+}
+
+.fos-dp__time-confirm {
+  padding: var(--space-1-5, 6px) var(--space-3);
+  background: var(--primary);
+  color: var(--primary-text);
+  border: none;
+  border-radius: var(--radius-md);
+  font-family: var(--font-body);
+  font-size: var(--text-xs);
+  font-weight: var(--font-weight-semibold);
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: var(--transition-interactive);
+}
+.fos-dp__time-confirm:hover {
+  background: var(--primary-dark);
+}
+.fos-dp__time-confirm:active {
+  transform: scale(0.95);
+}
+
+/* ─── Helper text ─────────────────────────────────────────────────────────── */
+
+.fos-dp__helper {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  font-family: var(--font-body);
+  font-size: var(--text-xs);
+  line-height: var(--leading-normal);
+  margin: 0;
+  animation: fos-dp-helper-in var(--duration-normal) var(--ease-spring);
+}
+@keyframes fos-dp-helper-in {
+  from { opacity: 0; transform: translateY(-4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.fos-dp__helper--hint    { color: var(--text-tertiary); }
+.fos-dp__helper--error   { color: var(--status-danger-text); }
+.fos-dp__helper--success { color: var(--status-success-text); }

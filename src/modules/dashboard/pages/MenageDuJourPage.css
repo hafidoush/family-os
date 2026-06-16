@@ -1,0 +1,218 @@
+.mdj-page {
+  min-height: 100dvh;
+  background: hsl(40, 28%, 96%);
+  padding-bottom: 80px;
+  animation: mdj-in 0.32s cubic-bezier(0.22, 1, 0.36, 1);
+}
+@keyframes mdj-in {
+  from { transform: translateX(32px); opacity: 0; }
+  to   { transform: translateX(0);    opacity: 1; }
+}
+
+/* ── Header ── */
+.mdj-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 20px 16px 16px;
+  position: sticky;
+  top: 0;
+  background: hsl(40, 28%, 96%);
+  z-index: 10;
+}
+
+.mdj-back {
+  width: 36px; height: 36px;
+  border-radius: 50%;
+  border: 1.5px solid hsl(240, 8%, 88%);
+  background: rgba(255,255,255,0.85);
+  color: hsl(240, 8%, 25%);
+  cursor: pointer; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  transition: transform 0.12s ease;
+}
+.mdj-back:active { transform: scale(0.90); }
+
+.mdj-header__info { flex: 1; }
+
+.mdj-title {
+  font-size: 24px; font-weight: 800;
+  color: hsl(240, 10%, 10%);
+  letter-spacing: -0.03em; margin: 0;
+}
+.mdj-subtitle {
+  font-size: 13px; color: hsl(240, 6%, 52%);
+  margin: 3px 0 0;
+}
+
+/* ── Anneau progression ── */
+.mdj-ring {
+  position: relative;
+  width: 52px; height: 52px;
+  flex-shrink: 0;
+  color: hsl(262, 40%, 85%);
+}
+.mdj-ring--done { color: hsl(142, 40%, 80%); }
+
+.mdj-ring__svg {
+  width: 100%; height: 100%;
+  transform: rotate(-90deg);
+}
+.mdj-ring__bg    { stroke: currentColor; opacity: 0.25; }
+.mdj-ring__fill  {
+  stroke: hsl(262, 48%, 58%);
+  transition: stroke-dasharray 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.mdj-ring--done .mdj-ring__fill { stroke: hsl(142, 50%, 50%); }
+
+.mdj-ring__pct {
+  position: absolute; inset: 0;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 11px; font-weight: 700;
+  color: hsl(262, 45%, 42%);
+}
+.mdj-ring--done .mdj-ring__pct { color: hsl(142, 45%, 35%); }
+
+/* ── Contenu ── */
+.mdj-content {
+  padding: 4px 14px 0;
+  display: flex; flex-direction: column; gap: 14px;
+}
+
+/* ── Section ── */
+.mdj-section {
+  display: flex; flex-direction: column; gap: 10px;
+}
+
+.mdj-section__head {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0 2px;
+}
+.mdj-section__label {
+  font-size: 12px; font-weight: 700;
+  letter-spacing: 0.06em; text-transform: uppercase;
+  color: hsl(240, 6%, 48%);
+}
+.mdj-section__tag {
+  font-size: 11px; font-weight: 600;
+  color: hsl(240, 6%, 55%);
+  background: hsl(240, 8%, 92%);
+  padding: 2px 8px; border-radius: 999px;
+}
+.mdj-section__tag--done {
+  color: hsl(142, 45%, 32%);
+  background: hsl(142, 45%, 91%);
+}
+
+/* ── Barre de section ── */
+.mdj-bar {
+  height: 3px;
+  background: hsl(240, 8%, 90%);
+  border-radius: 999px; overflow: hidden;
+}
+.mdj-bar__fill {
+  height: 100%; border-radius: 999px;
+  transition: width 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* ── Grille 2×2 ── */
+.mdj-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+/* ── Carte tâche ── */
+.mdj-card {
+  background: rgba(255,255,255,0.85);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255,255,255,0.75);
+  border-radius: 18px;
+  padding: 16px 14px 14px;
+  display: flex; flex-direction: column; gap: 8px;
+  text-align: left; cursor: pointer;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.04);
+  transition: transform 0.15s cubic-bezier(0.34, 1.3, 0.64, 1),
+              box-shadow 0.15s ease,
+              background 0.2s ease;
+  -webkit-tap-highlight-color: transparent;
+  min-height: 100px;
+}
+.mdj-card:active { transform: scale(0.95); }
+
+.mdj-card--done {
+  background: rgba(220, 252, 231, 0.55);
+  border-color: rgba(134, 239, 172, 0.35);
+  box-shadow: none;
+}
+
+/* ── Icône / emoji ── */
+.mdj-card__icon-wrap {
+  width: 38px; height: 38px;
+  border-radius: 12px;
+  background: hsl(262, 50%, 95%);
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+.mdj-card--done .mdj-card__icon-wrap {
+  background: hsl(142, 50%, 90%);
+}
+
+.mdj-card__emoji { font-size: 20px; line-height: 1; }
+
+.mdj-card__checkmark {
+  width: 18px; height: 18px;
+  stroke: hsl(142, 50%, 42%);
+}
+
+/* ── Texte ── */
+.mdj-card__titre {
+  font-size: 14px; font-weight: 700;
+  color: hsl(240, 8%, 14%);
+  line-height: 1.25;
+}
+.mdj-card--done .mdj-card__titre {
+  text-decoration: line-through;
+  color: hsl(240, 6%, 55%);
+}
+
+.mdj-card__freq {
+  font-size: 11px; font-weight: 500;
+  color: hsl(240, 6%, 58%);
+}
+.mdj-card--done .mdj-card__freq {
+  color: hsl(142, 40%, 42%);
+  font-weight: 600;
+}
+
+/* ── État vide ── */
+.mdj-empty-state {
+  display: flex; flex-direction: column;
+  align-items: center; gap: 8px;
+  padding: 60px 24px; text-align: center;
+  font-size: 32px;
+}
+.mdj-empty-state p {
+  font-size: 16px; font-weight: 600;
+  color: hsl(240, 8%, 24%); margin: 0;
+}
+.mdj-empty-state__sub {
+  font-size: 13px !important; font-weight: 400 !important;
+  color: hsl(240, 6%, 55%) !important;
+}
+
+/* ── Skeleton ── */
+.mdj-skeleton {
+  height: 220px; border-radius: 18px;
+  background: linear-gradient(90deg,
+    rgba(201,184,232,0.14) 25%,
+    rgba(201,184,232,0.26) 50%,
+    rgba(201,184,232,0.14) 75%);
+  background-size: 200% 100%;
+  animation: mdj-shimmer 1.4s ease-in-out infinite;
+}
+@keyframes mdj-shimmer {
+  0%   { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}

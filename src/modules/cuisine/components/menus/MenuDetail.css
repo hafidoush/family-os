@@ -1,0 +1,246 @@
+/* ─── MenuDetail — design modernisé ─────────────────────────────────────────── */
+
+.menu-detail {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 16px 16px calc(16px + 100px);
+}
+
+/* ── En-tête ── */
+.menu-detail__header {
+  background: rgba(201,184,232,0.14);
+  border-radius: 18px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  border: 1px solid rgba(201,184,232,0.25);
+}
+
+.menu-detail__semaine {
+  font-family: var(--font-display);
+  font-size: 17px;
+  font-weight: 700;
+  color: #3D2F5E;
+  letter-spacing: -0.01em;
+}
+
+.menu-detail__actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+/* ── Toggle Par jour / Libre ── */
+.menu-detail__gen-toggle {
+  display: flex;
+  background: rgba(201,184,232,0.2);
+  border-radius: 10px;
+  padding: 3px;
+  gap: 2px;
+  flex-shrink: 0;
+}
+
+.menu-detail__gen-toggle-btn {
+  padding: 5px 9px;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  font-family: var(--font-body);
+  font-size: 11px;
+  font-weight: 600;
+  color: #9A86BE;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+  white-space: nowrap;
+}
+
+.menu-detail__gen-toggle-btn--active {
+  background: white;
+  color: #5B3D8C;
+  box-shadow: 0 1px 3px rgba(90,50,140,0.12);
+}
+
+/* Bouton Ingrédients / Valider */
+.menu-detail__btn-valider {
+  flex: 1;
+  padding: 10px 14px;
+  background: rgba(111,126,214,0.12);
+  color: #4B5FA8;
+  border: 1.5px solid rgba(111,126,214,0.25);
+  border-radius: 12px;
+  font-family: var(--font-body);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s, opacity 0.15s;
+}
+
+.menu-detail__btn-valider:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.menu-detail__btn-valider:not(:disabled):hover {
+  background: rgba(111,126,214,0.2);
+}
+
+.menu-detail__btn-valider--active {
+  background: rgba(167,139,250,0.15);
+  color: #6D28D9;
+  border-color: rgba(167,139,250,0.35);
+}
+
+/* ── Sections ── */
+.menu-detail__section {
+  background: #FDFCFB;
+  border-radius: 18px;
+  padding: 16px;
+  border: 1px solid rgba(0,0,0,0.06);
+  box-shadow: 0 2px 8px rgba(60,40,90,0.04);
+}
+
+.menu-detail__section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 4px;
+}
+
+.menu-detail__section-title {
+  font-size: 15px;
+  font-weight: 700;
+  color: #2D2040;
+  margin: 0;
+  letter-spacing: -0.01em;
+}
+
+.menu-detail__section-count {
+  background: rgba(167,139,250,0.2);
+  color: #6D28D9;
+  font-size: 11px;
+  font-weight: 700;
+  min-width: 22px;
+  height: 22px;
+  border-radius: 20px;
+  padding: 0 7px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.menu-detail__section-hint {
+  font-size: 12px;
+  color: #9CA3AF;
+  margin: 0 0 12px;
+  line-height: 1.4;
+}
+
+.menu-detail__empty-section {
+  font-size: 13px;
+  color: #B8ADCC;
+  text-align: center;
+  padding: 16px 0 8px;
+  font-style: italic;
+}
+
+/* ── Jours ── */
+.menu-detail__jour {
+  margin-bottom: 14px;
+}
+
+.menu-detail__jour:last-child {
+  margin-bottom: 0;
+}
+
+.menu-detail__jour-label {
+  font-size: 11px;
+  font-weight: 700;
+  color: #A78BFA;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin-bottom: 8px;
+  padding-bottom: 6px;
+  border-bottom: 1px solid rgba(167,139,250,0.15);
+}
+
+/* ── Liste slots ── */
+.menu-detail__slot-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* ── Bouton ajouter ── */
+.menu-detail__add-btn {
+  width: 100%;
+  padding: 13px 16px;
+  background: transparent;
+  color: #A89EC0;
+  border: 2px dashed rgba(167,139,250,0.3);
+  border-radius: 14px;
+  font-family: var(--font-body);
+  font-size: 13.5px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: border-color 0.18s, color 0.18s, background 0.18s;
+}
+
+.menu-detail__add-btn:hover,
+.menu-detail__add-btn:active {
+  border-color: rgba(167,139,250,0.6);
+  color: #6D28D9;
+  background: rgba(167,139,250,0.05);
+}
+
+/* ── Skeletons ── */
+.menu-detail__skeleton {
+  height: 120px;
+  background: rgba(0,0,0,0.04);
+  border-radius: 18px;
+  animation: menu-pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes menu-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+/* ── Bouton IA ── */
+.menu-detail__btn-ia {
+  padding: 10px 14px;
+  border-radius: 12px;
+  border: 1.5px solid rgba(124,58,237,0.25);
+  background: rgba(124,58,237,0.07);
+  color: #7C3AED;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s, opacity 0.15s;
+  white-space: nowrap;
+}
+
+.menu-detail__btn-ia:hover  { background: rgba(124,58,237,0.13); }
+.menu-detail__btn-ia:disabled { opacity: 0.5; cursor: default; }
+
+/* ── Message génération ── */
+.menu-detail__gen-message {
+  margin: 0;
+  padding: 10px 14px;
+  border-radius: 12px;
+  background: rgba(124,58,237,0.08);
+  border: 1px solid rgba(124,58,237,0.18);
+  font-size: 12.5px;
+  color: #6D28D9;
+  font-weight: 500;
+  animation: notif-slide-in 0.2s ease;
+}
+
+@keyframes notif-slide-in {
+  from { opacity: 0; transform: translateY(-4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}

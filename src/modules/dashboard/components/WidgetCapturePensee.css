@@ -1,0 +1,341 @@
+/* ══════════════════════════════════════════════════════
+   WIDGET HERO — deux cartes superposées
+   ══════════════════════════════════════════════════════ */
+
+/* ── Wrapper groupe ── */
+.widget-hero-groupe {
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  overflow: visible;
+}
+
+/* ── Carte haute : dégradé + question ── */
+.widget-hero {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+  background: #F0EFEB;
+  border: none;
+  border-radius: 20px;
+  /* padding-top généreux + espace régulier via gap */
+  padding: 52px 24px 80px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 32px;
+  text-align: center;
+}
+
+/* ── Cercle dégradé décoratif — centré ── */
+.widget-hero__blob {
+  position: absolute;
+  bottom: -60px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 320px;
+  height: 320px;
+
+  background: url('/cercle.png') center / cover no-repeat;
+
+  border-radius: 50%;
+  opacity: 1;
+
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* Contenu au-dessus du blob */
+.widget-hero__salam,
+.widget-hero__question,
+.widget-hero__suggestions {
+  position: relative;
+  z-index: 1;
+}
+
+/* ── Badge télétravail inline ── */
+.widget-hero__teletravail-badge {
+  font-size: 0.75rem;
+  opacity: 0.75;
+  font-weight: 400;
+  letter-spacing: 0;
+}
+
+/* ── Groupe badge + salam (espace réduit entre eux) ── */
+.widget-hero__top {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+/* ── Badge charge mentale ── */
+.widget-hero__charge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 13px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  border: 1px solid transparent;
+}
+.widget-hero__charge--green {
+  background: hsl(142, 45%, 93%);
+  border-color: hsl(142, 40%, 82%);
+  color: hsl(142, 45%, 28%);
+}
+.widget-hero__charge--amber {
+  background: hsl(38, 90%, 93%);
+  border-color: hsl(38, 80%, 80%);
+  color: hsl(38, 75%, 30%);
+}
+.widget-hero__charge--red {
+  background: hsl(340, 60%, 93%);
+  border-color: hsl(340, 50%, 82%);
+  color: hsl(340, 55%, 32%);
+}
+.widget-hero__charge--btn {
+  cursor: pointer;
+  transition: opacity 0.12s;
+}
+.widget-hero__charge--btn:hover { opacity: 0.8; }
+.widget-hero__charge--btn:disabled { cursor: default; opacity: 1; }
+.widget-hero__charge-dot {
+  width: 6px; height: 6px;
+  border-radius: 50%; flex-shrink: 0;
+  animation: charge-pulse 2.4s ease-in-out infinite;
+}
+.widget-hero__charge--green .widget-hero__charge-dot { background: hsl(142, 50%, 42%); }
+.widget-hero__charge--amber .widget-hero__charge-dot { background: hsl(38, 80%, 48%); }
+.widget-hero__charge--red   .widget-hero__charge-dot { background: hsl(340, 60%, 52%); }
+
+@keyframes charge-pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50%       { opacity: 0.5; transform: scale(0.8); }
+}
+
+/* ── Salutation ── */
+.widget-hero__salam {
+  font-family: var(--font-body, system-ui);
+  font-size: 15px;
+  font-weight: 500;
+  letter-spacing: 0.10em;
+  text-transform: uppercase;
+  color: var(--text-tertiary, hsl(240, 6%, 65%));
+  margin: 0;
+}
+
+/* ── Question principale ── */
+.widget-hero__question {
+  font-family: var(--font-display, system-ui);
+  font-size: clamp(42px, 11vw, 52px);
+  font-weight: 500;
+  line-height: 1.10;
+  color: var(--text-primary, hsl(240, 7%, 11%));
+  letter-spacing: -0.025em;
+  margin: 0;
+}
+
+/* ── Suggestions : 2 colonnes → 3e centré dessous ── */
+.widget-hero__suggestions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  width: 100%;
+  margin: 16px 0;
+}
+
+/* 3e chip centré sur sa propre ligne */
+.widget-hero__chip:last-child {
+  grid-column: 1 / -1;
+  justify-self: center;
+}
+
+.widget-hero__chip {
+  font-family: var(--font-body, system-ui);
+  font-size: 14px;
+  font-weight: 400;
+  color: var(--text-primary, hsl(240, 7%, 11%));
+  background: #FFFFFF;
+  border: none;
+  border-radius: 999px;
+  padding: 8px 18px;
+  cursor: pointer;
+  transition: opacity 0.15s ease, transform 0.12s ease;
+  -webkit-tap-highlight-color: transparent;
+  white-space: nowrap;
+  text-align: center;
+}
+
+.widget-hero__chip:hover {
+  opacity: 0.85;
+}
+
+.widget-hero__chip:active {
+  transform: scale(0.96);
+}
+
+/* Chip urgent — léger contour ambré */
+.widget-hero__chip--urgent {
+  background: #FFF8EE;
+  outline: 1.5px solid rgba(245, 158, 11, 0.35);
+}
+
+/* Badge compteur dans le chip */
+.widget-hero__chip-badge {
+  display: inline-flex;
+  align-items: center;
+  margin-left: 6px;
+  padding: 1px 7px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 600;
+  background: rgba(124, 58, 237, 0.1);
+  color: #7C3AED;
+  white-space: nowrap;
+}
+
+.widget-hero__chip--urgent .widget-hero__chip-badge {
+  background: rgba(245, 158, 11, 0.15);
+  color: #B45309;
+}
+
+/* ══════════════════════════════════════════════════════
+   CARTE BASSE — glassmorphisme + input
+   Chevauche la carte haute (même pattern que widget-previsions)
+   ══════════════════════════════════════════════════════ */
+
+.widget-hero-input {
+  background:    rgba(255, 255, 255, 0.00);
+  backdrop-filter: blur(14px) saturate(130%);
+  -webkit-backdrop-filter: blur(14px) saturate(130%);
+  border:        1.5px solid rgba(255, 255, 255, 0.72);
+  outline:       1px solid rgba(180, 165, 210, 0.22);
+  border-radius: 20px;
+
+  /* Chevauche la carte du haut */
+  margin: -52px 0 0;
+
+  padding: 32px 20px 32px;
+
+  position: relative;
+  z-index: 2;
+
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* ── Zone de saisie ── */
+.widget-hero__input-row {
+  display: flex;
+  gap: 8px;
+  align-items: flex-end;
+  width: 100%;
+}
+
+.widget-hero__input-row--loading {
+  opacity: 0.65;
+}
+
+.widget-hero__textarea {
+  flex: 1;
+  min-height: 44px;
+  max-height: 120px;
+  resize: none;
+  border: 1.5px solid rgba(210, 200, 230, 0.35);
+  border-radius: 999px;
+  padding: 11px 18px;
+  font-family: var(--font-body, system-ui);
+  font-size: var(--text-base, 15px);
+  line-height: 1.45;
+  background: rgba(255, 255, 255, 0.70);
+  color: var(--text-primary);
+  outline: none;
+  transition: border-color 0.15s ease;
+  overflow-y: auto;
+}
+
+.widget-hero__textarea::placeholder {
+  color: var(--text-tertiary);
+}
+
+.widget-hero__textarea:focus {
+  border-color: hsla(262, 45%, 65%, 0.55);
+}
+
+.widget-hero__textarea:disabled {
+  background: rgba(245, 245, 247, 0.60);
+}
+
+/* Bouton envoi */
+.widget-hero__send {
+  width: 44px;
+  height: 44px;
+  flex-shrink: 0;
+  border-radius: 999px;
+  border: none;
+  cursor: pointer;
+  background: linear-gradient(135deg, hsl(262, 32%, 52%) 0%, hsl(278, 28%, 50%) 100%);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.15s cubic-bezier(0.34,1.56,0.64,1), opacity 0.15s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.widget-hero__send:disabled {
+  opacity: 0.35;
+  cursor: default;
+  transform: none;
+}
+
+.widget-hero__send:not(:disabled):active {
+  transform: scale(0.88);
+}
+
+/* Spinner IA */
+.widget-hero__spinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(255,255,255,0.3);
+  border-top-color: white;
+  border-radius: 50%;
+  animation: hero-spin 0.7s linear infinite;
+  display: inline-block;
+}
+
+@keyframes hero-spin {
+  to { transform: rotate(360deg); }
+}
+
+/* ── Confirmation ── */
+.widget-hero__confirm {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 10px 14px;
+  background: hsla(262, 50%, 95%, 0.80);
+  border: 1px solid hsla(262, 50%, 75%, 0.25);
+  border-radius: 999px;
+  font-family: var(--font-body, system-ui);
+  font-size: var(--text-sm, 13px);
+  font-weight: 500;
+  color: hsl(262, 45%, 30%);
+  animation: hero-confirm-in 0.28s cubic-bezier(0.34,1.56,0.64,1);
+}
+
+.widget-hero__confirm svg {
+  flex-shrink: 0;
+  color: hsl(262, 55%, 52%);
+}
+
+@keyframes hero-confirm-in {
+  from { opacity: 0; transform: translateY(-6px) scale(0.96); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}

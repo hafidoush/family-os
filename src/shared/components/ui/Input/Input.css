@@ -1,0 +1,333 @@
+/**
+ * FAMILY OS — Input.css
+ * Styles du composant Input.
+ * Toutes les valeurs via tokens CSS — aucune valeur brute.
+ */
+
+/* ─── Wrapper ─────────────────────────────────────────────────────────────── */
+
+.fos-input-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1-5, 6px);
+  width: 100%;
+}
+
+/* ─── Label ───────────────────────────────────────────────────────────────── */
+
+.fos-input__label {
+  font-family: var(--font-body);
+  font-size: var(--text-sm);
+  font-weight: var(--font-weight-medium);
+  line-height: var(--leading-tight);
+  color: var(--text-secondary);
+  letter-spacing: 0.01em;
+  cursor: pointer;
+  transition: color var(--duration-fast) var(--ease-out);
+}
+
+.fos-input--focused .fos-input__label {
+  color: var(--text-brand);
+}
+
+.fos-input--error .fos-input__label {
+  color: var(--status-danger-text);
+}
+
+.fos-input--success .fos-input__label {
+  color: var(--status-success-text);
+}
+
+.fos-input--disabled .fos-input__label {
+  color: var(--text-disabled);
+  cursor: not-allowed;
+}
+
+/* ─── Field wrap (contient input + icônes + focus ring) ─────────────────────  */
+
+.fos-input__field-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+/* ─── Input natif ─────────────────────────────────────────────────────────── */
+
+.fos-input__field {
+  width: 100%;
+  font-family: var(--font-body);
+  font-weight: var(--font-weight-regular);
+  color: var(--text-primary);
+  background: var(--input-bg);
+  border: 1.5px solid var(--input-border);
+  border-radius: var(--radius-input, var(--radius-md));
+  outline: none;
+  appearance: none;
+  -webkit-appearance: none;
+  caret-color: var(--primary);
+  transition: var(--transition-interactive);
+
+  /* Supprime les boutons natifs number */
+  -moz-appearance: textfield;
+}
+
+.fos-input__field::-webkit-outer-spin-button,
+.fos-input__field::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+/* Placeholder */
+.fos-input__field::placeholder {
+  color: var(--input-placeholder);
+  font-weight: var(--font-weight-regular);
+}
+
+/* ─── Tailles ─────────────────────────────────────────────────────────────── */
+
+/* sm */
+.fos-input--sm .fos-input__field {
+  height: var(--height-input-sm, 36px);
+  padding: 0 var(--space-3);
+  font-size: var(--text-sm);
+}
+.fos-input--sm.fos-input--has-left .fos-input__field {
+  padding-left: calc(var(--space-3) + 16px + var(--space-2));
+}
+.fos-input--sm.fos-input--has-right .fos-input__field {
+  padding-right: calc(var(--space-3) + 16px + var(--space-2));
+}
+
+/* md (défaut) */
+.fos-input--md .fos-input__field {
+  height: var(--height-input, 44px);
+  padding: 0 var(--space-3-5, 14px);
+  font-size: var(--text-base);
+}
+.fos-input--md.fos-input--has-left .fos-input__field {
+  padding-left: calc(var(--space-3-5, 14px) + 18px + var(--space-2-5, 10px));
+}
+.fos-input--md.fos-input--has-right .fos-input__field {
+  padding-right: calc(var(--space-3-5, 14px) + 18px + var(--space-2-5, 10px));
+}
+
+/* lg */
+.fos-input--lg .fos-input__field {
+  height: var(--height-input-lg, 52px);
+  padding: 0 var(--space-4);
+  font-size: var(--text-lg);
+}
+.fos-input--lg.fos-input--has-left .fos-input__field {
+  padding-left: calc(var(--space-4) + 20px + var(--space-3));
+}
+.fos-input--lg.fos-input--has-right .fos-input__field {
+  padding-right: calc(var(--space-4) + 20px + var(--space-3));
+}
+
+/* ─── Variants ────────────────────────────────────────────────────────────── */
+
+/* default — fond neutre, bordure visible */
+.fos-input--default .fos-input__field {
+  background: var(--input-bg);
+  border-color: var(--input-border);
+}
+
+/* filled — fond légèrement teinté, sans bordure au repos */
+.fos-input--filled .fos-input__field {
+  background: var(--color-lavender-50);
+  border-color: transparent;
+}
+
+/* ghost — complètement transparent, bordure basse uniquement */
+.fos-input--ghost .fos-input__field {
+  background: transparent;
+  border-color: transparent;
+  border-bottom-color: var(--border-default);
+  border-radius: 0;
+}
+
+/* ─── États focus ─────────────────────────────────────────────────────────── */
+
+.fos-input__field:focus {
+  background: var(--input-focus-bg);
+  border-color: var(--input-focus-border);
+}
+
+.fos-input--ghost .fos-input__field:focus {
+  border-color: transparent;
+  border-bottom-color: var(--primary);
+}
+
+/* Focus ring animé (ligne qui s'étend sous le ghost, halo pour default/filled) */
+.fos-input__focus-ring {
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  width: 0;
+  height: 2px;
+  background: var(--primary);
+  transform: translateX(-50%);
+  border-radius: var(--radius-full);
+  transition: width var(--duration-normal) var(--ease-spring);
+  pointer-events: none;
+}
+
+.fos-input--ghost.fos-input--focused .fos-input__focus-ring {
+  width: 100%;
+}
+
+/* ─── État error ──────────────────────────────────────────────────────────── */
+
+.fos-input--error .fos-input__field {
+  border-color: var(--status-danger-icon);
+  background: var(--status-danger-bg);
+}
+
+.fos-input--error.fos-input--ghost .fos-input__field {
+  border-color: transparent;
+  border-bottom-color: var(--status-danger-icon);
+  background: transparent;
+}
+
+.fos-input--error .fos-input__field:focus {
+}
+
+/* ─── État success ────────────────────────────────────────────────────────── */
+
+.fos-input--success .fos-input__field {
+  border-color: var(--status-success-icon);
+  background: var(--status-success-bg);
+}
+
+.fos-input--success.fos-input--ghost .fos-input__field {
+  border-color: transparent;
+  border-bottom-color: var(--status-success-icon);
+  background: transparent;
+}
+
+/* ─── État disabled ───────────────────────────────────────────────────────── */
+
+.fos-input--disabled .fos-input__field {
+  background: var(--bg-sunken);
+  border-color: var(--border-subtle);
+  color: var(--text-disabled);
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+.fos-input--disabled .fos-input__field::placeholder {
+  color: var(--text-disabled);
+}
+
+/* ─── Icônes ──────────────────────────────────────────────────────────────── */
+
+.fos-input__icon {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-tertiary);
+  pointer-events: none;
+  transition: color var(--duration-fast) var(--ease-out);
+  flex-shrink: 0;
+}
+
+.fos-input__icon--left {
+  left: var(--space-3);
+}
+
+.fos-input__icon--right {
+  right: var(--space-3);
+}
+
+.fos-input--sm .fos-input__icon {
+  font-size: 14px;
+  width: 16px;
+  height: 16px;
+}
+
+.fos-input--md .fos-input__icon {
+  font-size: 16px;
+  width: 18px;
+  height: 18px;
+}
+
+.fos-input--lg .fos-input__icon {
+  font-size: 18px;
+  width: 20px;
+  height: 20px;
+}
+
+/* Icône colorée selon l'état */
+.fos-input--focused .fos-input__icon--left {
+  color: var(--primary);
+}
+.fos-input--error .fos-input__icon {
+  color: var(--status-danger-icon);
+}
+.fos-input--success .fos-input__icon {
+  color: var(--status-success-icon);
+}
+.fos-input--disabled .fos-input__icon {
+  color: var(--text-disabled);
+}
+
+/* ─── Spinner de chargement ───────────────────────────────────────────────── */
+
+.fos-input__spinner {
+  width: 16px;
+  height: 16px;
+  color: var(--primary);
+  animation: fos-input-spin 0.8s linear infinite;
+}
+
+@keyframes fos-input-spin {
+  to { transform: rotate(360deg); }
+}
+
+/* ─── Helper text ─────────────────────────────────────────────────────────── */
+
+.fos-input__helper {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  font-family: var(--font-body);
+  font-size: var(--text-xs);
+  line-height: var(--leading-normal);
+  margin: 0;
+  animation: fos-input-helper-in var(--duration-normal) var(--ease-spring);
+}
+
+@keyframes fos-input-helper-in {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.fos-input__helper--hint {
+  color: var(--text-tertiary);
+}
+
+.fos-input__helper--error {
+  color: var(--status-danger-text);
+}
+
+.fos-input__helper--success {
+  color: var(--status-success-text);
+}
+
+/* ─── Responsive — touch targets iOS ─────────────────────────────────────── */
+
+@media (max-width: 480px) {
+  /* Assurer une hauteur touch target minimale de 44px sur iPhone */
+  .fos-input--sm .fos-input__field {
+    height: 40px;
+  }
+}

@@ -1,0 +1,168 @@
+/* ─── CuisineModule ────────────────────────────────────────────────────────── */
+
+.cuisine-module {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  background: var(--color-bg);
+  position: relative;
+}
+
+/* ─── Onglets ─────────────────────────────────────────────────────────────── */
+
+.cuisine-module__tabs {
+  display: flex;
+  gap: 0;
+  background: #F7F6F4;
+  border-radius: 999px;
+  margin: 12px 16px 0;
+  padding: 4px;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  flex-shrink: 0;
+}
+
+.cuisine-module__tab {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 9px 8px;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  font-family: var(--font-body);
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #A9A6B8;
+  border-radius: 999px;
+  transition: all 0.18s ease;
+  white-space: nowrap;
+}
+
+.cuisine-module__tab--active {
+  background: #D2ADEB;
+  color: white;
+  font-weight: 600;
+}
+
+.cuisine-module__tab-icon {
+  font-size: 1rem;
+}
+
+/* Sur iPhone, masquer les labels pour gagner de la place */
+@media (max-width: 390px) {
+  .cuisine-module__tab-label {
+    display: none;
+  }
+  .cuisine-module__tab-icon {
+    font-size: 1.25rem;
+  }
+}
+
+/* ─── Contenu ─────────────────────────────────────────────────────────────── */
+
+.cuisine-module__content {
+  flex: 1;
+  min-height: 0; /* critique : permet à overflow-y:auto de s'activer dans un flex */
+  overflow-y: auto;
+  padding: 16px;
+  padding-bottom: calc(var(--bottom-bar-h) + 24px);
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Le formulaire prend toute la hauteur sans padding */
+.cuisine-module__content--form {
+  padding: 0;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ─── Placeholder (menus / courses) ──────────────────────────────────────── */
+
+.cuisine-module__placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 80px 24px;
+  color: var(--color-muted);
+  text-align: center;
+}
+
+.cuisine-module__placeholder span {
+  font-size: 3rem;
+}
+
+.cuisine-module__placeholder p {
+  font-size: 0.9rem;
+  margin: 0;
+}
+
+/* ─── Bouton retour ───────────────────────────────────────────────────────── */
+
+.cuisine-module__back-bar {
+  padding: 10px 16px;
+  border-bottom: 1px solid var(--color-border);
+  background: var(--color-surface);
+  flex-shrink: 0;
+}
+
+.cuisine-module__back {
+  border: none;
+  background: none;
+  font-family: var(--font-body);
+  font-size: 0.875rem;
+  color: var(--color-lavande);
+  cursor: pointer;
+  font-weight: 600;
+  padding: 4px 0;
+  min-height: 36px;
+  display: flex;
+  align-items: center;
+}
+
+/* ─── FAB Nouvelle recette ────────────────────────────────────────────────── */
+
+.cuisine-module__fab {
+  position: fixed;
+  bottom: max(88px, calc(72px + env(safe-area-inset-bottom)));
+  right: 20px;
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  border: none;
+  background: var(--color-lavande);
+  color: white;
+  font-size: 1.6rem;
+  line-height: 1;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 20;
+  transition: transform var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+.cuisine-module__fab:hover {
+  transform: scale(1.08);
+}
+
+.cuisine-module__fab:active {
+  transform: scale(0.96);
+}
+
+/* Sur iPad/desktop, le FAB est moins bas (pas de bottom nav) */
+@media (min-width: 768px) {
+  .cuisine-module__fab {
+    bottom: 24px;
+    right: 28px;
+    width: 56px;
+    height: 56px;
+    font-size: 1.8rem;
+  }
+}

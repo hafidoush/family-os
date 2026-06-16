@@ -1,0 +1,293 @@
+/**
+ * FAMILY OS — Reset CSS
+ * Ciblé pour PWA mobile (iPhone / iPad) + tablette cuisine.
+ * Inspiré de modern-normalize — adapté aux spécificités iOS et au design system.
+ */
+
+/* ─── Box model universel ─────────────────────────────────────────────────── */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+/* ─── Root & HTML ─────────────────────────────────────────────────────────── */
+
+html {
+  /* Prévient l'ajustement de taille de police sur iOS en mode paysage */
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+
+  /* Rendu de police lissé */
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+
+  /* Comportement de défilement */
+  scroll-behavior: smooth;
+
+  /* Hauteur pleine — nécessaire pour les layouts full-height PWA */
+  height: 100%;
+
+  /* Couleur de fond initiale (avant que React monte) */
+  background-color: var(--bg-app);
+}
+
+/* ─── Body ────────────────────────────────────────────────────────────────── */
+
+body {
+  height: 100%;
+  min-height: 100dvh;  /* dvh = dynamic viewport height, corrige le bug iOS barre Safari */
+
+  font-family: var(--font-body);
+  font-size: var(--text-base);
+  font-weight: var(--font-weight-regular);
+  line-height: var(--leading-normal);
+  color: var(--text-primary);
+  background-color: var(--bg-app);
+
+  /* Désactive la sélection de texte sur les éléments interactifs en mobile */
+  -webkit-tap-highlight-color: transparent;
+
+  /* Désactive le rebond de scroll iOS sur le body (on le gère par zone) */
+  overscroll-behavior: none;
+
+  /* Isolation pour les z-index */
+  isolation: isolate;
+}
+
+/* ─── Racine React ────────────────────────────────────────────────────────── */
+
+#root {
+  height: 100%;
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  isolation: isolate;
+}
+
+/* ─── Typographie ─────────────────────────────────────────────────────────── */
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-heading);
+  font-weight: var(--font-weight-semibold);
+  line-height: var(--leading-tight);
+  letter-spacing: var(--tracking-tight);
+  color: var(--text-primary);
+
+  /* Pas de césure automatique sur les titres */
+  overflow-wrap: break-word;
+  hyphens: none;
+}
+
+p {
+  overflow-wrap: break-word;
+  hyphens: auto;
+  line-height: var(--leading-relaxed);
+}
+
+/* Liens */
+a {
+  color: var(--text-link);
+  text-decoration: none;
+  transition: var(--transition-color);
+}
+
+a:hover {
+  color: var(--text-link-hover);
+  text-decoration: underline;
+}
+
+a:focus-visible {
+  outline: var(--border-width-thick) solid var(--border-focus);
+  outline-offset: 2px;
+  border-radius: var(--radius-xs);
+}
+
+/* ─── Listes ──────────────────────────────────────────────────────────────── */
+
+ul, ol {
+  list-style: none;
+}
+
+/* ─── Médias ──────────────────────────────────────────────────────────────── */
+
+img,
+svg,
+video,
+canvas,
+audio,
+iframe,
+embed,
+object {
+  display: block;
+  max-width: 100%;
+}
+
+img {
+  height: auto;
+  /* Rendu net des images sur retina */
+  image-rendering: -webkit-optimize-contrast;
+}
+
+svg {
+  /* Les SVG héritent la couleur du texte par défaut */
+  fill: currentColor;
+  flex-shrink: 0;  /* empêche la compression en flexbox */
+}
+
+/* ─── Formulaires ─────────────────────────────────────────────────────────── */
+
+input,
+button,
+textarea,
+select {
+  font: inherit;
+  color: inherit;
+}
+
+/* Supprime le style natif iOS sur les inputs */
+input,
+textarea {
+  -webkit-appearance: none;
+  appearance: none;
+  border-radius: 0; /* évite le border-radius iOS par défaut */
+}
+
+/* Supprime les flèches des inputs number */
+input[type='number']::-webkit-inner-spin-button,
+input[type='number']::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+/* Supprime le style natif des selects */
+select {
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+/* Désactive le style natif de focus sur iOS */
+input:focus,
+textarea:focus,
+select:focus,
+button:focus {
+  outline: none;
+}
+
+/* Focus visible uniquement au clavier */
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible {
+  outline: var(--border-width-thick) solid var(--border-focus);
+  outline-offset: 2px;
+}
+
+button {
+  cursor: pointer;
+  background: none;
+  border: none;
+  -webkit-appearance: none;
+  appearance: none;
+  touch-action: manipulation;
+  border-radius: 999px;
+}
+
+button:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+/* ─── Tableaux ────────────────────────────────────────────────────────────── */
+
+table {
+  border-collapse: collapse;
+  border-spacing: 0;
+}
+
+/* ─── Séparateurs ─────────────────────────────────────────────────────────── */
+
+hr {
+  border: none;
+  border-top: var(--border-width) solid var(--border-subtle);
+  margin: var(--space-6) 0;
+}
+
+/* ─── Codes ───────────────────────────────────────────────────────────────── */
+
+code,
+kbd,
+samp,
+pre {
+  font-family: var(--font-mono);
+  font-size: 0.875em;
+}
+
+pre {
+  overflow-x: auto;
+  white-space: pre-wrap;
+  word-break: break-all;
+}
+
+/* ─── Divers ──────────────────────────────────────────────────────────────── */
+
+/* Supprime les décorations des abbréviations */
+abbr[title] {
+  text-decoration: underline dotted;
+  cursor: help;
+}
+
+/* Icônes dans les boutons — alignement vertical */
+button svg,
+a svg {
+  vertical-align: middle;
+}
+
+/* Désactive le zoom sur double-tap iOS pour les éléments interactifs */
+button,
+a,
+[role='button'] {
+  touch-action: manipulation;
+}
+
+/* Gestion du scroll dans les zones défilantes sur iOS */
+[data-scroll],
+.scroll-area {
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-y: contain;
+}
+
+/* ─── Accessibility ───────────────────────────────────────────────────────── */
+
+/* Classe utilitaire screen-reader-only */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
+}
+
+/* Respect des préférences de mouvement */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Focus outline visible pour la navigation clavier (iPad + keyboard) */
+:focus-visible {
+  outline: var(--border-width-thick) solid var(--border-focus);
+  outline-offset: 2px;
+}

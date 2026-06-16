@@ -1,0 +1,141 @@
+/**
+ * Modal — Fenêtre modale standard
+ * Convention : CSS plain — C-04
+ */
+
+/* Backdrop */
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: var(--surface-overlay);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  z-index: var(--z-overlay);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-4);
+  animation: modal-backdrop-in var(--duration-normal) var(--ease-out) forwards;
+}
+
+.modal-backdrop--closing {
+  animation: modal-backdrop-out var(--duration-normal) var(--ease-in) forwards;
+}
+
+@keyframes modal-backdrop-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes modal-backdrop-out {
+  from { opacity: 1; }
+  to   { opacity: 0; }
+}
+
+/* Conteneur de la modal */
+.modal {
+  position: relative;
+  background:   var(--glass-bg-strong);
+  border:       1px solid var(--glass-border-strong);
+  backdrop-filter: var(--glass-blur-strong);
+  -webkit-backdrop-filter: var(--glass-blur-strong);
+  border-radius: var(--radius-2xl);
+  width: 100%;
+  max-width: 480px;
+  max-height: 90dvh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  z-index: var(--z-modal);
+  animation: modal-in var(--duration-slow) var(--ease-spring) forwards;
+}
+
+.modal--closing {
+  animation: modal-out var(--duration-normal) var(--ease-in) forwards;
+}
+
+@keyframes modal-in {
+  from {
+    opacity: 0;
+    transform: scale(0.94) translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+@keyframes modal-out {
+  from {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+  to {
+    opacity: 0;
+    transform: scale(0.96) translateY(4px);
+  }
+}
+
+/* Tailles */
+.modal--sm  { max-width: 360px; }
+.modal--md  { max-width: 480px; }
+.modal--lg  { max-width: 640px; }
+.modal--xl  { max-width: 800px; }
+
+/* En-tête */
+.modal__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-5) var(--space-6) var(--space-4);
+  border-bottom: 1px solid var(--border-subtle);
+  flex-shrink: 0;
+}
+
+.modal__title {
+  font-family: var(--font-display);
+  font-size: var(--text-xl);
+  font-weight: var(--font-weight-semibold);
+  color: var(--text-primary);
+}
+
+.modal__close {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  min-width: 36px;
+  border-radius: var(--radius-full);
+  border: none;
+  background: var(--bg-sunken);
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: var(--transition-interactive);
+  font-size: var(--text-lg);
+}
+
+.modal__close:hover {
+  background: var(--border-subtle);
+  color: var(--text-primary);
+}
+
+/* Corps */
+.modal__body {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  padding: var(--space-6);
+  overscroll-behavior: contain;
+}
+
+/* Pied */
+.modal__footer {
+  display: flex;
+  gap: var(--space-3);
+  justify-content: flex-end;
+  padding: var(--space-4) var(--space-6) var(--space-5);
+  border-top: 1px solid var(--border-subtle);
+  flex-shrink: 0;
+}

@@ -1,0 +1,250 @@
+.recettes-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 0 0 160px; /* FAB (52px) + fos-pill nav (80px) + marge */
+}
+
+/* Toolbar */
+.recettes-list__toolbar {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.recettes-list__search {
+  flex: 1;
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.recettes-list__search-icon {
+  position: absolute;
+  left: 12px;
+  font-size: 0.875rem;
+  pointer-events: none;
+}
+
+.recettes-list__search-input {
+  width: 100%;
+  padding: 10px 12px 10px 36px;
+  border: 1.5px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  font-family: var(--font-body);
+  font-size: 0.875rem;
+  color: var(--color-text);
+  outline: none;
+  transition: border-color var(--transition-fast);
+}
+
+.recettes-list__search-input:focus {
+  border-color: var(--color-lavande);
+}
+
+.recettes-list__search-input::placeholder {
+  color: var(--color-muted);
+}
+
+.recettes-list__filter-btn {
+  width: 40px;
+  height: 40px;
+  border-radius: 999px;
+  border: 1.5px solid rgba(210,173,235,.20);
+  background: #F7F6F4;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #A9A6B8;
+  transition: all 0.15s ease;
+  flex-shrink: 0;
+}
+
+.recettes-list__filter-btn:hover:not(.recettes-list__filter-btn--active) {
+  border-color: rgba(210,173,235,.45);
+  color: #B98FD4;
+}
+
+.recettes-list__filter-btn--active {
+  background: rgba(210,173,235,.20);
+  border-color: rgba(210,173,235,.50);
+  color: #8B5BAE;
+}
+
+/* Chips catégories */
+.recettes-list__categories {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding-bottom: 4px;
+  scrollbar-width: none;
+}
+
+.recettes-list__categories::-webkit-scrollbar {
+  display: none;
+}
+
+.recettes-list__chip {
+  flex-shrink: 0;
+  padding: 9px 18px;
+  border-radius: 999px;
+  border: 1.5px solid rgba(210,173,235,.20);
+  background: #F7F6F4;
+  font-family: var(--font-body);
+  font-size: 13px;
+  font-weight: 500;
+  color: #6B6880;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  white-space: nowrap;
+}
+
+.recettes-list__chip:hover:not(.recettes-list__chip--active) {
+  border-color: rgba(210,173,235,.45);
+  color: #B98FD4;
+}
+
+.recettes-list__chip--active {
+  background: #4A4660;
+  border-color: transparent;
+  color: white;
+  font-weight: 600;
+}
+
+/* Compte */
+.recettes-list__count {
+  font-size: 0.8rem;
+  color: var(--color-muted);
+  margin: 0;
+}
+
+/* Grille */
+.recettes-list__grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 14px;
+}
+
+@media (min-width: 768px) {
+  .recettes-list__grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (min-width: 1024px) {
+  .recettes-list__grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+/* Skeleton */
+.recettes-list__skeleton {
+  aspect-ratio: 3 / 4;
+  border-radius: var(--radius-lg);
+  background: linear-gradient(90deg, var(--color-border) 25%, var(--color-bg) 50%, var(--color-border) 75%);
+  background-size: 200% 100%;
+  animation: skeleton-shimmer 1.4s infinite;
+}
+
+@keyframes skeleton-shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* Empty state */
+.recettes-list__empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 48px 24px;
+  text-align: center;
+  color: var(--color-muted);
+}
+
+.recettes-list__empty-icon {
+  font-size: 3rem;
+}
+
+.recettes-list__empty p {
+  font-size: 0.9rem;
+  margin: 0;
+}
+
+.recettes-list__cta {
+  margin-top: 8px;
+  padding: 12px 24px;
+  border-radius: var(--radius-md);
+  border: none;
+  background: #6F7ED6;
+  color: white;
+  font-family: var(--font-body);
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity var(--transition-fast);
+}
+
+.recettes-list__cta:hover {
+  opacity: 0.85;
+}
+/* ── Mode batch cooking ── */
+.recettes-list__batch-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 16px;
+  background: rgba(154, 92, 163, 0.10);
+  border: 1.5px solid rgba(154, 92, 163, 0.30);
+  border-radius: 12px;
+  margin: 0 0 8px;
+  font-size: 0.82rem;
+  color: #5B21B6;
+  font-weight: 500;
+}
+
+.recettes-list__batch-cancel {
+  padding: 6px 12px;
+  border-radius: 8px;
+  border: 1.5px solid rgba(154, 92, 163, 0.3);
+  background: transparent;
+  font-size: 0.8rem;
+  color: var(--color-muted, #7A7A9A);
+  cursor: pointer;
+}
+
+.recettes-list__batch-confirm-btn {
+  padding: 6px 14px;
+  border-radius: 8px;
+  border: none;
+  background: #6F7ED6;
+  color: white;
+  font-size: 0.82rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.recettes-list__batch-confirm-btn:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.recettes-list__batch-confirm {
+  padding: 10px 16px;
+  border-radius: 12px;
+  background: rgba(74, 222, 128, 0.15);
+  border: 1.5px solid rgba(74, 222, 128, 0.4);
+  font-size: 0.82rem;
+  color: #166534;
+  font-weight: 500;
+  margin-bottom: 8px;
+  animation: batchConfirmIn 0.3s ease both;
+}
+
+@keyframes batchConfirmIn {
+  from { opacity: 0; transform: translateY(-6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}

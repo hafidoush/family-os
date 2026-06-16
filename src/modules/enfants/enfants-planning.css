@@ -1,0 +1,288 @@
+/* ══════════════════════════════════════════════════════
+   FAMILY OS — Planning activités v3
+   Layout vertical par semaine, édition inline
+   ══════════════════════════════════════════════════════ */
+
+.section-planning { padding: 0 16px 24px; }
+
+/* ── En-tête ─────────────────────────────────────────── */
+
+.section-planning__header {
+  display: flex; align-items: flex-start; justify-content: space-between;
+  margin-bottom: 16px; gap: 8px;
+}
+.section-planning__title {
+  margin: 0 0 2px; font-size: 1.05rem; font-weight: 600;
+  color: hsl(262, 38%, 22%);
+}
+.section-planning__subtitle {
+  margin: 0; font-size: 0.8rem; color: hsl(262, 20%, 60%);
+}
+.section-planning__nav-btn {
+  width: 34px; height: 34px; border-radius: 50%; border: none;
+  background: hsl(262, 55%, 93%); color: hsl(262, 43%, 49%);
+  font-size: 16px; cursor: pointer; display: flex;
+  align-items: center; justify-content: center; flex-shrink: 0;
+  transition: background 0.15s, transform 0.12s;
+}
+.section-planning__nav-btn:hover { background: hsl(262, 45%, 87%); transform: scale(1.06); }
+
+.section-planning__saved-msg {
+  padding: 8px 14px; border-radius: 10px;
+  background: hsl(142, 50%, 93%); color: hsl(142, 45%, 30%);
+  font-size: 0.82rem; font-weight: 500; margin-bottom: 12px;
+}
+
+/* ── Grille semaine ──────────────────────────────────── */
+
+.planning-semaine {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+/* Slot = une ligne = un jour */
+.planning-slot {
+  display: flex;
+  align-items: flex-start;   /* multi-ligne → aligner en haut */
+  gap: 12px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: hsl(40, 35%, 97%);
+  border: 1.5px solid hsl(40, 25%, 91%);
+  min-height: 52px;
+  transition: border-color 0.18s, background 0.18s;
+}
+
+.planning-slot--today {
+  background: hsl(262, 55%, 97%);
+  border-color: hsl(262, 40%, 85%);
+}
+
+.planning-slot--draft {
+  background: hsl(262, 60%, 97%);
+  border-color: hsl(262, 45%, 80%);
+  border-style: dashed;
+}
+
+/* Colonne gauche — jour */
+.planning-slot__jour {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: 36px;
+  flex-shrink: 0;
+}
+
+.planning-slot__jour-label {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: hsl(262, 15%, 65%);
+  line-height: 1;
+}
+
+.planning-slot__jour-num {
+  font-size: 15px;
+  font-weight: 700;
+  color: hsl(262, 38%, 30%);
+  line-height: 1.2;
+  margin-top: 1px;
+}
+
+.planning-slot__jour--today .planning-slot__jour-label { color: hsl(262, 43%, 49%); }
+.planning-slot__jour--today .planning-slot__jour-num   { color: hsl(262, 43%, 49%); }
+
+/* Colonne gauche — centrer verticalement sur la première ligne */
+.planning-slot__jour {
+  padding-top: 2px;
+}
+
+/* Colonne droite — plusieurs activités empilées */
+.planning-slot__content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+
+/* Activité dans le slot */
+.planning-slot__activite {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+  min-width: 0;
+}
+
+.planning-slot__activite--done {
+  opacity: 0.55;
+}
+
+.planning-slot__activite--draft .planning-slot__nom {
+  color: hsl(262, 43%, 45%);
+}
+
+.planning-slot__nom--tap {
+  cursor: pointer;
+  text-decoration: underline dotted hsl(262, 43%, 65%);
+}
+
+.planning-slot__cat-icone {
+  font-size: 18px;
+  flex-shrink: 0;
+  line-height: 1;
+}
+
+.planning-slot__nom {
+  font-size: 0.88rem;
+  font-weight: 500;
+  color: hsl(262, 20%, 22%);
+  flex: 1;
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.planning-slot__draft-badge {
+  font-size: 10px;
+  font-weight: 600;
+  color: hsl(262, 43%, 55%);
+  background: hsl(262, 55%, 93%);
+  padding: 2px 7px;
+  border-radius: 20px;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.planning-slot__done-badge {
+  font-size: 12px;
+  font-weight: 700;
+  color: hsl(142, 45%, 40%);
+  flex-shrink: 0;
+}
+
+/* Actions inline */
+.planning-slot__actions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+.planning-slot__btn-regen,
+.planning-slot__btn-check,
+.planning-slot__btn-del {
+  width: 26px; height: 26px;
+  border-radius: 50%; border: none;
+  cursor: pointer; font-size: 14px;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+  transition: background 0.15s;
+}
+
+.planning-slot__btn-regen {
+  background: hsl(262, 45%, 92%);
+  color: hsl(262, 43%, 49%);
+}
+.planning-slot__btn-regen:hover { background: hsl(262, 45%, 85%); }
+
+.planning-slot__btn-check {
+  background: hsl(142, 45%, 90%);
+  color: hsl(142, 45%, 35%);
+  font-size: 12px;
+  font-weight: 700;
+}
+.planning-slot__btn-check:hover { background: hsl(142, 45%, 82%); }
+
+.planning-slot__btn-del {
+  background: hsl(0, 0%, 94%);
+  color: hsl(0, 0%, 55%);
+  font-size: 16px;
+}
+.planning-slot__btn-del:hover { background: hsl(4, 70%, 92%); color: hsl(4, 60%, 50%); }
+
+/* Select inline pour édition */
+.planning-slot__select {
+  flex: 1;
+  font-size: 13px;
+  padding: 5px 8px;
+  border-radius: 8px;
+  border: 1.5px solid hsl(262, 45%, 75%);
+  background: #F0EFEB;
+  color: hsl(262, 38%, 22%);
+  cursor: pointer;
+  min-width: 0;
+}
+
+/* Bouton + Ajouter */
+.planning-slot__add {
+  font-size: 12.5px;
+  font-weight: 500;
+  color: hsl(262, 30%, 70%);
+  background: none;
+  border: 1.5px dashed hsl(262, 30%, 82%);
+  border-radius: 8px;
+  padding: 5px 12px;
+  cursor: pointer;
+  transition: color 0.15s, border-color 0.15s;
+  white-space: nowrap;
+}
+.planning-slot__add:hover {
+  color: hsl(262, 43%, 49%);
+  border-color: hsl(262, 43%, 65%);
+}
+
+/* ── Footer actions ──────────────────────────────────── */
+
+.planning-footer {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin-top: 14px;
+}
+
+.planning-footer__btn-generate {
+  flex: 1;
+  padding: 11px 16px;
+  border-radius: 12px;
+  border: none;
+  background: hsl(262, 55%, 93%);
+  color: hsl(262, 43%, 40%);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.planning-footer__btn-generate:hover { background: hsl(262, 45%, 87%); }
+
+.planning-footer__btn-confirm {
+  padding: 11px 20px;
+  border-radius: 12px;
+  border: none;
+  background: linear-gradient(135deg, hsl(262, 65%, 62%), hsl(278, 58%, 58%));
+  color: white;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity 0.15s;
+  white-space: nowrap;
+}
+.planning-footer__btn-confirm:disabled { opacity: 0.5; cursor: default; }
+
+.planning-footer__hint {
+  margin: 0;
+  font-size: 0.82rem;
+  color: hsl(262, 15%, 60%);
+  font-style: italic;
+}
+
+.planning-footer__pending {
+  margin: 6px 0 0;
+  font-size: 11.5px;
+  color: hsl(262, 43%, 55%);
+  text-align: center;
+}

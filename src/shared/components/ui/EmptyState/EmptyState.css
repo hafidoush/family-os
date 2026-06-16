@@ -1,0 +1,236 @@
+/**
+ * FAMILY OS — EmptyState.css
+ * Styles du composant EmptyState.
+ * Toutes les valeurs via tokens — aucune valeur brute.
+ */
+
+/* ─── Accent local (surcharge par moduleColor) ──────────────────────────────── */
+.empty-state {
+  --empty-accent: var(--primary);
+  --empty-accent-subtle: color-mix(in srgb, var(--empty-accent) 10%, transparent);
+  --empty-accent-ring: color-mix(in srgb, var(--empty-accent) 18%, transparent);
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  width: 100%;
+}
+
+/* ─── Tailles ─────────────────────────────────────────────────────────────── */
+.empty-state--sm { gap: var(--space-3); padding: var(--space-6) var(--space-4); }
+.empty-state--md { gap: var(--space-4); padding: var(--space-10) var(--space-6); }
+.empty-state--lg { gap: var(--space-6); padding: var(--space-16) var(--space-8); }
+
+/* ─── Variantes ───────────────────────────────────────────────────────────── */
+
+/* default : card glass standard */
+.empty-state--default {
+  background: var(--glass-bg);
+  backdrop-filter: var(--glass-blur-light);
+  -webkit-backdrop-filter: var(--glass-blur-light);
+  border: 1px solid var(--glass-border-light);
+  border-radius: var(--radius-card);
+}
+
+/* subtle : fond transparent, pas de border */
+.empty-state--subtle {
+  background: transparent;
+}
+
+/* module : teinte accent subtile, verre teinté */
+.empty-state--module {
+  background: var(--empty-accent-subtle);
+  border: 1px solid color-mix(in srgb, var(--empty-accent) 22%, transparent);
+  border-radius: var(--radius-card);
+}
+
+/* ─── Halo ────────────────────────────────────────────────────────────────── */
+.empty-state__halo {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+/* Tailles de halo selon --size */
+.empty-state--sm .empty-state__halo { width: 64px;  height: 64px;  }
+.empty-state--md .empty-state__halo { width: 88px;  height: 88px;  }
+.empty-state--lg .empty-state__halo { width: 112px; height: 112px; }
+
+.empty-state__halo-ring {
+  position: absolute;
+  inset: 0;
+  border-radius: var(--radius-full);
+  animation: empty-state-pulse var(--duration-slowest) var(--ease-in-out) infinite alternate;
+}
+
+.empty-state__halo-ring--outer {
+  background: var(--empty-accent-ring);
+  animation-delay: 0ms;
+}
+
+.empty-state__halo-ring--inner {
+  inset: 10px;
+  background: color-mix(in srgb, var(--empty-accent) 12%, transparent);
+  animation-delay: 200ms;
+}
+
+.empty-state__icon-wrap {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-full);
+  background: var(--glass-bg-strong);
+  backdrop-filter: var(--glass-blur-light);
+  -webkit-backdrop-filter: var(--glass-blur-light);
+  border: 1px solid color-mix(in srgb, var(--empty-accent) 28%, var(--glass-border-light));
+}
+
+.empty-state--sm .empty-state__icon-wrap { width: 44px;  height: 44px;  }
+.empty-state--md .empty-state__icon-wrap { width: 60px;  height: 60px;  }
+.empty-state--lg .empty-state__icon-wrap { width: 76px;  height: 76px;  }
+
+.empty-state__icon {
+  display: block;
+  line-height: 1;
+  user-select: none;
+}
+
+.empty-state--sm .empty-state__icon { font-size: var(--text-2xl); }
+.empty-state--md .empty-state__icon { font-size: var(--text-3xl); }
+.empty-state--lg .empty-state__icon { font-size: var(--text-4xl); }
+
+/* ─── Body ────────────────────────────────────────────────────────────────── */
+.empty-state__body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  max-width: 320px;
+}
+
+.empty-state--lg .empty-state__body {
+  max-width: 400px;
+}
+
+.empty-state__title {
+  font-family: var(--font-display);
+  font-weight: var(--font-weight-semibold);
+  color: var(--text-primary);
+  line-height: var(--leading-snug);
+  margin: 0;
+}
+
+.empty-state--sm .empty-state__title { font-size: var(--text-sm);  }
+.empty-state--md .empty-state__title { font-size: var(--text-base); }
+.empty-state--lg .empty-state__title { font-size: var(--text-xl);  }
+
+.empty-state__description {
+  font-family: var(--font-body);
+  color: var(--text-secondary);
+  line-height: var(--leading-relaxed);
+  margin: 0;
+}
+
+.empty-state--sm .empty-state__description { font-size: var(--text-xs); }
+.empty-state--md .empty-state__description { font-size: var(--text-sm); }
+.empty-state--lg .empty-state__description { font-size: var(--text-base); }
+
+/* ─── Actions ─────────────────────────────────────────────────────────────── */
+.empty-state__actions {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.empty-state__btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  border: none;
+  cursor: pointer;
+  font-family: var(--font-body);
+  font-weight: var(--font-weight-medium);
+  border-radius: var(--radius-full);
+  transition: var(--transition-interactive);
+  white-space: nowrap;
+  text-decoration: none;
+}
+
+.empty-state--sm .empty-state__btn {
+  font-size: var(--text-xs);
+  padding: var(--space-2) var(--space-4);
+  height: var(--height-btn-sm);
+}
+.empty-state--md .empty-state__btn,
+.empty-state--lg .empty-state__btn {
+  font-size: var(--text-sm);
+  padding: var(--space-2-5) var(--space-5);
+  height: var(--height-btn-md);
+}
+
+/* Bouton primaire */
+.empty-state__btn--primary {
+  background: var(--empty-accent);
+  color: var(--primary-text);
+}
+
+.empty-state__btn--primary:hover {
+  filter: brightness(1.08);
+}
+
+.empty-state__btn--primary:focus-visible {
+  outline: 2px solid var(--empty-accent);
+  outline-offset: 3px;
+}
+
+/* Bouton secondaire */
+.empty-state__btn--secondary {
+  background: transparent;
+  color: var(--empty-accent);
+  font-weight: var(--font-weight-regular);
+  font-size: var(--text-sm) !important;
+}
+
+.empty-state__btn--secondary:hover {
+  background: var(--empty-accent-subtle);
+}
+
+.empty-state__btn--secondary:focus-visible {
+  outline: 2px solid var(--empty-accent);
+  outline-offset: 3px;
+}
+
+.empty-state__btn-icon {
+  display: flex;
+  align-items: center;
+  font-size: 1em;
+  line-height: 1;
+}
+
+/* ─── Animation halo ──────────────────────────────────────────────────────── */
+@keyframes empty-state-pulse {
+  from { opacity: 0.5; transform: scale(0.96); }
+  to   { opacity: 1;   transform: scale(1.04); }
+}
+
+/* ─── Reduced motion ──────────────────────────────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  .empty-state__halo-ring {
+    animation: none;
+  }
+}
+
+/* ─── Responsive ──────────────────────────────────────────────────────────── */
+@media (min-width: 768px) {
+  .empty-state__actions {
+    flex-direction: row;
+    justify-content: center;
+  }
+}

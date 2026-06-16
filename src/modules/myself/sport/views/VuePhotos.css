@@ -1,0 +1,112 @@
+.vue-photos {
+  padding: 24px;
+}
+
+.vue-photos__title {
+  font-size: 22px;
+  font-weight: 800;
+  margin-bottom: 20px;
+}
+
+.photos-months {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.photos-month {
+  background: var(--bp-card);
+  border-radius: var(--bp-radius);
+  padding: 20px;
+  border: 1px solid var(--bp-border);
+}
+
+.photos-month__header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+.photos-month__label {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--bp-text);
+}
+
+.photos-month__badge {
+  font-size: 11px;
+  background: var(--bp-lavender);
+  color: var(--bp-purple-deep);
+  padding: 3px 8px;
+  border-radius: 20px;
+  font-weight: 700;
+}
+
+.photos-slots {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.photos-slot {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+
+.photos-slot__label {
+  font-size: 11px;
+  color: var(--bp-muted);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.photos-slot__area {
+  width: 100%;
+  aspect-ratio: 3/4;
+  border: 2px dashed var(--bp-border);
+  border-radius: var(--bp-radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  overflow: hidden;
+  background: var(--bp-bg);
+  position: relative;
+  transition: border-color 0.15s;
+}
+
+.photos-slot__area:hover { border-color: var(--bp-purple-mid); }
+
+.photos-slot__area img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.photos-slot__plus {
+  font-size: 28px;
+  color: var(--bp-lavender);
+}
+
+.photos-slot__input { display: none; }
+
+.photos-month__note {
+  width: 100%;
+  border: 1.5px solid var(--bp-border);
+  border-radius: var(--bp-radius-sm);
+  padding: 10px 14px;
+  font-size: 13px;
+  color: var(--bp-text);
+  background: var(--bp-bg);
+  resize: vertical;
+  min-height: 60px;
+  font-family: inherit;
+  box-sizing: border-box;
+}
+
+.photos-month__note:focus { outline: none; border-color: var(--bp-purple-mid); }

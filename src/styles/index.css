@@ -1,0 +1,18 @@
+/**
+ * FAMILY OS — Design System
+ * Point d'entrée unique à importer dans main.tsx
+ *
+ * Ordre d'import obligatoire :
+ *   1. tokens     — variables CSS (doit être en premier)
+ *   2. reset      — normalisation (utilise les tokens)
+ *   3. typography — polices + classes utilitaires (utilise les tokens)
+ *   4. utils      — classes utilitaires transversales (utilise les tokens)
+ *
+ * Usage dans main.tsx :
+ *   import '@styles/index.css';
+ */
+
+@import './tokens.css';
+@import './reset.css';
+@import './typography.css';
+@import './utils.css';

@@ -1,0 +1,666 @@
+/**
+ * FAMILY OS — Design Tokens
+ * Source de vérité de tout le design system.
+ * Ne jamais utiliser de valeurs brutes dans les composants —
+ * toujours référencer un token.
+ *
+ * Structure :
+ *   1. Palette brute (échelle de couleurs)
+ *   2. Tokens sémantiques (surfaces, textes, bordures, états)
+ *   3. Glassmorphism
+ *   4. Espacement
+ *   5. Typographie (tailles, poids, hauteurs de ligne)
+ *   6. Bordures & rayons
+ *   7. Ombres & élévations
+ *   8. Transitions & animations
+ *   9. Z-index
+ *  10. Breakpoints (custom properties en px pour JS si besoin)
+ *  11. Tokens dark mode (prefers-color-scheme)
+ */
+
+:root {
+
+  /* ─── 1. PALETTE BRUTE ────────────────────────────────────────────────────
+   * Valeurs HSL — permet les manipulations alpha sans rgba() répétitifs.
+   * Nommage : --color-[teinte]-[intensité 50→950]
+   * Ne pas utiliser directement dans les composants — passer par les tokens
+   * sémantiques ci-dessous.
+   * ──────────────────────────────────────────────────────────────────────── */
+
+  /* Lavande (couleur primaire) */
+  --color-lavender-50:  hsl(262, 60%, 97%);
+  --color-lavender-100: hsl(262, 55%, 93%);
+  --color-lavender-200: hsl(262, 52%, 86%);
+  --color-lavender-300: hsl(262, 50%, 76%);
+  --color-lavender-400: hsl(262, 48%, 67%);
+  --color-lavender-500: hsl(262, 45%, 58%);   /* primaire */
+  --color-lavender-600: hsl(262, 43%, 49%);
+  --color-lavender-700: hsl(262, 42%, 40%);
+  --color-lavender-800: hsl(262, 40%, 30%);
+  --color-lavender-900: hsl(262, 38%, 22%);
+  --color-lavender-950: hsl(262, 36%, 14%);
+
+  /* Bleu ciel */
+  --color-sky-50:  hsl(208, 70%, 97%);
+  --color-sky-100: hsl(208, 65%, 92%);
+  --color-sky-200: hsl(208, 62%, 84%);
+  --color-sky-300: hsl(208, 58%, 73%);
+  --color-sky-400: hsl(208, 54%, 62%);
+  --color-sky-500: hsl(208, 50%, 52%);
+  --color-sky-600: hsl(208, 48%, 43%);
+  --color-sky-700: hsl(208, 46%, 34%);
+  --color-sky-800: hsl(208, 44%, 25%);
+  --color-sky-900: hsl(208, 42%, 18%);
+
+  /* Violet pastel */
+  --color-violet-50:  hsl(280, 65%, 97%);
+  --color-violet-100: hsl(280, 60%, 93%);
+  --color-violet-200: hsl(280, 56%, 85%);
+  --color-violet-300: hsl(280, 52%, 74%);
+  --color-violet-400: hsl(280, 48%, 63%);
+  --color-violet-500: hsl(280, 44%, 53%);
+  --color-violet-600: hsl(280, 42%, 44%);
+  --color-violet-700: hsl(280, 40%, 35%);
+
+  /* Rose poudré */
+  --color-rose-50:  hsl(340, 60%, 97%);
+  --color-rose-100: hsl(340, 55%, 93%);
+  --color-rose-200: hsl(340, 50%, 86%);
+  --color-rose-300: hsl(340, 46%, 76%);
+  --color-rose-400: hsl(340, 43%, 66%);
+  --color-rose-500: hsl(340, 40%, 57%);
+  --color-rose-600: hsl(340, 38%, 47%);
+
+  /* Blanc cassé / Cream */
+  --color-cream-50:  hsl(40, 40%, 99%);
+  --color-cream-100: hsl(40, 35%, 97%);
+  --color-cream-200: hsl(40, 30%, 94%);
+  --color-cream-300: hsl(40, 25%, 89%);
+  --color-cream-400: hsl(40, 20%, 82%);
+
+  /* Neutres chauds */
+  --color-neutral-50:  hsl(240, 10%, 98%);
+  --color-neutral-100: hsl(240, 9%, 95%);
+  --color-neutral-200: hsl(240, 8%, 90%);
+  --color-neutral-300: hsl(240, 7%, 82%);
+  --color-neutral-400: hsl(240, 6%, 65%);
+  --color-neutral-500: hsl(240, 5%, 50%);
+  --color-neutral-600: hsl(240, 5%, 38%);
+  --color-neutral-700: hsl(240, 5%, 28%);
+  --color-neutral-800: hsl(240, 6%, 18%);
+  --color-neutral-900: hsl(240, 7%, 11%);
+  --color-neutral-950: hsl(240, 8%, 6%);
+
+  /* Statuts sémantiques */
+  --color-success-100: hsl(142, 50%, 92%);
+  --color-success-500: hsl(142, 45%, 45%);
+  --color-success-700: hsl(142, 45%, 30%);
+
+  --color-warning-100: hsl(38, 90%, 92%);
+  --color-warning-500: hsl(38, 85%, 52%);
+  --color-warning-700: hsl(38, 80%, 36%);
+
+  --color-danger-100: hsl(4, 70%, 92%);
+  --color-danger-500: hsl(4, 65%, 52%);
+  --color-danger-700: hsl(4, 60%, 36%);
+
+  --color-info-100: hsl(208, 65%, 92%);
+  --color-info-500: hsl(208, 55%, 48%);
+  --color-info-700: hsl(208, 50%, 32%);
+
+
+  /* ─── 2. TOKENS SÉMANTIQUES ───────────────────────────────────────────────
+   * Ces tokens sont utilisés dans tous les composants.
+   * ──────────────────────────────────────────────────────────────────────── */
+
+  /* Fond d'application */
+  --bg-app:          var(--cream);
+  --bg-base:         var(--cream);
+  --bg-elevated:     hsl(0, 0%, 100%);
+  --bg-sunken:       var(--color-neutral-100);
+
+  /* Surfaces (cartes, panels, modals) */
+  --surface-1:       hsl(0, 0%, 100%);          /* carte standard */
+  --surface-2:       var(--color-cream-100);     /* carte secondaire */
+  --surface-3:       var(--color-lavender-50);   /* carte teintée */
+  --surface-overlay: hsla(262, 30%, 20%, 0.45);  /* backdrop modal */
+
+  /* ─── Palette Family OS ─────────────────────────────────────────────────
+   * Couleurs validées dans le design system.
+   * ──────────────────────────────────────────────────────────────────────── */
+  --periwinkle:        #6F7ED6;
+  --periwinkle-10:     rgba(111, 126, 214, 0.10);
+  --periwinkle-20:     rgba(111, 126, 214, 0.20);
+
+  --lilac:             #D2ADEB;
+  --lilac-dark:        #B98FD4;
+  --lilac-10:          rgba(210, 173, 235, 0.12);
+  --lilac-20:          rgba(210, 173, 235, 0.25);
+  --lilac-40:          rgba(210, 173, 235, 0.45);
+
+  --coral:             #FD7746;
+  --coral-10:          rgba(253, 119, 70, 0.10);
+
+  --amber:             #FEC355;
+  --amber-10:          rgba(254, 195, 85, 0.15);
+
+  --cream:             #F7F6F4;
+  --white-pure:        #FDFDFE;
+
+  --subcat-active:     #4A4660;
+
+  /* Couleurs primaires (brand) — periwinkle */
+  --primary:         var(--periwinkle);
+  --primary-light:   #8E9CDF;
+  --primary-dark:    #5D6DC4;
+  --primary-subtle:  var(--periwinkle-10);
+  --primary-text:    hsl(0, 0%, 100%);
+
+  /* Secondaire — lilas */
+  --secondary:       var(--lilac);
+  --secondary-dark:  var(--lilac-dark);
+  --secondary-subtle: var(--lilac-10);
+  --secondary-text:  hsl(0, 0%, 100%);
+
+  /* CTA urgent — corail */
+  --cta:             var(--coral);
+  --cta-subtle:      var(--coral-10);
+  --cta-text:        hsl(0, 0%, 100%);
+
+  /* Couleurs d'accent */
+  --accent-sky:      var(--color-sky-400);
+  --accent-violet:   var(--color-violet-400);
+  --accent-rose:     var(--color-rose-400);
+
+  /* Couleurs de texte */
+  --text-primary:    var(--color-neutral-900);
+  --text-secondary:  var(--color-neutral-600);
+  --text-tertiary:   var(--color-neutral-400);
+  --text-disabled:   var(--color-neutral-300);
+  --text-inverse:    hsl(0, 0%, 100%);
+  --text-brand:      var(--color-lavender-600);
+  --text-link:       var(--color-sky-600);
+  --text-link-hover: var(--color-sky-700);
+
+  /* Bordures */
+  --border-subtle:   var(--color-neutral-200);
+  --border-default:  var(--color-neutral-300);
+  --border-strong:   var(--color-neutral-400);
+  --border-brand:    var(--color-lavender-300);
+  --border-focus:    var(--color-lavender-500);
+
+  /* Statuts */
+  --status-success-bg:   var(--color-success-100);
+  --status-success-text: var(--color-success-700);
+  --status-success-icon: var(--color-success-500);
+
+  --status-warning-bg:   var(--color-warning-100);
+  --status-warning-text: var(--color-warning-700);
+  --status-warning-icon: var(--color-warning-500);
+
+  --status-danger-bg:    var(--color-danger-100);
+  --status-danger-text:  var(--color-danger-700);
+  --status-danger-icon:  var(--color-danger-500);
+
+  --status-info-bg:      var(--color-info-100);
+  --status-info-text:    var(--color-info-700);
+  --status-info-icon:    var(--color-info-500);
+
+  /* Couleurs par module — palette visionOS saturée */
+  --module-dashboard: hsl(262, 68%, 65%);   /* lavande vive */
+  --module-cuisine:   hsl(22, 88%, 62%);    /* orange vibrant */
+  --module-enfants:   hsl(168, 62%, 48%);   /* vert menthe */
+  --module-myself:    hsl(338, 72%, 65%);   /* rose profond */
+  --module-maison:    hsl(205, 78%, 58%);   /* sky vif */
+  --module-famille:   hsl(278, 68%, 62%);   /* violet intense */
+  --module-achats:    hsl(48, 95%, 55%);    /* jaune-or */
+
+
+  /* ─── 3. GLASSMORPHISM — visionOS liquid glass ───────────────────────────
+   * Surfaces en verre liquide : blur saturé + specular highlight blanc.
+   * Le reflet speculaire (inset top) est la signature visionOS.
+   * ──────────────────────────────────────────────────────────────────────── */
+
+  /* Verre léger (widgets secondaires) */
+  --glass-bg-light:      hsla(0, 0%, 100%, 0.42);
+  --glass-border-light:  hsla(0, 0%, 100%, 0.65);
+  --glass-blur-light:    blur(28px) saturate(160%);
+  --glass-shadow-light:
+    inset 0 1px 0 hsla(0, 0%, 100%, 0.80),
+    0 4px 24px hsla(262, 50%, 30%, 0.12);
+
+  /* Verre standard (cartes principales) */
+  --glass-bg:            hsla(0, 0%, 100%, 0.48);
+  --glass-border:        hsla(0, 0%, 100%, 0.72);
+  --glass-blur:          blur(44px) saturate(180%);
+  --glass-shadow:
+    inset 0 1.5px 0 hsla(0, 0%, 100%, 0.90),
+    inset 0 -1px 0 hsla(0, 0%, 100%, 0.18),
+    0 8px 40px hsla(262, 55%, 28%, 0.16),
+    0 2px 8px  hsla(262, 55%, 28%, 0.10);
+
+  /* Verre fort (modals, drawers) */
+  --glass-bg-strong:     hsla(0, 0%, 100%, 0.70);
+  --glass-border-strong: hsla(0, 0%, 100%, 0.88);
+  --glass-blur-strong:   blur(64px) saturate(200%);
+  --glass-shadow-strong:
+    inset 0 2px 0 hsla(0, 0%, 100%, 0.95),
+    inset 0 -1px 0 hsla(0, 0%, 100%, 0.22),
+    0 20px 60px hsla(262, 50%, 20%, 0.20),
+    0 6px 20px  hsla(262, 50%, 20%, 0.12);
+
+  /* Verre teinté violet/lilas (accent brand) */
+  --glass-bg-tinted:     hsla(262, 65%, 92%, 0.58);
+  --glass-border-tinted: hsla(262, 72%, 80%, 0.60);
+  --glass-blur-tinted:   blur(36px) saturate(170%);
+
+  /* Accent jaune-doré (chips, badges énergiques) */
+  --accent-gold:         hsl(48, 95%, 58%);
+  --accent-gold-subtle:  hsla(48, 95%, 58%, 0.15);
+
+  /* Arrière-plan — gradient visionOS vivid */
+  --bg-gradient-app: linear-gradient(
+    135deg,
+    hsl(262, 72%, 78%) 0%,
+    hsl(208, 76%, 76%) 26%,
+    hsl(278, 68%, 78%) 52%,
+    hsl(338, 62%, 82%) 74%,
+    hsl(48,  72%, 80%) 100%
+  );
+
+  /* Dégradé section */
+  --bg-gradient-section: linear-gradient(
+    180deg,
+    hsla(262, 60%, 95%, 0.85) 0%,
+    hsla(0, 0%, 100%, 0.35) 100%
+  );
+
+
+  /* ─── 4. ESPACEMENT ───────────────────────────────────────────────────────
+   * Échelle en multiples de 4px.
+   * --space-[n] = n × 4px
+   * ──────────────────────────────────────────────────────────────────────── */
+
+  --space-0:   0px;
+  --space-px:  1px;
+  --space-0-5: 2px;
+  --space-1:   4px;
+  --space-1-5: 6px;
+  --space-2:   8px;
+  --space-2-5: 10px;
+  --space-3:   12px;
+  --space-3-5: 14px;
+  --space-4:   16px;
+  --space-5:   20px;
+  --space-6:   24px;
+  --space-7:   28px;
+  --space-8:   32px;
+  --space-9:   36px;
+  --space-10:  40px;
+  --space-11:  44px;   /* min tap target iOS */
+  --space-12:  48px;
+  --space-14:  56px;
+  --space-16:  64px;
+  --space-18:  72px;
+  --space-20:  80px;
+  --space-24:  96px;
+  --space-28:  112px;
+  --space-32:  128px;
+
+  /* Espacements sémantiques */
+  --spacing-page-x:      var(--space-4);   /* padding horizontal page mobile */
+  --spacing-page-x-md:   var(--space-6);   /* padding horizontal page tablet */
+  --spacing-section:     var(--space-8);   /* espace entre sections */
+  --spacing-card:        var(--space-4);   /* padding interne carte */
+  --spacing-card-lg:     var(--space-6);   /* padding interne grande carte */
+  --spacing-stack-xs:    var(--space-1);
+  --spacing-stack-sm:    var(--space-2);
+  --spacing-stack:       var(--space-4);
+  --spacing-stack-lg:    var(--space-6);
+
+  /* Hauteur des éléments interactifs */
+  --height-input:        var(--space-11);  /* 44px — min tap iOS */
+  --height-button-sm:    36px;
+  --height-button:       var(--space-11);  /* 44px */
+  --height-button-lg:    52px;
+  --height-nav-bottom:   var(--space-16);  /* 64px bottom bar iPhone */
+  --height-nav-top:      var(--space-14);  /* 56px top bar */
+  --height-fab:          var(--space-14);  /* 56px bouton flottant */
+
+
+  /* ─── 5. TYPOGRAPHIE ──────────────────────────────────────────────────────
+   * Familles :
+   *   Display  → Cormorant Garamond (élégant, éditorial)
+   *   Heading  → Playfair Display (premium, lisible)
+   *   Body     → Manrope (moderne, aéré, excellent sur mobile)
+   * Chargées via @font-face dans typography.css
+   * ──────────────────────────────────────────────────────────────────────── */
+
+  --font-display:  'Roobert', 'SF Pro Display', -apple-system, BlinkMacSystemFont, 'Helvetica Neue', sans-serif;
+  --font-heading:  'SF Pro Display', -apple-system, BlinkMacSystemFont, 'Helvetica Neue', sans-serif;
+  --font-body:     'Roobert', 'SF Pro Text', -apple-system, BlinkMacSystemFont, 'Helvetica Neue', sans-serif;
+  --font-mono:     'JetBrains Mono', 'Fira Code', monospace;
+
+  /* Tailles — échelle typographique (base 16px) */
+  --text-xs:   11px;
+  --text-sm:   13px;
+  --text-base: 15px;   /* corps principal mobile */
+  --text-md:   16px;
+  --text-lg:   18px;
+  --text-xl:   20px;
+  --text-2xl:  24px;
+  --text-3xl:  28px;
+  --text-4xl:  34px;
+  --text-5xl:  42px;
+  --text-6xl:  52px;
+  --text-7xl:  64px;
+
+  /* Poids */
+  --font-weight-light:    300;
+  --font-weight-regular:  400;
+  --font-weight-medium:   500;
+  --font-weight-semibold: 600;
+  --font-weight-bold:     700;
+  --font-weight-extrabold:800;
+
+  /* Hauteurs de ligne */
+  --leading-none:    1;
+  --leading-tight:   1.25;
+  --leading-snug:    1.375;
+  --leading-normal:  1.5;
+  --leading-relaxed: 1.625;
+  --leading-loose:   2;
+
+  /* Espacement entre lettres */
+  --tracking-tighter: -0.04em;
+  --tracking-tight:   -0.02em;
+  --tracking-normal:   0em;
+  --tracking-wide:     0.02em;
+  --tracking-wider:    0.05em;
+  --tracking-widest:   0.1em;
+  --tracking-caps:     0.08em;  /* pour les labels uppercase */
+
+
+  /* ─── 6. BORDURES & RAYONS ────────────────────────────────────────────────  */
+
+  --border-width-thin:   0.5px;
+  --border-width:        1px;
+  --border-width-medium: 1.5px;
+  --border-width-thick:  2px;
+
+  --radius-xs:   4px;
+  --radius-sm:   8px;
+  --radius-md:   12px;
+  --radius-lg:   16px;
+  --radius-xl:   20px;
+  --radius-2xl:  24px;
+  --radius-3xl:  32px;
+  --radius-full: 9999px;
+
+  /* Rayons sémantiques */
+  --radius-card:   var(--radius-xl);     /* cartes principales */
+  --radius-card-sm:var(--radius-lg);     /* cartes secondaires */
+  --radius-button: var(--radius-full);   /* boutons pill */
+  --radius-button-sm: var(--radius-md);  /* boutons avec icône */
+  --radius-input:  var(--radius-lg);     /* champs de saisie */
+  --radius-badge:  var(--radius-full);   /* badges */
+  --radius-modal:  var(--radius-2xl);    /* modals, drawers */
+  --radius-chip:   var(--radius-full);   /* chips / tags */
+
+
+  /* ─── 7. OMBRES & ÉLÉVATIONS ──────────────────────────────────────────────
+   * Ombres douces avec teinte brand pour un rendu "wellness premium".
+   * ──────────────────────────────────────────────────────────────────────── */
+
+  --shadow-xs:
+    0 1px 2px hsla(262, 20%, 30%, 0.04);
+
+  --shadow-sm:
+    0 1px 3px  hsla(262, 20%, 30%, 0.06),
+    0 1px 2px  hsla(262, 20%, 30%, 0.04);
+
+  --shadow-md:
+    0 4px 6px  hsla(262, 20%, 30%, 0.07),
+    0 2px 4px  hsla(262, 20%, 30%, 0.05);
+
+  --shadow-lg:
+    0 10px 15px hsla(262, 20%, 30%, 0.08),
+    0 4px  6px  hsla(262, 20%, 30%, 0.05);
+
+  --shadow-xl:
+    0 20px 25px hsla(262, 20%, 30%, 0.09),
+    0 8px  10px hsla(262, 20%, 30%, 0.05);
+
+  --shadow-2xl:
+    0 32px 48px hsla(262, 20%, 20%, 0.12),
+    0 12px 20px hsla(262, 20%, 20%, 0.07);
+
+  /* Ombre avec teinte brand */
+  --shadow-brand-sm:
+    0 4px 16px hsla(262, 65%, 55%, 0.28),
+    inset 0 1px 0 hsla(0, 0%, 100%, 0.60);
+
+  --shadow-brand-md:
+    0 8px 32px hsla(262, 65%, 55%, 0.32),
+    0 2px 8px  hsla(262, 65%, 55%, 0.18),
+    inset 0 1.5px 0 hsla(0, 0%, 100%, 0.65);
+
+  --shadow-brand-lg:
+    0 20px 50px hsla(262, 65%, 50%, 0.36),
+    0 6px  20px hsla(262, 65%, 50%, 0.22),
+    inset 0 2px 0 hsla(0, 0%, 100%, 0.70);
+
+  /* Ombre interne (input focus, etc.) */
+  --shadow-inset-sm:   inset 0 1px 2px hsla(262, 20%, 30%, 0.06);
+  --shadow-inset:      inset 0 2px 4px hsla(262, 20%, 30%, 0.08);
+
+  /* Élévations sémantiques */
+  --elevation-card:    var(--shadow-sm);
+  --elevation-card-hover: var(--shadow-md);
+  --elevation-modal:   var(--shadow-2xl);
+  --elevation-fab:     var(--shadow-brand-md);
+  --elevation-tooltip: var(--shadow-lg);
+  --elevation-nav:     var(--shadow-md);
+
+
+  /* ─── 8. TRANSITIONS & ANIMATIONS ────────────────────────────────────────  */
+
+  /* Durées */
+  --duration-instant:  50ms;
+  --duration-fast:     100ms;
+  --duration-normal:   200ms;
+  --duration-slow:     350ms;
+  --duration-slower:   500ms;
+  --duration-slowest:  800ms;
+
+  /* Courbes d'accélération */
+  --ease-linear:   linear;
+  --ease-in:       cubic-bezier(0.4, 0, 1, 1);
+  --ease-out:      cubic-bezier(0, 0, 0.2, 1);
+  --ease-in-out:   cubic-bezier(0.4, 0, 0.2, 1);
+  --ease-spring:   cubic-bezier(0.34, 1.56, 0.64, 1);  /* rebond léger */
+  --ease-smooth:   cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  --ease-snappy:   cubic-bezier(0.2, 0, 0, 1);         /* Apple-like */
+
+  /* Transitions sémantiques */
+  --transition-color:     color var(--duration-fast) var(--ease-out),
+                          background-color var(--duration-fast) var(--ease-out),
+                          border-color var(--duration-fast) var(--ease-out);
+  --transition-opacity:   opacity var(--duration-normal) var(--ease-out);
+  --transition-shadow:    box-shadow var(--duration-normal) var(--ease-out);
+  --transition-transform: transform var(--duration-normal) var(--ease-spring);
+  --transition-all:       all var(--duration-normal) var(--ease-out);
+
+  /* Transition interactive (boutons, inputs) */
+  --transition-interactive:
+    color            var(--duration-fast) var(--ease-out),
+    background-color var(--duration-fast) var(--ease-out),
+    border-color     var(--duration-fast) var(--ease-out),
+    box-shadow       var(--duration-normal) var(--ease-out),
+    transform        var(--duration-fast) var(--ease-spring),
+    opacity          var(--duration-fast) var(--ease-out);
+
+
+  /* ─── 9. Z-INDEX ──────────────────────────────────────────────────────────  */
+
+  --z-base:       0;
+  --z-raised:     10;
+  --z-dropdown:   100;
+  --z-sticky:     200;
+  --z-overlay:    300;   /* backdrop */
+  --z-modal:      400;   /* modals, drawers */
+  --z-fab:        500;   /* bouton flottant */
+  --z-nav:        600;   /* navigation principale */
+  --z-toast:      700;   /* notifications toast */
+  --z-tooltip:    800;
+  --z-top:        900;   /* éléments toujours au-dessus */
+
+
+  /* ─── 10. BREAKPOINTS ─────────────────────────────────────────────────────
+   * En px — référence pour les media queries dans les autres fichiers CSS.
+   * Appareils cibles : iPhone (375–430px), iPad (768–1024px), tablette cuisine (~1024px)
+   * ──────────────────────────────────────────────────────────────────────── */
+
+  --bp-sm:  480px;
+  --bp-md:  768px;   /* iPad portrait */
+  --bp-lg:  1024px;  /* iPad landscape / tablette cuisine */
+  --bp-xl:  1280px;
+  --bp-2xl: 1536px;
+
+  /* Safe areas iOS (notch, home indicator) */
+  --safe-top:    env(safe-area-inset-top, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-left:   env(safe-area-inset-left, 0px);
+  --safe-right:  env(safe-area-inset-right, 0px);
+
+
+  /* ─── 11. TOKENS SPÉCIFIQUES AUX COMPOSANTS ──────────────────────────────
+   * Pré-compositions pour éviter la répétition dans les composants.
+   * ──────────────────────────────────────────────────────────────────────── */
+
+  /* Navigation bottom bar (iPhone) — liquid glass visionOS */
+  --nav-bottom-bg:         rgba(253, 253, 254, 0.72);
+  --nav-bottom-blur:       blur(24px) saturate(180%);
+  --nav-bottom-border:     rgba(255, 255, 255, 0.88);
+  --nav-item-active-color: var(--lilac);
+  --nav-item-active-text:  white;
+  --nav-add-bg:            rgba(255, 255, 255, 0.22);
+  --nav-add-border:        rgba(255, 255, 255, 0.60);
+  --nav-item-color:        var(--text-tertiary);
+
+  /* Navigation sidebar (iPad / tablette) */
+  --nav-sidebar-bg:    hsla(0, 0%, 100%, 0.55);
+  --nav-sidebar-blur:  blur(48px) saturate(180%);
+  --nav-sidebar-width: 260px;
+  --nav-sidebar-border:hsla(0, 0%, 100%, 0.45);
+
+  /* Carte standard — glass visionOS */
+  --card-bg:        var(--glass-bg);
+  --card-border:    var(--glass-border);
+  --card-blur:      var(--glass-blur);
+  --card-shadow:    var(--glass-shadow);
+  --card-padding:   var(--spacing-card);
+  --card-radius:    var(--radius-card);
+
+  /* Input */
+  --input-bg:       var(--color-neutral-50);
+  --input-border:   var(--border-default);
+  --input-focus-bg: hsl(0, 0%, 100%);
+  --input-focus-border: var(--border-focus);
+  --input-focus-shadow: 0 0 0 3px hsla(262, 45%, 58%, 0.15);
+  --input-placeholder: var(--text-tertiary);
+
+  /* Badge */
+  --badge-radius:  var(--radius-full);
+  --badge-font:    var(--font-weight-semibold);
+
+  /* FAB */
+  --fab-size:      var(--height-fab);
+  --fab-bg:        var(--primary);
+  --fab-shadow:    var(--elevation-fab);
+  --fab-radius:    var(--radius-full);
+  --fab-bottom:    calc(var(--height-nav-bottom) + var(--space-4) + var(--safe-bottom));
+  --fab-right:     var(--space-4);
+}
+
+
+/* ─── 11. DARK MODE ───────────────────────────────────────────────────────────
+ * Override des tokens sémantiques uniquement.
+ * La palette brute reste identique — seule la sémantique change.
+ * ──────────────────────────────────────────────────────────────────────────── */
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    /* Fonds */
+    --bg-app:        hsl(240, 12%, 9%);
+    --bg-base:       hsl(240, 12%, 11%);
+    --bg-elevated:   hsl(240, 11%, 14%);
+    --bg-sunken:     hsl(240, 13%, 7%);
+
+    /* Surfaces */
+    --surface-1:     hsl(240, 11%, 15%);
+    --surface-2:     hsl(240, 10%, 12%);
+    --surface-3:     hsl(262, 20%, 16%);
+    --surface-overlay: hsla(240, 20%, 5%, 0.70);
+
+    /* Textes */
+    --text-primary:   hsl(240, 15%, 92%);
+    --text-secondary: hsl(240, 10%, 65%);
+    --text-tertiary:  hsl(240, 8%, 45%);
+    --text-disabled:  hsl(240, 6%, 30%);
+    --text-brand:     var(--color-lavender-300);
+    --text-link:      var(--color-sky-300);
+    --text-link-hover:var(--color-sky-200);
+
+    /* Bordures */
+    --border-subtle:  hsla(240, 10%, 100%, 0.06);
+    --border-default: hsla(240, 10%, 100%, 0.10);
+    --border-strong:  hsla(240, 10%, 100%, 0.16);
+    --border-brand:   var(--color-lavender-600);
+
+    /* Glassmorphism dark — liquid glass visionOS */
+    --glass-bg-light:      hsla(262, 20%, 20%, 0.55);
+    --glass-border-light:  hsla(0, 0%, 100%, 0.12);
+    --glass-shadow-light:
+      inset 0 1px 0 hsla(0, 0%, 100%, 0.18),
+      0 4px 24px hsla(262, 50%, 10%, 0.30);
+    --glass-bg:            hsla(262, 18%, 16%, 0.68);
+    --glass-border:        hsla(0, 0%, 100%, 0.16);
+    --glass-shadow:
+      inset 0 1.5px 0 hsla(0, 0%, 100%, 0.22),
+      inset 0 -1px 0 hsla(0, 0%, 100%, 0.06),
+      0 8px 40px hsla(262, 60%, 8%, 0.40),
+      0 2px 8px  hsla(262, 60%, 8%, 0.20);
+    --glass-bg-strong:     hsla(262, 16%, 14%, 0.85);
+    --glass-border-strong: hsla(0, 0%, 100%, 0.20);
+    --glass-shadow-strong:
+      inset 0 2px 0 hsla(0, 0%, 100%, 0.25),
+      0 20px 60px hsla(262, 60%, 5%, 0.50);
+    --glass-bg-tinted:     hsla(262, 35%, 18%, 0.72);
+    --glass-border-tinted: hsla(262, 60%, 70%, 0.25);
+
+    /* Dégradé dark — riche visionOS */
+    --bg-gradient-app: linear-gradient(
+      135deg,
+      hsl(262, 40%, 8%)  0%,
+      hsl(208, 40%, 9%)  30%,
+      hsl(278, 35%, 9%)  55%,
+      hsl(240, 30%, 7%)  100%
+    );
+
+    /* Navigation dark */
+    --nav-bottom-bg:      hsla(240, 15%, 10%, 0.88);
+    --nav-bottom-border:  hsla(240, 15%, 100%, 0.08);
+    --nav-sidebar-bg:     hsla(240, 15%, 12%, 0.80);
+
+    /* Carte dark */
+    --card-bg:     var(--glass-bg);
+    --card-border: var(--glass-border);
+
+    /* Input dark */
+    --input-bg:           hsl(240, 12%, 14%);
+    --input-border:       var(--border-default);
+    --input-focus-bg:     hsl(240, 12%, 16%);
+    --input-focus-shadow: 0 0 0 3px hsla(262, 45%, 58%, 0.20);
+  }
+}

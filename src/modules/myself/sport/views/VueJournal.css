@@ -1,0 +1,168 @@
+.vue-journal {
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.vue-journal__title { font-size: 22px; font-weight: 800; }
+
+.journal-card {
+  background: var(--bp-card);
+  border-radius: var(--bp-radius);
+  padding: 22px;
+  border: 1px solid var(--bp-border);
+}
+
+.journal-card__title { font-size: 16px; font-weight: 700; margin-bottom: 16px; }
+
+/* Mood */
+.journal-moods {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 18px;
+}
+
+.journal-mood-btn {
+  font-size: 28px;
+  background: var(--bp-bg);
+  border: 2px solid var(--bp-border);
+  border-radius: 12px;
+  padding: 8px 14px;
+  cursor: pointer;
+  transition: all 0.15s;
+  flex: 1;
+}
+
+.journal-mood-btn--active {
+  border-color: var(--bp-purple-mid);
+  background: linear-gradient(135deg, rgba(167,139,250,0.15), rgba(244,114,182,0.1));
+  transform: scale(1.08);
+}
+
+/* Sliders */
+.journal-sliders { display: flex; flex-direction: column; gap: 12px; margin-bottom: 18px; }
+
+.journal-slider-row { display: flex; align-items: center; gap: 12px; }
+.journal-slider-row__label { width: 110px; font-size: 13px; font-weight: 600; flex-shrink: 0; }
+.journal-slider-row input[type="range"] { flex: 1; accent-color: var(--bp-purple-mid); }
+.journal-slider-row__val { width: 35px; text-align: right; font-size: 14px; font-weight: 700; color: var(--bp-purple-deep); }
+
+.journal-sommeil {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 18px;
+}
+.journal-sommeil label { font-size: 13px; font-weight: 600; }
+.journal-sommeil input {
+  border: 1.5px solid var(--bp-border);
+  border-radius: 8px;
+  padding: 8px 10px;
+  font-size: 14px;
+  width: 80px;
+  background: var(--bp-bg);
+  color: var(--bp-text);
+}
+.journal-sommeil input:focus { outline: none; border-color: var(--bp-purple-mid); }
+
+.journal-textarea {
+  width: 100%;
+  border: 1.5px solid var(--bp-border);
+  border-radius: var(--bp-radius-sm);
+  padding: 12px 14px;
+  font-size: 14px;
+  color: var(--bp-text);
+  background: var(--bp-bg);
+  resize: vertical;
+  min-height: 90px;
+  font-family: inherit;
+  margin-bottom: 14px;
+  box-sizing: border-box;
+}
+.journal-textarea:focus { outline: none; border-color: var(--bp-purple-mid); }
+
+.journal-save-btn {
+  width: 100%;
+  background: #6F7ED6;
+  color: #fff;
+  border: none;
+  border-radius: var(--bp-radius);
+  padding: 14px;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+/* Calendrier */
+.journal-cal {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.journal-cal__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.journal-cal__nav {
+  background: none;
+  border: 1.5px solid var(--bp-border);
+  border-radius: 8px;
+  padding: 6px 12px;
+  cursor: pointer;
+  font-size: 16px;
+  color: var(--bp-text);
+}
+
+.journal-cal__month { font-size: 15px; font-weight: 700; }
+
+.journal-cal__grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 4px;
+}
+
+.journal-cal__dow {
+  text-align: center;
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--bp-muted);
+  text-transform: uppercase;
+  padding: 4px 0;
+}
+
+.journal-cal__day {
+  aspect-ratio: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--bp-muted);
+  position: relative;
+}
+
+.journal-cal__day--journal { background: var(--bp-pink-light); color: var(--bp-pink-deep); }
+.journal-cal__day--seance  { background: var(--bp-lavender); color: var(--bp-purple-deep); }
+.journal-cal__day--today   { outline: 2px solid var(--bp-pink-deep); }
+.journal-cal__day--empty   { }
+
+/* Entrées récentes */
+.journal-entries { display: flex; flex-direction: column; gap: 12px; }
+
+.journal-entry {
+  background: var(--bp-bg);
+  border-radius: var(--bp-radius-sm);
+  padding: 14px;
+  border: 1px solid var(--bp-border);
+}
+
+.journal-entry__header { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
+.journal-entry__mood { font-size: 22px; }
+.journal-entry__date { font-size: 12px; color: var(--bp-muted); }
+.journal-entry__scores { font-size: 11px; color: var(--bp-muted); margin-left: auto; }
+.journal-entry__text { font-size: 13px; color: var(--bp-text); line-height: 1.5; }

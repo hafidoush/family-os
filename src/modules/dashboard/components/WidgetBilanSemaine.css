@@ -1,0 +1,324 @@
+/* =====================================================================
+   WIDGET BILAN SEMAINE — redesign premium 15/06/2026
+   Références : Calm, Headspace, Apple Health
+   ===================================================================== */
+
+.widget-bilan {
+  background: rgba(255, 255, 255, 0.88);
+  backdrop-filter: blur(28px) saturate(180%);
+  -webkit-backdrop-filter: blur(28px) saturate(180%);
+  border: 1px solid rgba(167, 139, 250, 0.16);
+  border-radius: 24px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ── Zone hero : dégradé lavande en haut ─────────────────────────── */
+
+.bilan__hero {
+  background: linear-gradient(
+    160deg,
+    hsl(262, 60%, 94%) 0%,
+    hsl(262, 45%, 97%) 55%,
+    hsl(40, 30%, 99%) 100%
+  );
+  padding: 20px 20px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  position: relative;
+}
+
+/* ── En-tête ──────────────────────────────────────────────────────── */
+
+.bilan__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.bilan__header-left {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.bilan__eyebrow {
+  font-family: var(--font-body, -apple-system, sans-serif);
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: hsl(262, 43%, 60%);
+}
+
+.bilan__title {
+  font-family: var(--font-body, -apple-system, sans-serif);
+  font-size: 17px;
+  font-weight: 700;
+  color: hsl(262, 38%, 22%);
+  margin: 0;
+  line-height: 1.2;
+}
+
+.bilan__dismiss {
+  width: 28px; height: 28px;
+  border-radius: 50%; border: none;
+  background: rgba(0, 0, 0, 0.05);
+  color: hsl(262, 10%, 55%);
+  font-size: 17px; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+  transition: background 0.15s, color 0.15s;
+  line-height: 1;
+}
+.bilan__dismiss:hover {
+  background: rgba(0, 0, 0, 0.09);
+  color: hsl(262, 10%, 35%);
+}
+
+/* ── Score — héros visuel ─────────────────────────────────────────── */
+
+.bilan__score-zone {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+}
+
+.bilan__score-ring-wrap {
+  position: relative;
+  width: 76px;
+  height: 76px;
+  flex-shrink: 0;
+}
+
+.bilan__score-svg {
+  width: 76px; height: 76px;
+  transform: rotate(-90deg);
+}
+
+.bilan__score-track {
+  fill: none;
+  stroke: hsl(262, 30%, 91%);
+  stroke-width: 4;
+}
+
+.bilan__score-arc {
+  fill: none;
+  stroke-width: 4;
+  stroke-linecap: round;
+  transition: stroke-dasharray 0.9s cubic-bezier(0.34, 1.2, 0.64, 1),
+              stroke 0.4s ease;
+}
+
+.bilan__score-arc--green { stroke: hsl(152, 42%, 45%); }
+.bilan__score-arc--amber { stroke: hsl(38, 72%, 50%); }
+.bilan__score-arc--clay  { stroke: hsl(15, 55%, 52%); }
+
+.bilan__score-inner {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0;
+}
+
+.bilan__score-num {
+  font-family: var(--font-body, -apple-system, sans-serif);
+  font-size: 22px;
+  font-weight: 800;
+  color: hsl(262, 38%, 20%);
+  line-height: 1;
+}
+
+.bilan__score-denom {
+  font-family: var(--font-body, -apple-system, sans-serif);
+  font-size: 10px;
+  font-weight: 500;
+  color: hsl(262, 20%, 62%);
+  line-height: 1;
+}
+
+.bilan__score-caption {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.bilan__score-label {
+  font-family: var(--font-body, -apple-system, sans-serif);
+  font-size: 15px;
+  font-weight: 700;
+  color: hsl(262, 35%, 22%);
+  line-height: 1.25;
+}
+
+.bilan__score-sub {
+  font-family: var(--font-body, -apple-system, sans-serif);
+  font-size: 12.5px;
+  color: hsl(262, 15%, 56%);
+  line-height: 1.35;
+}
+
+/* ── Texte IA ─────────────────────────────────────────────────────── */
+
+.bilan__ia {
+  font-family: var(--font-body, -apple-system, sans-serif);
+  font-size: 13px;
+  line-height: 1.6;
+  color: hsl(262, 18%, 42%);
+  margin: 0;
+  padding: 11px 14px;
+  background: rgba(167, 139, 250, 0.07);
+  border-radius: 12px;
+  border-left: 2.5px solid hsl(262, 45%, 72%);
+  font-style: italic;
+}
+
+.bilan__ia-loading {
+  font-size: 12px;
+  color: hsl(262, 20%, 65%);
+  font-style: italic;
+  margin: 0;
+  padding: 4px 0;
+}
+
+/* ── Zone points — fond crème ─────────────────────────────────────── */
+
+.bilan__body {
+  padding: 0 20px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.bilan__section-label {
+  font-family: var(--font-body, -apple-system, sans-serif);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: hsl(262, 20%, 65%);
+  padding-top: 4px;
+}
+
+/* ── Lignes de points ─────────────────────────────────────────────── */
+
+.bilan__rows {
+  display: flex;
+  flex-direction: column;
+}
+
+.bilan__row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 11px 0;
+  border-bottom: 1px solid hsl(40, 20%, 92%);
+}
+.bilan__row:last-child { border-bottom: none; }
+
+.bilan__row-icon {
+  font-size: 18px;
+  line-height: 1;
+  width: 24px;
+  flex-shrink: 0;
+  text-align: center;
+}
+
+.bilan__row-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+}
+
+.bilan__row-label {
+  font-family: var(--font-body, -apple-system, sans-serif);
+  font-size: 13.5px;
+  font-weight: 600;
+  color: hsl(262, 22%, 22%);
+  line-height: 1.2;
+}
+
+.bilan__row-valeur {
+  font-family: var(--font-body, -apple-system, sans-serif);
+  font-size: 12px;
+  line-height: 1.3;
+}
+
+.bilan__row--ok    .bilan__row-valeur { color: hsl(152, 38%, 46%); }
+.bilan__row--warn  .bilan__row-valeur { color: hsl(38, 65%, 44%); }
+.bilan__row--clay  .bilan__row-valeur { color: hsl(15, 52%, 48%); }
+
+/* Indicateur statut à droite */
+.bilan__row-dot {
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.bilan__row--ok   .bilan__row-dot { background: hsl(152, 42%, 52%); }
+.bilan__row--warn .bilan__row-dot { background: hsl(38, 72%, 54%);  }
+.bilan__row--clay .bilan__row-dot { background: hsl(15, 55%, 55%);  }
+
+/* ── Récap semaine ────────────────────────────────────────────────── */
+
+.bilan__recap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  background: hsl(262, 55%, 97%);
+  border-radius: 10px;
+}
+
+.bilan__recap-icon {
+  font-size: 14px;
+  flex-shrink: 0;
+}
+
+.bilan__recap-text {
+  font-family: var(--font-body, -apple-system, sans-serif);
+  font-size: 12.5px;
+  color: hsl(262, 22%, 48%);
+  line-height: 1.3;
+}
+
+.bilan__recap-text strong {
+  color: hsl(262, 43%, 40%);
+  font-weight: 700;
+}
+
+/* ── CTA ──────────────────────────────────────────────────────────── */
+
+.bilan__cta {
+  width: 100%;
+  padding: 13px 22px;
+  border-radius: 9999px;
+  border: none;
+  background: #6F7ED6;
+  color: #fff;
+  font-family: var(--font-body, -apple-system, sans-serif);
+  font-size: 14.5px;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  letter-spacing: 0.01em;
+  box-shadow: 0 4px 16px rgba(111, 126, 214, 0.28);
+  transition: opacity 0.18s, transform 0.15s, box-shadow 0.18s;
+  -webkit-tap-highlight-color: transparent;
+}
+.bilan__cta:hover  { opacity: 0.93; box-shadow: 0 6px 20px rgba(111, 126, 214, 0.36); }
+.bilan__cta:active { transform: scale(0.98); opacity: 0.88; box-shadow: none; }
+
+.bilan__cta-arrow {
+  font-size: 18px;
+  opacity: 0.8;
+}

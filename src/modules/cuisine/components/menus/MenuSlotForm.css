@@ -1,0 +1,222 @@
+/* ─── MenuSlotForm ───────────────────────────────────────────────────────────── */
+
+.slot-form__overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.4);
+  z-index: 800;
+  animation: fade-in 0.2s ease;
+}
+
+.slot-form {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: hsl(40, 28%, 96%);
+  border-radius: var(--radius-xl) var(--radius-xl) 0 0;
+  padding: var(--space-3) var(--space-4) calc(var(--space-4) + env(safe-area-inset-bottom));
+  z-index: 801;
+  max-height: 92vh;
+  overflow-y: auto;
+  animation: slide-up 0.3s cubic-bezier(0.32, 0.72, 0, 1);
+}
+
+@keyframes slide-up {
+  from { transform: translateY(100%); }
+  to   { transform: translateY(0); }
+}
+
+@keyframes fade-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+.slot-form__handle {
+  width: 40px;
+  height: 4px;
+  background: var(--color-border);
+  border-radius: var(--radius-full);
+  margin: 0 auto var(--space-4);
+}
+
+.slot-form__title {
+  font-family: var(--font-display);
+  font-size: var(--text-lg);
+  font-weight: 700;
+  color: var(--color-text-primary);
+  margin: 0 0 var(--space-4);
+}
+
+/* Champs */
+.slot-form__field {
+  margin-bottom: var(--space-4);
+}
+
+.slot-form__label {
+  display: block;
+  font-size: var(--text-sm);
+  font-weight: 700;
+  color: var(--color-text-primary);
+  margin-bottom: var(--space-2);
+}
+
+.slot-form__optional {
+  font-weight: 400;
+  color: var(--color-text-secondary);
+}
+
+.slot-form__input {
+  width: 100%;
+  padding: var(--space-3);
+  border: 1.5px solid var(--color-border);
+  border-radius: var(--radius-md);
+  font-family: var(--font-body);
+  font-size: var(--text-base);
+  background: var(--color-surface);
+  color: var(--color-text-primary);
+  box-sizing: border-box;
+}
+
+.slot-form__input:focus {
+  outline: none;
+  border-color: var(--color-lavande);
+}
+
+/* Recette sélectionnée */
+.slot-form__pick-btn {
+  width: 100%;
+  padding: var(--space-3);
+  background: var(--color-surface);
+  border: 1.5px solid var(--color-border);
+  border-radius: var(--radius-md);
+  font-family: var(--font-body);
+  font-size: var(--text-sm);
+  color: var(--color-lavande);
+  font-weight: 600;
+  cursor: pointer;
+  text-align: left;
+}
+
+.slot-form__separator {
+  text-align: center;
+  color: var(--color-text-secondary);
+  font-size: var(--text-xs);
+  margin: var(--space-2) 0;
+}
+
+.slot-form__recette-selected {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-3);
+  background: var(--color-surface);
+  border: 1.5px solid var(--color-lavande);
+  border-radius: var(--radius-md);
+  font-size: var(--text-sm);
+  font-weight: 600;
+}
+
+.slot-form__recette-clear {
+  background: none;
+  border: none;
+  font-size: 1.2rem;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  padding: 0 var(--space-1);
+  line-height: 1;
+}
+
+/* Jours */
+.slot-form__jours {
+  display: flex;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+}
+
+.slot-form__jour-btn {
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-full);
+  border: 1.5px solid var(--color-border);
+  background: var(--color-surface);
+  font-family: var(--font-body);
+  font-size: var(--text-sm);
+  font-weight: 500;
+  color: var(--color-text-primary);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  min-height: 40px;
+}
+
+.slot-form__jour-btn--active {
+  background: var(--color-lavande);
+  border-color: var(--color-lavande);
+  font-weight: 700;
+}
+
+/* Repas */
+.slot-form__repas {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--space-2);
+}
+
+.slot-form__repas-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: var(--space-3) var(--space-2);
+  border-radius: var(--radius-md);
+  border: 1.5px solid var(--color-border);
+  background: var(--color-surface);
+  font-family: var(--font-body);
+  font-size: var(--text-sm);
+  color: var(--color-text-primary);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  min-height: 60px;
+}
+
+.slot-form__repas-btn--active {
+  background: var(--color-rose-poudre);
+  border-color: var(--color-rose-poudre);
+  font-weight: 700;
+}
+
+/* Actions */
+.slot-form__actions {
+  display: grid;
+  grid-template-columns: 1fr 2fr;
+  gap: var(--space-2);
+  margin-top: var(--space-4);
+}
+
+.slot-form__cancel {
+  padding: var(--space-3);
+  background: transparent;
+  border: 1.5px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  font-family: var(--font-body);
+  font-size: var(--text-base);
+  color: var(--color-text-secondary);
+  cursor: pointer;
+}
+
+.slot-form__save {
+  padding: var(--space-3);
+  background: var(--color-lavande);
+  border: none;
+  border-radius: var(--radius-lg);
+  font-family: var(--font-body);
+  font-size: var(--text-base);
+  font-weight: 700;
+  color: var(--color-text-primary);
+  cursor: pointer;
+  transition: opacity var(--transition-fast);
+}
+
+.slot-form__save:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}

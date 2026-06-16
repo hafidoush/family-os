@@ -1,0 +1,301 @@
+/* ── ActivitesPlanifieesPage ── */
+
+.activites-page {
+  min-height: 100vh;
+  background: var(--bg-app, #FAF9F7);
+  padding-bottom: 40px;
+  animation: slideInFromRight 0.28s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@keyframes slideInFromRight {
+  from { transform: translateX(100%); opacity: 0; }
+  to   { transform: translateX(0);    opacity: 1; }
+}
+
+/* ── Header ── */
+.activites-page__header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px 16px 12px;
+  position: sticky;
+  top: 0;
+  background: var(--bg-app, #FAF9F7);
+  z-index: 10;
+  border-bottom: 1px solid rgba(0,0,0,0.06);
+}
+
+.activites-page__back {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 1.5px solid rgba(0,0,0,0.1);
+  background: #F7F6F4;
+  color: var(--text-primary, #1a1a2e);
+  font-size: 16px;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: all 0.15s ease;
+}
+
+.activites-page__back:active {
+  background: #ede9fe;
+  transform: scale(0.92);
+}
+
+.activites-page__title {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--text-primary, #1a1a2e);
+  margin: 0;
+  letter-spacing: -0.02em;
+}
+
+/* ── Content ── */
+.activites-page__content {
+  padding: 16px 16px 32px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.activite-card {
+  margin: 0 2px;
+}
+
+/* ── Empty state ── */
+.activites-page__empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 60px 24px;
+  text-align: center;
+}
+
+.activites-page__empty-icon {
+  font-size: 48px;
+  line-height: 1;
+}
+
+.activites-page__empty-text {
+  font-size: 15px;
+  color: var(--text-secondary, #6b7280);
+  line-height: 1.5;
+  margin: 0;
+}
+
+/* ── Activity card ── */
+.activite-card {
+  background: #F7F6F4;
+  border-radius: 16px;
+  border: 1.5px solid rgba(0,0,0,0.06);
+  overflow: hidden;
+  transition: all 0.18s ease;
+}
+
+.activite-card--realisee {
+  opacity: 0.7;
+}
+
+.activite-card__header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  width: 100%;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  text-align: left;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.activite-card__emoji {
+  font-size: 24px;
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(167, 139, 250, 0.12);
+  border-radius: 12px;
+  flex-shrink: 0;
+}
+
+.activite-card--realisee .activite-card__emoji {
+  background: rgba(34, 197, 94, 0.12);
+}
+
+.activite-card__meta {
+  flex: 1;
+  min-width: 0;
+}
+
+.activite-card__nom {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text-primary, #1a1a2e);
+  margin: 0 0 4px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.activite-card--realisee .activite-card__nom {
+  text-decoration: line-through;
+  color: var(--text-secondary, #6b7280);
+}
+
+.activite-card__pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.activite-card__pill {
+  font-size: 11px;
+  padding: 2px 7px;
+  border-radius: 999px;
+  font-weight: 500;
+}
+
+.activite-card__pill--purple {
+  background: rgba(167, 139, 250, 0.15);
+  color: #7c3aed;
+}
+
+.activite-card__pill--blue {
+  background: rgba(59, 130, 246, 0.12);
+  color: #1d4ed8;
+}
+
+.activite-card__pill--green {
+  background: rgba(34, 197, 94, 0.15);
+  color: #15803d;
+}
+
+.activite-card__chevron {
+  font-size: 12px;
+  color: var(--text-tertiary, #9ca3af);
+  flex-shrink: 0;
+}
+
+/* ── Expanded body ── */
+.activite-card__body {
+  padding: 0 16px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  border-top: 1px solid rgba(0,0,0,0.05);
+  animation: fadeIn 0.18s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.activite-row {
+  display: flex;
+  gap: 10px;
+  padding-top: 10px;
+}
+
+.activite-row__icon {
+  font-size: 16px;
+  width: 24px;
+  flex-shrink: 0;
+  padding-top: 1px;
+}
+
+.activite-row__label {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-tertiary, #9ca3af);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin: 0 0 2px;
+}
+
+.activite-row__value {
+  font-size: 14px;
+  color: var(--text-primary, #1a1a2e);
+  margin: 0;
+  line-height: 1.45;
+}
+
+.activite-materiel {
+  margin: 0;
+  padding-left: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.activite-materiel li {
+  font-size: 13px;
+  color: var(--text-primary, #1a1a2e);
+}
+
+.activite-row--prep {
+  background: rgba(251, 191, 36, 0.08);
+  border-radius: 10px;
+  padding: 8px 10px;
+  gap: 8px;
+}
+
+/* ── Commencer button ── */
+.activite-card__btn-commencer {
+  margin-top: 4px;
+  width: 100%;
+  padding: 11px;
+  border-radius: 12px;
+  border: none;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.activite-card__btn-commencer--start {
+  background: #A78BFA;
+  color: white;
+}
+
+.activite-card__btn-commencer--start:active {
+  background: #7c3aed;
+  transform: scale(0.97);
+}
+
+.activite-card__btn-commencer--done {
+  background: rgba(34, 197, 94, 0.15);
+  color: #15803d;
+}
+
+.activite-card__btn-commencer--done:active {
+  opacity: 0.7;
+  transform: scale(0.97);
+}
+
+.activite-card__btn-replier {
+  width: 100%;
+  padding: 8px;
+  border: 1.5px solid rgba(0,0,0,0.08);
+  border-radius: 10px;
+  background: transparent;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-tertiary, #9ca3af);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.activite-card__btn-replier:active {
+  background: rgba(0,0,0,0.04);
+  transform: scale(0.98);
+}

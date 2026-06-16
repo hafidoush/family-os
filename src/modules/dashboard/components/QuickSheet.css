@@ -1,0 +1,178 @@
+/* ================================================================
+   QUICK SHEET — bottom drawer partagé pour les ajouts rapides
+   Utilisé par EvenementQuickSheet + ActiviteQuickSheet
+   ================================================================ */
+
+.quick-sheet-backdrop {
+  position: fixed;
+  inset: 0;
+  background: hsla(240, 15%, 10%, 0.30);
+  z-index: 800;
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  animation: qs-fade-in 0.18s ease;
+}
+
+.quick-sheet {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 801;
+  background: rgba(255, 255, 255, 0.97);
+  backdrop-filter: blur(40px) saturate(180%);
+  -webkit-backdrop-filter: blur(40px) saturate(180%);
+  border-radius: var(--radius-2xl) var(--radius-2xl) 0 0;
+  padding: var(--space-4) var(--space-5) calc(var(--space-8) + env(safe-area-inset-bottom));
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  animation: qs-slide-up 0.28s cubic-bezier(0.34, 1.56, 0.64, 1);
+  max-height: 85dvh;
+  overflow-y: auto;
+}
+
+@media (min-width: 768px) {
+  .quick-sheet {
+    max-width: 480px;
+    left: 50%;
+    right: auto;
+    transform: translateX(-50%);
+    border-radius: var(--radius-2xl);
+    bottom: var(--space-6);
+  }
+}
+
+.quick-sheet__handle {
+  width: 36px;
+  height: 4px;
+  background: var(--border-default);
+  border-radius: var(--radius-full);
+  margin: 0 auto -8px;
+  flex-shrink: 0;
+}
+
+.quick-sheet__title {
+  font-family: var(--font-display);
+  font-size: var(--text-lg);
+  font-weight: 700;
+  color: var(--text-primary);
+  letter-spacing: -0.02em;
+  text-align: center;
+  margin: 0;
+}
+
+/* ── Input ── */
+.quick-sheet__input {
+  width: 100%;
+  height: 48px;
+  padding: 0 var(--space-4);
+  border: 1.5px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  font-family: var(--font-body);
+  font-size: var(--text-base);
+  font-weight: 400;
+  color: var(--text-primary);
+  background: var(--color-neutral-50, #fafafa);
+  outline: none;
+  box-sizing: border-box;
+  transition: border-color 0.14s ease, box-shadow 0.14s ease;
+}
+.quick-sheet__input:focus {
+  border-color: var(--border-focus);
+}
+.quick-sheet__input::placeholder { color: var(--text-tertiary); }
+
+.quick-sheet__input--date,
+.quick-sheet__input--time {
+  flex: 1;
+  color-scheme: light;
+}
+
+.quick-sheet__row {
+  display: flex;
+  gap: var(--space-3);
+}
+
+/* ── Pill selectors (type / enfant) ── */
+.quick-sheet__pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.quick-sheet__pill {
+  height: 36px;
+  padding: 0 var(--space-4);
+  border-radius: var(--radius-full);
+  border: 1.5px solid var(--border-subtle);
+  background: transparent;
+  font-family: var(--font-body);
+  font-size: var(--text-sm);
+  font-weight: 500;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 0.14s ease;
+  white-space: nowrap;
+  -webkit-tap-highlight-color: transparent;
+}
+.quick-sheet__pill:hover {
+  border-color: var(--border-brand);
+  color: var(--text-brand);
+}
+.quick-sheet__pill--active {
+  background: var(--primary-subtle, hsla(262, 60%, 62%, 0.12));
+  border-color: var(--primary);
+  color: var(--primary);
+  font-weight: 600;
+}
+
+/* ── Label section ── */
+.quick-sheet__label {
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--text-secondary);
+  letter-spacing: 0.01em;
+  margin-bottom: -8px;
+}
+
+/* ── Save button ── */
+.quick-sheet__save {
+  height: 52px;
+  width: 100%;
+  border: none;
+  border-radius: var(--radius-full);
+  background: linear-gradient(135deg, #6F7ED6 0%, #D2ADEB 100%);
+  color: white;
+  font-family: var(--font-body);
+  font-size: var(--text-base);
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity 0.14s ease, transform 0.12s cubic-bezier(0.34,1.56,0.64,1);
+  -webkit-tap-highlight-color: transparent;
+}
+.quick-sheet__save:hover { opacity: 0.92; }
+.quick-sheet__save:active { transform: scale(0.97); }
+.quick-sheet__save:disabled {
+  opacity: 0.42;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.quick-sheet__loading,
+.quick-sheet__empty {
+  font-size: var(--text-sm);
+  color: var(--text-tertiary);
+  text-align: center;
+  padding: var(--space-2) 0;
+}
+
+/* ── Animations ── */
+@keyframes qs-slide-up {
+  from { transform: translateY(100%); }
+  to   { transform: translateY(0); }
+}
+@keyframes qs-fade-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}

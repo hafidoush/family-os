@@ -1,0 +1,134 @@
+.humeur-bulle {
+  position: fixed;
+  bottom: calc(90px + env(safe-area-inset-bottom, 0px));
+  left: 50%;
+  transform: translateX(-50%);
+  width: calc(100% - 28px);
+  max-width: 420px;
+  z-index: 200;
+
+  background: rgba(255, 255, 255, 0.94);
+  backdrop-filter: blur(28px);
+  -webkit-backdrop-filter: blur(28px);
+  border: 1px solid rgba(210, 173, 235, 0.25);
+  border-radius: 20px;
+  box-shadow:
+    0 -4px 32px rgba(111, 80, 180, 0.10),
+    0 8px 40px rgba(0, 0, 0, 0.08);
+
+  padding: 14px 16px;
+
+  animation: bulle-slide-up 0.38s cubic-bezier(0.34, 1.2, 0.64, 1) both;
+}
+
+@keyframes bulle-slide-up {
+  from { opacity: 0; transform: translateX(-50%) translateY(20px); }
+  to   { opacity: 1; transform: translateX(-50%) translateY(0);    }
+}
+
+/* ── Header ── */
+.humeur-bulle__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.humeur-bulle__title {
+  font-size: 13px;
+  font-weight: 600;
+  color: hsl(240, 8%, 28%);
+  letter-spacing: 0.01em;
+}
+
+.humeur-bulle__close {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  border: none;
+  background: hsl(240, 8%, 92%);
+  color: hsl(240, 6%, 50%);
+  font-size: 11px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: background 0.12s ease;
+}
+.humeur-bulle__close:hover { background: hsl(240, 8%, 85%); }
+
+/* ── Liste membres ── */
+.humeur-bulle__liste {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.humeur-bulle__ligne {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+/* ── Avatar ── */
+.humeur-bulle__avatar {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 700;
+  color: white;
+}
+
+/* ── Prénom ── */
+.humeur-bulle__prenom {
+  font-size: 13px;
+  font-weight: 500;
+  color: hsl(240, 8%, 30%);
+  min-width: 52px;
+}
+
+/* ── Emojis ── */
+.humeur-bulle__emojis {
+  display: flex;
+  gap: 2px;
+  flex: 1;
+  justify-content: flex-end;
+}
+
+.humeur-bulle__btn {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  border: 1.5px solid transparent;
+  background: transparent;
+  font-size: 20px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.15s cubic-bezier(0.34, 1.4, 0.64, 1),
+              background 0.12s ease,
+              border-color 0.12s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.humeur-bulle__btn:hover {
+  background: hsl(262, 50%, 96%);
+  transform: scale(1.15);
+}
+
+.humeur-bulle__btn:active {
+  transform: scale(0.90);
+}
+
+.humeur-bulle__btn--selected {
+  background: hsl(262, 55%, 94%);
+  border-color: hsl(262, 45%, 75%);
+  transform: scale(1.08);
+}

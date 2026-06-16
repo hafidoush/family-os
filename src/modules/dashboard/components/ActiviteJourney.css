@@ -1,0 +1,181 @@
+/* FAMILY OS — ActiviteJourney */
+
+.aj-backdrop {
+  position: fixed; inset: 0; background: rgba(30,20,60,0.4);
+  z-index: 200; backdrop-filter: blur(3px);
+}
+
+.aj-sheet {
+  position: fixed; bottom: 0; left: 0; right: 0;
+  max-height: 90dvh; overflow-y: auto;
+  background: var(--color-cream-100, #FAF8F5);
+  border-radius: 20px 20px 0 0;
+  z-index: 201;
+  display: flex; flex-direction: column;
+  animation: aj-slide-up 0.32s cubic-bezier(0.34, 1.2, 0.64, 1) both;
+  padding-bottom: env(safe-area-inset-bottom, 16px);
+}
+
+@keyframes aj-slide-up {
+  from { transform: translateY(100%); opacity: 0; }
+  to   { transform: translateY(0);    opacity: 1; }
+}
+
+.aj-handle {
+  width: 40px; height: 4px; border-radius: 2px;
+  background: rgba(201,184,232,0.5);
+  margin: 12px auto 0;
+}
+
+/* Header */
+.aj-header {
+  display: flex; align-items: flex-start; gap: 14px;
+  padding: 16px 20px 14px;
+}
+
+.aj-progress-ring {
+  position: relative; flex-shrink: 0;
+  width: 60px; height: 60px;
+  display: flex; align-items: center; justify-content: center;
+}
+
+.aj-progress-text {
+  position: absolute; font-size: 11px; font-weight: 800;
+  color: #5B4A82;
+}
+
+.aj-header-info { flex: 1; display: flex; flex-direction: column; gap: 3px; }
+.aj-title { font-size: 18px; font-weight: 700; color: #3B2F5E; margin: 0; }
+.aj-etat { font-size: 13px; font-weight: 500; }
+.aj-prochaine { font-size: 12px; color: #9B8DB5; }
+
+.aj-close {
+  width: 30px; height: 30px; border-radius: 50%;
+  border: none; background: rgba(201,184,232,0.25);
+  color: #7C6FA0; font-size: 13px; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+}
+
+/* Cards */
+.aj-cards {
+  padding: 4px 16px 16px;
+  display: flex; flex-direction: column; gap: 10px;
+  overflow-y: auto;
+}
+
+.aj-empty {
+  text-align: center; padding: 48px 24px;
+  display: flex; flex-direction: column; align-items: center; gap: 10px;
+  color: #9B8DB5;
+}
+.aj-empty span { font-size: 40px; }
+.aj-empty p { font-size: 15px; }
+
+/* Carte activité */
+.aj-card {
+  display: flex; align-items: center; gap: 12px;
+  background: #F0EFEB;
+  border: 1.5px solid rgba(201,184,232,0.35);
+  border-radius: 14px;
+  padding: 12px 14px;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 8px rgba(167,139,250,0.06);
+}
+
+.aj-card--active { cursor: pointer; }
+.aj-card--active:active { transform: scale(0.98); }
+
+.aj-card--done {
+  opacity: 0.6;
+  background: rgba(249,247,255,0.7);
+  cursor: default;
+}
+
+.aj-card--celebrate {
+  animation: aj-celebrate 0.6s ease;
+  border-color: #34D399;
+  box-shadow: 0 0 20px rgba(52,211,153,0.3);
+}
+
+@keyframes aj-celebrate {
+  0%   { transform: scale(1); }
+  30%  { transform: scale(1.04); }
+  60%  { transform: scale(0.98); }
+  100% { transform: scale(1); }
+}
+
+.aj-card__icon {
+  width: 44px; height: 44px; border-radius: 12px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 22px; flex-shrink: 0;
+}
+
+.aj-card__content { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 5px; }
+.aj-card__top { display: flex; align-items: center; gap: 8px; }
+.aj-card__nom { font-size: 14px; font-weight: 600; color: #3B2F5E; }
+.aj-card__done-badge {
+  font-size: 10px; font-weight: 700; padding: 2px 7px;
+  border-radius: 999px; background: rgba(52,211,153,0.15); color: #059669;
+}
+
+.aj-card__meta { display: flex; align-items: center; gap: 5px; flex-wrap: wrap; }
+.aj-card__membre {
+  font-size: 11px; font-weight: 600; padding: 2px 8px;
+  border-radius: 999px;
+}
+.aj-card__pill {
+  font-size: 11px; color: #7C6FA0; padding: 2px 7px;
+  background: rgba(201,184,232,0.2); border-radius: 999px;
+}
+
+/* Actions */
+.aj-card__actions { display: flex; gap: 6px; flex-shrink: 0; }
+.aj-card__btn {
+  width: 32px; height: 32px; border-radius: 50%; border: none;
+  cursor: pointer; font-size: 14px;
+  display: flex; align-items: center; justify-content: center;
+  transition: transform 0.15s, opacity 0.15s;
+}
+.aj-card__btn:active { transform: scale(0.9); }
+.aj-card__btn--start { background: rgba(96,165,250,0.15); color: #3B82F6; }
+.aj-card__btn--done  { background: rgba(52,211,153,0.15); color: #059669; font-weight: 800; }
+.aj-card__btn--postpone { background: rgba(251,191,36,0.15); color: #D97706; }
+
+/* ── Swipe backgrounds ── */
+.aj-swipe-wrap { touch-action: pan-y; }
+
+.aj-swipe-bg {
+  position: absolute; inset: 0;
+  display: flex; align-items: center;
+  padding: 0 20px;
+  border-radius: 14px;
+  font-size: 13px; font-weight: 700;
+  pointer-events: none;
+  transition: opacity 0.1s;
+}
+.aj-swipe-bg--right {
+  background: rgba(52, 211, 153, 0.2);
+  color: #059669;
+  justify-content: flex-start;
+  gap: 8px;
+}
+.aj-swipe-bg--right span:first-child { font-size: 20px; }
+.aj-swipe-bg--left {
+  background: rgba(251, 191, 36, 0.2);
+  color: #D97706;
+  justify-content: flex-end;
+  gap: 8px;
+}
+.aj-swipe-bg--left span:last-child { font-size: 20px; }
+
+/* Célébration footer */
+.aj-celebration {
+  margin: 8px 16px 16px;
+  padding: 12px 16px;
+  background: rgba(52,211,153,0.12);
+  border: 1.5px solid rgba(52,211,153,0.3);
+  border-radius: 12px;
+  font-size: 13px; font-weight: 600; color: #059669;
+  text-align: center;
+  animation: aj-slide-up 0.4s ease;
+}

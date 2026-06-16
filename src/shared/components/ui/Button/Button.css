@@ -1,0 +1,274 @@
+/**
+ * FAMILY OS — Button.module.css
+ * Tokens uniquement — aucune valeur brute.
+ * Architecture : base → variants → sizes → modifiers → états
+ */
+
+/* ─── BASE ───────────────────────────────────────────────────────────────────── */
+
+.btn {
+  /* Layout */
+  position: relative;
+  display:  inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+
+  /* Taille par défaut (md) */
+  height:          var(--height-button);
+  padding-inline:  var(--space-5);
+
+  /* Typographie */
+  font-family:    var(--font-body);
+  font-size:      var(--text-sm);
+  font-weight:    var(--font-weight-semibold);
+  letter-spacing: var(--tracking-wide);
+  line-height:    var(--leading-none);
+  white-space:    nowrap;
+  text-decoration: none;
+
+  /* Forme */
+  border-radius: var(--radius-button);
+  border:        var(--border-width) solid transparent;
+
+  /* Interaction */
+  cursor:  pointer;
+  outline: none;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+  user-select:  none;
+
+  /* Transition */
+  transition: var(--transition-interactive);
+
+  /* Overflow pour le spinner */
+  overflow: hidden;
+}
+
+/* Focus visible (clavier / accessibilité) */
+.btn:focus-visible {
+  outline:        var(--border-width-thick) solid var(--border-focus);
+  outline-offset: 3px;
+}
+
+/* ─── CONTENU & ICÔNES ───────────────────────────────────────────────────────── */
+
+.content {
+  display:     inline-flex;
+  align-items: center;
+  gap:         var(--space-2);
+  transition:  opacity var(--duration-fast) var(--ease-out);
+}
+
+.content--hidden {
+  opacity: 0;
+}
+
+.icon {
+  display:     inline-flex;
+  align-items: center;
+  flex-shrink: 0;
+  /* Taille héritée du contexte via font-size */
+  font-size:   1.1em;
+  line-height: 1;
+}
+
+.label {
+  /* Rien de spécial — hérite du .btn */
+}
+
+/* ─── SPINNER ────────────────────────────────────────────────────────────────── */
+
+.spinner {
+  position: absolute;
+  inset:    0;
+  margin:   auto;
+  width:    18px;
+  height:   18px;
+
+  border-radius:      var(--radius-full);
+  border:             2px solid currentColor;
+  border-top-color:   transparent;
+  border-right-color: transparent;
+
+  animation: spin 0.65s var(--ease-linear) infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* ─── VARIANT : PRIMARY — periwinkle (action principale, 1 par écran) ───────── */
+
+.btn--primary {
+  background:   var(--periwinkle);
+  color:        white;
+  border-color: transparent;
+}
+
+.btn--primary:hover:not(:disabled) {
+  background:  var(--primary-dark);
+  transform:   translateY(-1px);
+}
+
+.btn--primary:active:not(:disabled) {
+  transform:  translateY(0) scale(0.97);
+}
+
+/* ─── VARIANT : SECONDARY — lilas (actions secondaires importantes) ──────────── */
+
+.btn--secondary {
+  background:   var(--lilac);
+  color:        white;
+  border-color: transparent;
+}
+
+.btn--secondary:hover:not(:disabled) {
+  background:  var(--lilac-dark);
+  transform:   translateY(-1px);
+}
+
+.btn--secondary:active:not(:disabled) {
+  transform:  translateY(0) scale(0.97);
+}
+
+/* ─── VARIANT : GHOST — fond blanc/bordure (discret) ─────────────────────────── */
+
+.btn--ghost {
+  background:   var(--white-pure);
+  color:        var(--text-primary);
+  border-color: var(--lilac-20);
+}
+
+.btn--ghost:hover:not(:disabled) {
+  border-color: var(--lilac);
+  background:   var(--lilac-10);
+  color:        var(--lilac-dark);
+  transform:    translateY(-1px);
+}
+
+.btn--ghost:active:not(:disabled) {
+  transform: translateY(0) scale(0.98);
+}
+
+.btn--ghost:hover:not(:disabled) {
+  background: hsla(262, 50%, 60%, 0.08);
+  color:      var(--text-brand);
+}
+
+.btn--ghost:active:not(:disabled) {
+  background: hsla(262, 50%, 60%, 0.14);
+  transform:  scale(0.97);
+}
+
+/* ─── VARIANT : DANGER / CTA — corail (urgent uniquement) ───────────────────── */
+
+.btn--danger {
+  background:   var(--coral);
+  color:        white;
+  border-color: transparent;
+}
+
+.btn--danger:hover:not(:disabled) {
+  background:   #E8663A;
+  border-color: transparent;
+  transform:    translateY(-1px);
+}
+
+.btn--danger:active:not(:disabled) {
+  transform:  translateY(0) scale(0.98);
+}
+
+/* ─── VARIANT : SUCCESS ──────────────────────────────────────────────────────── */
+
+.btn--success {
+  background:   var(--status-success-bg);
+  color:        var(--status-success-text);
+  border-color: hsla(142, 45%, 45%, 0.25);
+}
+
+.btn--success:hover:not(:disabled) {
+  background:   var(--color-success-500);
+  color:        var(--text-inverse);
+  border-color: transparent;
+  transform:    translateY(-1px);
+}
+
+.btn--success:active:not(:disabled) {
+  transform:  translateY(0) scale(0.98);
+}
+
+/* ─── TAILLES ────────────────────────────────────────────────────────────────── */
+
+.btn--sm {
+  height:         var(--height-button-sm);
+  padding-inline: var(--space-3-5);
+  font-size:      var(--text-xs);
+  border-radius:  var(--radius-button-sm);
+  gap:            var(--space-1-5);
+}
+
+.btn--sm .icon {
+  font-size: 1em;
+}
+
+/* md = base (déjà défini dans .btn) */
+
+.btn--lg {
+  height:         var(--height-button-lg);
+  padding-inline: var(--space-7);
+  font-size:      var(--text-base);
+  gap:            var(--space-2-5);
+}
+
+.btn--lg .icon {
+  font-size: 1.15em;
+}
+
+/* ─── MODIFICATEURS ──────────────────────────────────────────────────────────── */
+
+/* Icône seule — carré/cercle selon le radius */
+.btn--icon-only {
+  padding-inline: 0;
+  aspect-ratio:   1;
+}
+
+.btn--icon-only .icon {
+  font-size: 1.25em;
+}
+
+/* Pleine largeur */
+.btn--full {
+  width: 100%;
+}
+
+/* Loading — bloque les interactions mais conserve l'apparence */
+.btn--loading {
+  cursor:  default;
+  pointer-events: none;
+}
+
+/* ─── ÉTAT DÉSACTIVÉ ─────────────────────────────────────────────────────────── */
+
+.btn:disabled,
+.btn[aria-disabled="true"] {
+  opacity:        0.45;
+  cursor:         not-allowed;
+  pointer-events: none;
+  transform:      none;
+}
+
+/* ─── UTILITAIRE ACCESSIBILITÉ ───────────────────────────────────────────────── */
+
+/* Masque visuellement tout en restant accessible aux lecteurs d'écran */
+:global(.sr-only) {
+  position: absolute;
+  width:    1px;
+  height:   1px;
+  padding:  0;
+  margin:   -1px;
+  overflow: hidden;
+  clip:     rect(0, 0, 0, 0);
+  white-space:    nowrap;
+  border-width:   0;
+}

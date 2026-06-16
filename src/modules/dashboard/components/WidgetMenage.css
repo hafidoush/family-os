@@ -1,0 +1,105 @@
+/* FAMILY OS — WidgetMenage */
+
+.widget-menage { cursor: default; }
+
+.wm-score {
+  font-size: 12px; font-weight: 700;
+  padding: 2px 8px; border-radius: 999px;
+  background: rgba(167,139,250,0.12); color: #7C6FA0;
+}
+.wm-score--done { background: rgba(52,211,153,0.15); color: #059669; }
+
+.wm-progress-bar {
+  height: 4px; border-radius: 2px;
+  background: rgba(201,184,232,0.25);
+  margin: 4px 0 10px; overflow: hidden;
+}
+.wm-progress-fill {
+  height: 100%; border-radius: 2px;
+  transition: width 0.4s ease;
+}
+
+.wm-summary { display: flex; flex-direction: column; gap: 3px; }
+.wm-summary__label { font-size: 13px; font-weight: 500; color: #3B2F5E; }
+.wm-summary__next { font-size: 12px; color: #9B8DB5; }
+
+.wm-list {
+  list-style: none; margin: 0; padding: 0;
+  display: flex; flex-direction: column; gap: 6px;
+}
+.wm-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 6px 0;
+}
+.wm-item--done { opacity: 0.55; }
+.wm-check {
+  width: 22px; height: 22px; border-radius: 50%;
+  border: 1.5px solid rgba(167,139,250,0.5);
+  background: none; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 12px; font-weight: 800; color: #059669;
+  transition: all 0.15s; flex-shrink: 0;
+}
+.wm-check.done { background: rgba(52,211,153,0.2); border-color: #059669; }
+.wm-titre {
+  font-size: 13px; color: #3B2F5E;
+}
+.wm-item--done .wm-titre { text-decoration: line-through; color: #9B8DB5; }
+
+.wm-toggle {
+  width: 100%; padding: 6px; margin-top: 6px;
+  border: none; background: none;
+  font-size: 12px; color: #9B8DB5; cursor: pointer;
+  text-align: center;
+}
+
+/* ── Pièces à entretenir ──────────────────────────────────────────────────── */
+
+.wm-pieces-alerte {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid rgba(167,139,250,0.15);
+}
+
+.wm-pieces-alerte__titre {
+  display: block;
+  font-size: 11px;
+  font-weight: 600;
+  color: #9B8DB5;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 8px;
+}
+
+.wm-pieces-list {
+  list-style: none;
+  margin: 0; padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.wm-piece-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  padding: 4px 0;
+}
+
+.wm-piece-dot {
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.wm-piece-nom {
+  font-size: 13px;
+  color: #3B2F5E;
+  flex: 1;
+}
+
+.wm-piece-etat {
+  font-size: 11px;
+  font-weight: 600;
+}

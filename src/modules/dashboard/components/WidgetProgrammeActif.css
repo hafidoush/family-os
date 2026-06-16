@@ -1,0 +1,197 @@
+/* ============================================================
+   WIDGET PROGRAMME ACTIF
+   ============================================================ */
+
+.wpa-card {
+  background: #ffffff;
+  border-radius: 20px;
+  border: 1.5px solid rgba(167, 139, 250, 0.18);
+  padding: 16px;
+  cursor: pointer;
+  position: relative;
+  transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+  box-shadow: 0 2px 16px rgba(124, 58, 237, 0.08);
+  overflow: hidden;
+  margin: 0 16px 16px;
+}
+
+.wpa-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, #A78BFA, #7C3AED);
+}
+
+.wpa-card:active { transform: scale(0.99); }
+
+/* ── Badge IA ── */
+.wpa-ia-badge {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: rgba(167, 139, 250, 0.15);
+  font-family: var(--font-body);
+  font-size: 10px;
+  font-weight: 700;
+  color: #7C3AED;
+  letter-spacing: 0.04em;
+}
+
+/* ── Ligne du haut ── */
+.wpa-top {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+/* ── Anneau ── */
+.wpa-ring {
+  position: relative;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.wpa-ring__pct {
+  position: absolute;
+  font-family: var(--font-body);
+  font-size: 11px;
+  font-weight: 800;
+  color: #7C3AED;
+}
+
+/* ── Infos ── */
+.wpa-info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.wpa-label {
+  font-family: var(--font-body);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #A78BFA;
+}
+
+.wpa-titre {
+  font-family: var(--font-body);
+  font-size: 15px;
+  font-weight: 800;
+  color: var(--color-text-primary, #1F2937);
+  letter-spacing: -0.01em;
+  margin: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.wpa-semaine {
+  font-family: var(--font-body);
+  font-size: 11px;
+  color: var(--color-text-tertiary, #9CA3AF);
+}
+
+.wpa-arrow {
+  font-size: 20px;
+  color: #D1D5DB;
+  flex-shrink: 0;
+  margin-right: 20px;
+}
+
+/* ── Prochaine activité ── */
+.wpa-next {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: rgba(167, 139, 250, 0.07);
+  border: 1px solid rgba(167, 139, 250, 0.12);
+}
+
+.wpa-next__dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #A78BFA;
+  flex-shrink: 0;
+}
+
+.wpa-next__body {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.wpa-next__label {
+  font-family: var(--font-body);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #A78BFA;
+}
+
+.wpa-next__titre {
+  font-family: var(--font-body);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-text-primary, #1F2937);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.wpa-next__duree {
+  font-family: var(--font-body);
+  font-size: 11px;
+  color: var(--color-text-tertiary, #9CA3AF);
+  flex-shrink: 0;
+}
+
+/* ── Semaine terminée ── */
+.wpa-done {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  border-radius: 12px;
+  background: rgba(34, 197, 94, 0.07);
+  font-family: var(--font-body);
+  font-size: 12px;
+  color: #15803D;
+  font-weight: 600;
+}
+
+/* ── État vide ── */
+.wpa-empty {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 16px;
+  margin: 0 16px 16px;
+  border-radius: 14px;
+  background: rgba(0, 0, 0, 0.03);
+}
+
+.wpa-empty__icon {
+  font-size: 16px;
+}
+
+.wpa-empty__text {
+  font-family: var(--font-body);
+  font-size: 13px;
+  color: var(--color-text-tertiary, #9CA3AF);
+}

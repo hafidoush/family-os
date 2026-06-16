@@ -1,0 +1,107 @@
+/* ══════════════════════════════════════════════════════
+   FAMILY OS — NotificationBanner
+   Bandeau contextuel en haut du dashboard
+   ══════════════════════════════════════════════════════ */
+
+.notif-banner {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin: 0 16px 4px;
+  padding: 12px 14px;
+  border-radius: 14px;
+  border: 1px solid transparent;
+
+  /* Animation d'entrée */
+  animation: notif-slide-in 0.25s ease;
+}
+
+@keyframes notif-slide-in {
+  from { opacity: 0; transform: translateY(-8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ── Variantes ──────────────────────────────────────── */
+
+.notif-banner--info {
+  background: rgba(167, 139, 250, 0.09);
+  border-color: rgba(167, 139, 250, 0.25);
+}
+
+.notif-banner--warning {
+  background: rgba(245, 158, 11, 0.08);
+  border-color: rgba(245, 158, 11, 0.28);
+}
+
+.notif-banner--urgent {
+  background: rgba(239, 68, 68, 0.07);
+  border-color: rgba(239, 68, 68, 0.25);
+}
+
+/* ── Emoji ──────────────────────────────────────────── */
+
+.notif-banner__emoji {
+  font-size: 18px;
+  line-height: 1;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+/* ── Message ────────────────────────────────────────── */
+
+.notif-banner__message {
+  flex: 1;
+  margin: 0;
+  font-size: 0.83rem;
+  line-height: 1.45;
+  color: var(--color-text, #1a1a2e);
+}
+
+/* ── Actions ────────────────────────────────────────── */
+
+.notif-banner__actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+.notif-banner__action {
+  padding: 5px 11px;
+  border-radius: 20px;
+  border: none;
+  cursor: pointer;
+  font-size: 0.78rem;
+  font-weight: 600;
+  white-space: nowrap;
+  transition: opacity 0.15s;
+}
+
+.notif-banner--info    .notif-banner__action { background: rgba(124,58,237,0.12); color: #6D28D9; }
+.notif-banner--warning .notif-banner__action { background: rgba(245,158,11,0.15); color: #92400E; }
+.notif-banner--urgent  .notif-banner__action { background: rgba(239,68,68,0.12);  color: #B91C1C; }
+
+.notif-banner__action:hover { opacity: 0.8; }
+
+.notif-banner__dismiss {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(0,0,0,0.06);
+  color: #9CA3AF;
+  font-size: 16px;
+  line-height: 1;
+  cursor: pointer;
+  transition: background 0.15s;
+  padding: 0;
+}
+
+.notif-banner__dismiss:hover {
+  background: rgba(0,0,0,0.1);
+  color: #6B7280;
+}
