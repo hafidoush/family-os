@@ -253,6 +253,7 @@ body {
   background: var(--nav-bottom-bg, hsla(0, 0%, 100%, 0.92));
   backdrop-filter: blur(40px) saturate(180%);
   -webkit-backdrop-filter: blur(40px) saturate(180%);
+  pointer-events: none;
 }
 
 .fos-pill-item {
