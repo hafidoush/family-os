@@ -11,6 +11,7 @@
  * Le contexte actif (pour le FAB A-31) est géré par navigationStore (Zustand).
  */
 
+import { useEffect } from 'react';
 import { Outlet, NavLink, useLocation } from 'react-router-dom';
 import { useOfflineStatus } from './shared/hooks/useOfflineStatus';
 import { ToastContainer } from './shared/components/ui/ToastContainer/ToastContainer';
@@ -191,6 +192,22 @@ const PILL_ITEMS = ['/dashboard', '/cuisine', '/enfants', '/foyer', '/nous'];
 export default function AppLayout() {
   const location = useLocation();
   const { isOnline } = useOfflineStatus();
+
+  useEffect(() => {
+    const update = () => {
+      const h = window.innerHeight;
+      const offset = window.visualViewport?.offsetTop ?? 0;
+      document.documentElement.style.setProperty('--app-height', `${h}px`);
+      document.documentElement.style.setProperty('--vp-offset', `${offset}px`);
+    };
+    update();
+    window.addEventListener('resize', update);
+    window.visualViewport?.addEventListener('resize', update);
+    return () => {
+      window.removeEventListener('resize', update);
+      window.visualViewport?.removeEventListener('resize', update);
+    };
+  }, []);
 
   const mainModules    = NAV_MODULES.filter(m => m.path !== '/parametres');
   const settingsModule = NAV_MODULES.find(m => m.path === '/parametres')!;
