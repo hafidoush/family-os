@@ -42,6 +42,8 @@ export default defineConfig({
         ],
       },
       workbox: {
+        skipWaiting: true,
+        clientsClaim: true,
         maximumFileSizeToCacheInBytes: 4 * 1024 * 1024, // 4 MiB — cercle.png fait 2.3MB
         // Cache-first pour tout (offline-first)
         globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2}'],

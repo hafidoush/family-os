@@ -13,7 +13,7 @@ import type {
 } from '@shared/types'
 
 // ─── Version du schéma — incrémenter à chaque migration ──────────────────────
-export const SCHEMA_VERSION = 9
+export const SCHEMA_VERSION = 11
 
 // ─── Définition de la base ────────────────────────────────────────────────────
 class FamilyOSDatabase extends Dexie {
@@ -565,6 +565,16 @@ class FamilyOSDatabase extends Dexie {
     // ─── Version 10 — table evenementsDetails (module Réceptions) ────────
     this.version(10).stores({
       evenementsDetails: 'id, evenementId, archive, updatedAt',
+    })
+
+    // ─── Version 11 — nettoyage avatars corrompus (Blob → {} via sync JSON) ──
+    this.version(11).stores({}).upgrade(async tx => {
+      const membres = await tx.table('membres').toArray()
+      for (const m of membres) {
+        if (m.avatar !== undefined && !(m.avatar instanceof Blob)) {
+          await tx.table('membres').update(m.id, { avatar: undefined })
+        }
+      }
     })
 
     // ─── Version 9 — correction dates de naissance enfants ───────────────
