@@ -193,6 +193,7 @@ body {
 .fos-main {
   flex: 1;
   min-height: 0;
+  height: 100%;
   overflow-y: auto;
   overflow-x: hidden;
   position: relative;
