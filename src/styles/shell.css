@@ -40,8 +40,8 @@ html {
 }
 
 body {
-  min-height: 100%;
-  min-height: -webkit-fill-available;
+  height: 100%;
+  height: -webkit-fill-available;
   overflow: hidden;
   background: var(--color-cream);
   font-family: var(--font-body);
@@ -65,7 +65,7 @@ body {
 /* ── App Shell ──────────────────────────────────────────────────────────── */
 .fos-shell {
   display: flex;
-  height: 100dvh;
+  height: 100%;
   width: 100%;
   position: relative;
   overflow: hidden;
