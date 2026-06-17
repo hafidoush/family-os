@@ -1650,7 +1650,7 @@ async function seedRecettes(): Promise<void> {
     // ── PLATS ─────────────────────────────────────────────────────────────────
     recette('Orzo aux tomates confites', 'Plat principal', 20, [], false,
       ['Tomates cerises','Oignons rouges','Orzo','Beurre','Bouillon de légumes','Parmesan râpé','Ricotta','Citron','Basilic',"Huile d'olive",'Vinaigre balsamique','Paprika fumé','Persillade','Thym']),
-    recette('Galettes d\'agneau aux pistaches & sauce yaourt au sumac', 'Plat principal', 20, ['Viande rouge'], true,
+    recette('Galettes d\'agneau aux pistaches & sauce yaourt au sumac', 'Plat principal', 20, ['Viande rouge'], false,
       ['Agneau haché','Pistaches','Oignons','Ail','Roquette',"Huile d'olive",'Sumac','Yaourt grec','Citron']),
     recette('Tagliatelles de courgettes, nuggets de poulet & sauce au parmesan', 'Plat principal', 30, [], false,
       ['Poulet (Blanc)','Corn-flakes nature','Chapelure panko','Sauce soja sucrée','Paprika fumé','Oeufs','Courgettes',"Huile d'olive",'Sel','Poivre','Bouillon de volaille','Parmesan râpé','Crème liquide']),

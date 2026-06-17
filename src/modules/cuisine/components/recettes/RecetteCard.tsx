@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { toggleFavori } from '../../services/recetteService'
+import { toggleFavori, toggleKidsFavorite } from '../../services/recetteService'
 import type { Recette, CategorieRecette } from '../../../../shared/types'
 import { IconHeart, IconCalendar } from '@shared/components/ui/Icon/Icon'
 import './RecetteCard.css'
@@ -44,6 +44,11 @@ export function RecetteCard({
   const handleFavori = (e: React.MouseEvent) => {
     e.stopPropagation()
     toggleFavori(recette.id, !recette.favori)
+  }
+
+  const handleKidsFavorite = (e: React.MouseEvent) => {
+    e.stopPropagation()
+    toggleKidsFavorite(recette.id, !recette.kidsFavorite)
   }
 
   const handleAddToMenu = (e: React.MouseEvent) => {
@@ -91,6 +96,16 @@ export function RecetteCard({
         aria-label={recette.favori ? 'Retirer des favoris' : 'Ajouter aux favoris'}
       >
         <IconHeart size={16} />
+      </button>
+
+      {/* Bouton kids favorite */}
+      <button
+        className={`recette-card__kids-favori ${recette.kidsFavorite ? 'recette-card__kids-favori--active' : ''}`}
+        onClick={handleKidsFavorite}
+        aria-label={recette.kidsFavorite ? 'Retirer des favoris enfants' : 'Ajouter aux favoris enfants'}
+        title="Favori enfants"
+      >
+        ⭐
       </button>
 
       {/* Bouton "Ajouter au menu" (mode normal) OU checkbox (mode batch) */}

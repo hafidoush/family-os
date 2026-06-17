@@ -52,6 +52,7 @@ async function planifierBatchCooking(recetteIds: string[]): Promise<void> {
 export function RecettesList({ onSelectRecette, onCreateRecette }: Props) {
   const [categorieId, setCategorieId] = useState<string | undefined>(undefined)
   const [favoriSeulement, setFavoriSeulement] = useState(false)
+  const [kidsFavoriteSeulement, setKidsFavoriteSeulement] = useState(false)
   const [recherche, setRecherche] = useState('')
 
   // Mode batch cooking
@@ -61,7 +62,7 @@ export function RecettesList({ onSelectRecette, onCreateRecette }: Props) {
 
   const [importOuvert, setImportOuvert] = useState(false)
 
-  const recettes = useRecettes({ categorieId, favoriSeulement, recherche })
+  const recettes = useRecettes({ categorieId, favoriSeulement, kidsFavoriteSeulement, recherche })
   const categories = useCategoriesRecettes()
 
   const categoriesMap = new Map(categories?.map((c) => [c.id, c]))
@@ -125,6 +126,15 @@ export function RecettesList({ onSelectRecette, onCreateRecette }: Props) {
           title="Favoris"
         >
           <IconHeart size={18} />
+        </button>
+
+        <button
+          className={`recettes-list__filter-btn ${kidsFavoriteSeulement ? 'recettes-list__filter-btn--active' : ''}`}
+          onClick={() => setKidsFavoriteSeulement((v) => !v)}
+          aria-pressed={kidsFavoriteSeulement}
+          title="Favoris enfants"
+        >
+          ⭐
         </button>
 
         <button
@@ -200,11 +210,11 @@ export function RecettesList({ onSelectRecette, onCreateRecette }: Props) {
         <div className="recettes-list__empty">
           <span className="recettes-list__empty-icon">🍽️</span>
           <p>
-            {recherche || categorieId || favoriSeulement || false
+            {recherche || categorieId || favoriSeulement || kidsFavoriteSeulement
               ? 'Aucune recette ne correspond à ces filtres'
               : 'Aucune recette pour l\'instant'}
           </p>
-          {!recherche && !categorieId && !favoriSeulement && !false && (
+          {!recherche && !categorieId && !favoriSeulement && !kidsFavoriteSeulement && (
             <button className="recettes-list__cta" onClick={onCreateRecette}>
               Créer ma première recette
             </button>
