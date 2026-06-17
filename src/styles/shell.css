@@ -37,7 +37,6 @@
 html {
   height: 100%;
   height: -webkit-fill-available;
-  background: #FFFFFF;
 }
 
 body {
@@ -67,7 +66,6 @@ body {
 .fos-shell {
   display: flex;
   height: 100dvh;
-  height: -webkit-fill-available;
   width: 100%;
   position: relative;
   overflow: hidden;
@@ -194,6 +192,7 @@ body {
 /* ── Main content ───────────────────────────────────────────────────────── */
 .fos-main {
   flex: 1;
+  min-height: 0;
   height: 100%;
   overflow-y: auto;
   overflow-x: hidden;

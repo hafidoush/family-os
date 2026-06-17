@@ -1,6 +1,5 @@
 .login-page {
-  flex: 1;
-  min-height: 100%;
+  min-height: 100dvh;
   display: flex;
   align-items: center;
   justify-content: center;
