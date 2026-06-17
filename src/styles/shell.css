@@ -65,7 +65,7 @@ body {
 /* ── App Shell ──────────────────────────────────────────────────────────── */
 .fos-shell {
   display: flex;
-  height: 100dvh;
+  height: 100%;
   width: 100%;
   position: relative;
   overflow: hidden;
