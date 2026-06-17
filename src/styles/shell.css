@@ -235,7 +235,7 @@ body {
   display: flex;
   align-items: center;
   gap: 0;
-  padding: 8px 16px;
+  padding: 8px 16px 16px;
 
   background: var(--nav-bottom-bg, hsla(0, 0%, 100%, 0.92));
   backdrop-filter: blur(40px) saturate(180%);
