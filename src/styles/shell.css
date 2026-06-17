@@ -41,6 +41,8 @@ html, body, #root {
   font-family: var(--font-body);
   color: var(--color-text);
   -webkit-font-smoothing: antialiased;
+  padding-top: env(safe-area-inset-top);
+  padding-top: constant(safe-area-inset-top);
 }
 
 /* ── Scrollbars invisibles sur tous les conteneurs ─────────────── */
@@ -181,7 +183,7 @@ html, body, #root {
   overflow-x: hidden;
   height: 100%;
   position: relative;
-  padding-bottom: calc(var(--bottom-bar-h) + 16px);
+  /* Pas de padding-bottom ici : chaque module gère son propre espacement bas */
 }
 
 .fos-main::-webkit-scrollbar { width: 4px; }
@@ -220,12 +222,13 @@ html, body, #root {
   display: flex;
   align-items: center;
   gap: 0;
-  padding: 8px 16px 12px;
+  padding: 8px 16px calc(12px + env(safe-area-inset-bottom));
+  padding: 8px 16px calc(12px + constant(safe-area-inset-bottom));
 
-  background: hsla(0, 0%, 100%, 0.92);
+  background: var(--nav-bottom-bg, hsla(0, 0%, 100%, 0.92));
   backdrop-filter: blur(40px) saturate(180%);
   -webkit-backdrop-filter: blur(40px) saturate(180%);
-  border-top: 1px solid rgba(210, 173, 235, 0.15);
+  border-top: 1px solid var(--nav-bottom-border, rgba(210, 173, 235, 0.15));
 }
 
 .fos-pill-item {
@@ -414,7 +417,7 @@ html, body, #root {
 .fos-quick-pensee__save:disabled { opacity: 0.5; cursor: default; }
 
 /* ── Responsive ── */
-@media (min-width: 768px) {
+@media (min-width: 1024px) {
   .fos-sidebar { display: flex; }
   .fos-pill { display: none; }
   .fos-main { padding-bottom: 0; }
