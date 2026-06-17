@@ -14,6 +14,7 @@
 import { Outlet, NavLink, useLocation } from 'react-router-dom';
 import { useOfflineStatus } from './shared/hooks/useOfflineStatus';
 import { ToastContainer } from './shared/components/ui/ToastContainer/ToastContainer';
+import { DebugPanel } from './shared/components/ui/DebugPanel';
 import './styles/shell.css';
 
 // ---------------------------------------------------------------------------
@@ -223,6 +224,7 @@ export default function AppLayout() {
       </main>
 
       <ToastContainer />
+      <DebugPanel />
     </div>
 
       {/* ── Floating pill nav — hors du shell pour éviter le clipping iOS overflow:hidden ── */}

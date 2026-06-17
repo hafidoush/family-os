@@ -243,16 +243,6 @@ body {
   border-top: 1px solid var(--nav-bottom-border, rgba(210, 173, 235, 0.15));
 }
 
-.fos-pill::after {
-  content: '';
-  position: absolute;
-  top: 100%;
-  left: 0;
-  right: 0;
-  height: env(safe-area-inset-bottom);
-  background: red;
-  pointer-events: none;
-}
 
 .fos-pill-item {
   flex: 1;
