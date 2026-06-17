@@ -86,14 +86,25 @@ export async function pushRecord(dexieTable: string, record: Record<string, unkn
 }
 
 // ── Soft-delete sur Supabase ──────────────────────────────────────────────────
+// Upsert (pas update) : crée un tombstone même si la ligne n'existait pas encore
+// dans Supabase (cas des enregistrements seedés ou créés hors-ligne)
 export async function softDeleteRecord(dexieTable: string, id: string) {
   const supaTable = TABLE_MAP[dexieTable]
   if (!supaTable) return
 
+  const { data: { session } } = await supabase.auth.getSession()
+  if (!session) return
+
+  const now = new Date().toISOString()
   const { error } = await supabase
     .from(supaTable)
-    .update({ deleted_at: new Date().toISOString() })
-    .eq('id', id)
+    .upsert({
+      id,
+      user_id: session.user.id,
+      data: { id },
+      updated_at: now,
+      deleted_at: now,
+    }, { onConflict: 'id' })
 
   if (error) console.warn(`[sync] delete ${dexieTable}:`, error.message)
 }
@@ -106,6 +117,22 @@ export async function pullAll() {
   for (const dexieTable of DEXIE_TABLES) {
     const supaTable = TABLE_MAP[dexieTable]
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const table = (db as any)[dexieTable]
+    if (!table) continue
+
+    // 1. Supprimer localement les enregistrements effacés sur Supabase
+    const { data: deleted } = await supabase
+      .from(supaTable)
+      .select('id')
+      .eq('user_id', session.user.id)
+      .not('deleted_at', 'is', null)
+
+    if (deleted?.length) {
+      await table.bulkDelete(deleted.map((r: { id: string }) => r.id))
+    }
+
+    // 2. Récupérer et appliquer les enregistrements vivants
     const { data, error } = await supabase
       .from(supaTable)
       .select('id, data, deleted_at')
@@ -117,10 +144,6 @@ export async function pullAll() {
       continue
     }
     if (!data?.length) continue
-
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const table = (db as any)[dexieTable]
-    if (!table) continue
 
     let records = data.map((row: { data: Record<string, unknown> }) => row.data)
 

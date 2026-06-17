@@ -52,12 +52,8 @@ async function _seedDatabase(): Promise<void> {
   // Répare les recettes avec une catégorie orpheline (ID inexistant)
   await repairRecettesOrphelines()
 
-  // Seed recettes uniquement si la base est vide (jamais d'écrasement des données utilisateur)
-  const totalRecettes = await db.recettes.count()
-  if (totalRecettes === 0) {
-    await seedRecettes()
-    console.log('[FamilyOS] Recettes initialisées.')
-  }
+  // Purge one-shot des recettes pré-enregistrées (deviceId === 'seed')
+  await purgeSeededRecettes()
 
   // Re-seed activités si absentes ou sans objectifPedagogique (ancien format)
   const needsReseedActivites = activitesCount === 0 || await (async () => {
@@ -1609,6 +1605,26 @@ async function seedActivites(): Promise<void> {
   ]
 
   await db.activites.bulkAdd(activites)
+}
+
+// ── Purge one-shot des recettes pré-enregistrées (deviceId === 'seed') ────────
+async function purgeSeededRecettes(): Promise<void> {
+  const CLE = 'seeded_recipes_purged_v1'
+  const already = await db.parametresSync.where('cle').equals(CLE).first()
+  if (already) return
+
+  const now = new Date()
+
+  const seeded = await db.recettes.filter(r => r.deviceId === 'seed').toArray()
+  if (seeded.length > 0) {
+    const ids = seeded.map(r => r.id)
+    const ingIds = (await db.recettesIngredients.filter(i => ids.includes(i.recette)).toArray()).map(i => i.id)
+    if (ingIds.length > 0) await db.recettesIngredients.bulkDelete(ingIds)
+    await db.recettes.bulkDelete(ids)
+    console.log(`[FamilyOS] ${seeded.length} recette(s) pré-enregistrée(s) supprimée(s).`)
+  }
+
+  await db.parametresSync.put({ id: uuid(), cle: CLE, valeur: 'true', derniereModification: now, createdAt: now, updatedAt: now })
 }
 
 // ── Recettes importées depuis Notion ExportBlock ──────────────────────────────
