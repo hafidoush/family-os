@@ -11,6 +11,12 @@ function norm(s: string): string {
   return s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[-–]/g, ' ').replace(/\s+/g, ' ').trim()
 }
 
+// ID stable déterministe pour les activités seedées — identique sur tous les appareils
+function stableActivityId(nom: string): string {
+  const slug = nom.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').substring(0, 60)
+  return `seed-act-${slug}`
+}
+
 // Mutex pour éviter les appels concurrents (React StrictMode double-fires useEffect en dev)
 let _seedPromise: Promise<void> | null = null
 
@@ -66,6 +72,9 @@ async function _seedDatabase(): Promise<void> {
     await seedActivites()
     console.log('[FamilyOS] Activités (re)initialisées.')
   }
+
+  // Migration IDs stables pour activités (corrige sync entre appareils)
+  await migrateActivitesToStableIds()
 
   // Seed catalogue produits si absent
   const produitsCount = await db.produits.count()
@@ -857,7 +866,7 @@ async function seedActivites(): Promise<void> {
     instructions: string,
   ): Activite {
     return {
-      id: uuid(),
+      id: stableActivityId(nom),
       nom,
       categorie,
       ageMin,
@@ -1605,6 +1614,40 @@ async function seedActivites(): Promise<void> {
   ]
 
   await db.activites.bulkAdd(activites)
+}
+
+// ── Migration one-shot : IDs stables pour activités seedées ──────────────────
+// Chaque appareil seedait avec uuid() → IDs différents → planifications brisées
+// Cette migration remplace tous les IDs aléatoires par des IDs stables basés sur le nom
+export async function migrateActivitesToStableIds(): Promise<void> {
+  const CLE = 'stable_activity_ids_v1'
+  const already = await db.parametresSync.where('cle').equals(CLE).first()
+  if (already) return
+
+  const now = new Date()
+  const activites = await db.activites.toArray()
+  let migrated = 0
+
+  for (const a of activites) {
+    const newId = stableActivityId(a.nom)
+    if (newId === a.id) continue
+
+    // Mettre à jour les références dans planificationsActivites
+    const planifs = await db.planificationsActivites.filter(p => p.activite === a.id).toArray()
+    await Promise.all(planifs.map(p => db.planificationsActivites.update(p.id, { activite: newId, updatedAt: now })))
+
+    // Mettre à jour les références dans activitesProgramme
+    const aps = await db.activitesProgramme.filter(ap => ap.activiteCatalogueId === a.id).toArray()
+    await Promise.all(aps.map(ap => db.activitesProgramme.update(ap.id, { activiteCatalogueId: newId, updatedAt: now })))
+
+    // Recréer l'activité avec l'ID stable (put + delete car Dexie ne supporte pas le renommage d'ID)
+    await db.activites.put({ ...a, id: newId, updatedAt: now })
+    await db.activites.delete(a.id)
+    migrated++
+  }
+
+  await db.parametresSync.put({ id: uuid(), cle: CLE, valeur: 'true', derniereModification: now, createdAt: now, updatedAt: now })
+  if (migrated > 0) console.log(`[FamilyOS] ${migrated} activité(s) migrée(s) vers IDs stables.`)
 }
 
 // ── Purge one-shot des recettes pré-enregistrées (deviceId === 'seed') ────────
