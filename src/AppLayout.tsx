@@ -225,9 +225,6 @@ export default function AppLayout() {
       <ToastContainer />
     </div>
 
-      {/* Remplissage zone safe-area bas (home indicator iPhone) */}
-      <div className="fos-safe-area-bottom" aria-hidden="true" />
-
       {/* ── Floating pill nav — hors du shell pour éviter le clipping iOS overflow:hidden ── */}
       <nav className="fos-pill" aria-label="Navigation">
         {PILL_ITEMS.map(path => {
