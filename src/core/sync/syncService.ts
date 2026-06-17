@@ -15,6 +15,11 @@ import { supabase } from '../supabase/client'
 import { db } from '../db/database'
 import type { RealtimeChannel } from '@supabase/supabase-js'
 
+// Champs Blob non sérialisables en JSON — exclus du push, préservés au pull
+const BLOB_FIELDS: Record<string, string[]> = {
+  membres: ['avatar'],
+}
+
 // Mapping nom de table Dexie → nom de table Supabase
 const TABLE_MAP: Record<string, string> = {
   recettes:                 'recettes',
@@ -61,12 +66,18 @@ export async function pushRecord(dexieTable: string, record: Record<string, unkn
   const { data: { session } } = await supabase.auth.getSession()
   if (!session) return
 
+  // Exclure les champs Blob — non sérialisables en JSON
+  const blobFields = BLOB_FIELDS[dexieTable] ?? []
+  const data = blobFields.length
+    ? Object.fromEntries(Object.entries(record).filter(([k]) => !blobFields.includes(k)))
+    : record
+
   const { error } = await supabase
     .from(supaTable)
     .upsert({
       id:         record.id,
       user_id:    session.user.id,
-      data:       record,
+      data,
       updated_at: new Date().toISOString(),
       deleted_at: record.deletedAt ? new Date(record.deletedAt as string).toISOString() : null,
     }, { onConflict: 'id' })
@@ -111,7 +122,27 @@ export async function pullAll() {
     const table = (db as any)[dexieTable]
     if (!table) continue
 
-    const records = data.map((row: { data: Record<string, unknown> }) => row.data)
+    let records = data.map((row: { data: Record<string, unknown> }) => row.data)
+
+    // Préserver les champs Blob locaux (non synchronisés via Supabase)
+    const blobFields = BLOB_FIELDS[dexieTable]
+    if (blobFields?.length) {
+      const existing = await table.toArray()
+      const localMap = new Map<string, Record<string, unknown>>(
+        existing.map((r: Record<string, unknown>) => [r.id as string, r])
+      )
+      records = records.map((r: Record<string, unknown>) => {
+        const local = localMap.get(r.id as string)
+        if (!local) return r
+        const preserved = Object.fromEntries(
+          blobFields
+            .filter(f => local[f] instanceof Blob)
+            .map(f => [f, local[f]])
+        )
+        return { ...r, ...preserved }
+      })
+    }
+
     await table.bulkPut(records)
   }
 }
@@ -173,6 +204,16 @@ export function startRealtime() {
         if (row.deleted_at) {
           await table.delete(row.data.id)
         } else {
+          // Préserver les champs Blob locaux avant écrasement
+          const blobFields = BLOB_FIELDS[dexieTable]
+          if (blobFields?.length) {
+            const local = await table.get(row.data.id)
+            if (local) {
+              blobFields.forEach(f => {
+                if (local[f] instanceof Blob) row.data[f] = local[f]
+              })
+            }
+          }
           await table.put(row.data)
         }
       }

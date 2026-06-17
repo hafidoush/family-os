@@ -12,7 +12,7 @@ import type { Membre } from '@shared/types/modules';
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
 function blobToUrl(blob: Blob | undefined): string | null {
-  if (!blob) return null;
+  if (!blob || !(blob instanceof Blob)) return null;
   return URL.createObjectURL(blob);
 }
 
