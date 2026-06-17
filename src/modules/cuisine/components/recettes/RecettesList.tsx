@@ -6,7 +6,7 @@ import { db } from '../../../../core/db/database'
 import { newEntity } from '../../../../core/db/helpers'
 import type { SessionPreparation } from '../../../../shared/types'
 import { ImportRecetteSheet } from './ImportRecetteSheet'
-import { IconHeart, IconStarShine, IconBookBookmark, IconMagnifier } from '@shared/components/ui/Icon/Icon'
+import { IconHeart, IconStarMinimalistic, IconBookBookmark, IconMagnifier } from '@shared/components/ui/Icon/Icon'
 import './RecettesList.css'
 
 interface Props {
@@ -134,7 +134,7 @@ export function RecettesList({ onSelectRecette, onCreateRecette }: Props) {
           aria-pressed={kidsFavoriteSeulement}
           title="Favoris enfants"
         >
-          ⭐
+          <IconStarMinimalistic size={18} />
         </button>
 
         <button

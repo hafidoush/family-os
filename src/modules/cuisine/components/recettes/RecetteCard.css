@@ -158,19 +158,19 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 14px;
-  opacity: 0.5;
-  transition: transform var(--transition-fast), opacity var(--transition-fast);
+  color: rgba(255, 255, 255, 0.6);
+  transition: transform var(--transition-fast), color var(--transition-fast), background var(--transition-fast);
   z-index: 3;
 }
 
 .recette-card__kids-favori--active {
-  opacity: 1;
+  background: rgba(251, 191, 36, 0.35);
+  color: rgba(251, 191, 36, 1);
 }
 
 .recette-card__kids-favori:hover {
   transform: scale(1.15);
-  opacity: 0.9;
+  color: rgba(251, 191, 36, 0.9);
 }
 
 /* Texte posé sur le panneau glass */

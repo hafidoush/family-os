@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { toggleFavori, toggleKidsFavorite } from '../../services/recetteService'
 import type { Recette, CategorieRecette } from '../../../../shared/types'
-import { IconHeart, IconCalendar } from '@shared/components/ui/Icon/Icon'
+import { IconHeart, IconCalendar, IconStarMinimalistic } from '@shared/components/ui/Icon/Icon'
 import './RecetteCard.css'
 
 interface Props {
@@ -105,7 +105,7 @@ export function RecetteCard({
         aria-label={recette.kidsFavorite ? 'Retirer des favoris enfants' : 'Ajouter aux favoris enfants'}
         title="Favori enfants"
       >
-        ⭐
+        <IconStarMinimalistic size={16} />
       </button>
 
       {/* Bouton "Ajouter au menu" (mode normal) OU checkbox (mode batch) */}
