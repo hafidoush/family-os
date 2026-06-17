@@ -196,6 +196,7 @@ export default function AppLayout() {
   const settingsModule = NAV_MODULES.find(m => m.path === '/parametres')!;
 
   return (
+    <>
     <div className="fos-shell">
 
       {/* ── Sidebar (iPad / tablette) ── */}
@@ -221,7 +222,10 @@ export default function AppLayout() {
         <Outlet />
       </main>
 
-      {/* ── Floating pill nav ── */}
+      <ToastContainer />
+    </div>
+
+      {/* ── Floating pill nav — hors du shell pour éviter le clipping iOS overflow:hidden ── */}
       <nav className="fos-pill" aria-label="Navigation">
         {PILL_ITEMS.map(path => {
           const mod = NAV_MODULES.find(m => m.path === path)!;
@@ -247,8 +251,6 @@ export default function AppLayout() {
           <span>📵</span> Hors ligne — les données sont disponibles localement
         </div>
       )}
-
-      <ToastContainer />
-    </div>
+    </>
   );
 }
