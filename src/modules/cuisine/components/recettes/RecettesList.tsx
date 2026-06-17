@@ -6,7 +6,7 @@ import { db } from '../../../../core/db/database'
 import { newEntity } from '../../../../core/db/helpers'
 import type { SessionPreparation } from '../../../../shared/types'
 import { ImportRecetteSheet } from './ImportRecetteSheet'
-import { IconHeart, IconStarShine, IconStarMinimalistic, IconBookBookmark, IconMagnifier } from '@shared/components/ui/Icon/Icon'
+import { IconHeart, IconStarShine, IconBookBookmark, IconMagnifier } from '@shared/components/ui/Icon/Icon'
 import './RecettesList.css'
 
 interface Props {
@@ -52,7 +52,6 @@ async function planifierBatchCooking(recetteIds: string[]): Promise<void> {
 export function RecettesList({ onSelectRecette, onCreateRecette }: Props) {
   const [categorieId, setCategorieId] = useState<string | undefined>(undefined)
   const [favoriSeulement, setFavoriSeulement] = useState(false)
-  const [kidsFavoriteSeulement, setKidsFavoriteSeulement] = useState(false)
   const [recherche, setRecherche] = useState('')
 
   // Mode batch cooking
@@ -62,7 +61,7 @@ export function RecettesList({ onSelectRecette, onCreateRecette }: Props) {
 
   const [importOuvert, setImportOuvert] = useState(false)
 
-  const recettes = useRecettes({ categorieId, favoriSeulement, kidsFavoriteSeulement, recherche })
+  const recettes = useRecettes({ categorieId, favoriSeulement, recherche })
   const categories = useCategoriesRecettes()
 
   const categoriesMap = new Map(categories?.map((c) => [c.id, c]))
@@ -126,15 +125,6 @@ export function RecettesList({ onSelectRecette, onCreateRecette }: Props) {
           title="Favoris"
         >
           <IconHeart size={18} />
-        </button>
-
-        <button
-          className={`recettes-list__filter-btn ${kidsFavoriteSeulement ? 'recettes-list__filter-btn--active' : ''}`}
-          onClick={() => setKidsFavoriteSeulement((v) => !v)}
-          aria-pressed={kidsFavoriteSeulement}
-          title="Kids Favorite"
-        >
-          <IconStarMinimalistic size={18} />
         </button>
 
         <button
@@ -210,11 +200,11 @@ export function RecettesList({ onSelectRecette, onCreateRecette }: Props) {
         <div className="recettes-list__empty">
           <span className="recettes-list__empty-icon">🍽️</span>
           <p>
-            {recherche || categorieId || favoriSeulement || kidsFavoriteSeulement
+            {recherche || categorieId || favoriSeulement || false
               ? 'Aucune recette ne correspond à ces filtres'
               : 'Aucune recette pour l\'instant'}
           </p>
-          {!recherche && !categorieId && !favoriSeulement && !kidsFavoriteSeulement && (
+          {!recherche && !categorieId && !favoriSeulement && !false && (
             <button className="recettes-list__cta" onClick={onCreateRecette}>
               Créer ma première recette
             </button>

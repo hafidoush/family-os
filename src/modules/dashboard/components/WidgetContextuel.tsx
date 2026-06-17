@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useMeteo } from '../hooks/useMeteo';
+import { useTheme } from '@shared/hooks/useTheme';
 import './WidgetContextuel.css';
 
 const JOURS_COURT = ['DIM', 'LUN', 'MAR', 'MER', 'JEU', 'VEN', 'SAM'];
@@ -22,7 +23,8 @@ function getWmoIcon(code: number): string {
 
 export function WidgetContextuel() {
   const [now, setNow] = useState(new Date());
-  const { data: meteo, loading: meteoLoading } = useMeteo();
+  const { data: meteo } = useMeteo();
+  const { mode, toggle } = useTheme();
 
   useEffect(() => {
     const timer = setInterval(() => setNow(new Date()), 60_000);
@@ -51,13 +53,20 @@ export function WidgetContextuel() {
         </div>
       </div>
 
-      {/* Droite : toggle light mode */}
+      {/* Droite : toggle thème */}
       <div className="widget-contextuel-topbar__right">
-        <div className="widget-contextuel-topbar__mode-toggle">
-          <span className="widget-contextuel-topbar__mode-btn widget-contextuel-topbar__mode-btn--active">☀</span>
-          <span className="widget-contextuel-topbar__mode-btn">☽</span>
-        </div>
-        <span className="widget-contextuel-topbar__mode-label">light<br/>mode</span>
+        <button
+          className="widget-contextuel-topbar__mode-toggle"
+          onClick={toggle}
+          aria-label={`Thème : ${mode}. Cliquer pour changer`}
+          title={`Thème actuel : ${mode}`}
+        >
+          <span className={`widget-contextuel-topbar__mode-btn${mode === 'light' ? ' widget-contextuel-topbar__mode-btn--active' : ''}`}>☀</span>
+          <span className={`widget-contextuel-topbar__mode-btn${mode === 'dark' ? ' widget-contextuel-topbar__mode-btn--active' : ''}`}>☽</span>
+        </button>
+        <span className="widget-contextuel-topbar__mode-label">
+          {mode === 'light' ? 'light' : mode === 'dark' ? 'dark' : 'auto'}<br/>mode
+        </span>
       </div>
     </div>
   );

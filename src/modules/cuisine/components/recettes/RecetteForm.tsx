@@ -61,8 +61,6 @@ export function RecetteForm({ recetteId, onSave, onCancel }: Props) {
   const [typePreparation, setTypePreparation] = useState<'plat' | 'gouter' | 'dessert' | 'petit_dejeuner' | 'snack' | ''>('')
   const [modeConservation, setModeConservation] = useState('')
   const [dureeConservation, setDureeConservation] = useState('')
-  const [congelable, setCongelable] = useState(false)
-  const [kidsFavorite, setKidsFavorite] = useState(false)
   const [imageData, setImageData] = useState<string | undefined>(undefined) // base64
   const [imagePreview, setImagePreview] = useState<string | null>(null)
   const [ingredients, setIngredients] = useState<IngredientRow[]>([newIngredientRow()])
@@ -90,8 +88,6 @@ export function RecetteForm({ recetteId, onSave, onCancel }: Props) {
     setTypePreparation(recetteExistante.typePreparation ?? '')
     setModeConservation(recetteExistante.modeConservation ?? '')
     setDureeConservation(recetteExistante.dureeConservation?.toString() ?? '')
-    setCongelable(recetteExistante.congelable ?? false)
-    setKidsFavorite(recetteExistante.kidsFavorite ?? false)
 
     // Préférer imageData (base64) ; fallback vers Blob legacy
     if (recetteExistante.imageData) {
@@ -266,8 +262,6 @@ export function RecetteForm({ recetteId, onSave, onCancel }: Props) {
         typePreparation: typePreparation || undefined,
         modeConservation: modeConservation.trim() || undefined,
         dureeConservation: dureeConservation ? parseInt(dureeConservation) : undefined,
-        congelable: congelable || undefined,
-        kidsFavorite: kidsFavorite || undefined,
       }
 
       let savedId: string
@@ -565,29 +559,6 @@ export function RecetteForm({ recetteId, onSave, onCancel }: Props) {
             </div>
           </div>
 
-          <div className="recette-form__field">
-            <label className="recette-form__optionnel" style={{ cursor: 'pointer' }}>
-              <input
-                type="checkbox"
-                checked={congelable}
-                onChange={(e) => setCongelable(e.target.checked)}
-                style={{ marginRight: 8 }}
-              />
-              <span>Peut se congeler</span>
-            </label>
-          </div>
-
-          <div className="recette-form__field">
-            <label className="recette-form__optionnel" style={{ cursor: 'pointer' }}>
-              <input
-                type="checkbox"
-                checked={kidsFavorite}
-                onChange={(e) => setKidsFavorite(e.target.checked)}
-                style={{ marginRight: 8 }}
-              />
-              <span>⭐ Kids Favorite — les enfants adorent</span>
-            </label>
-          </div>
         </section>
 
       </div>

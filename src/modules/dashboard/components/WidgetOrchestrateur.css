@@ -351,30 +351,33 @@
 
 .orc-action-wrap {
   position: relative;
-  display: flex;
-  align-items: stretch;
-  gap: 6px;
 }
 
 .orc-action-wrap .orc-action {
-  flex: 1;
+  width: 100%;
+  padding-right: 36px;
 }
 
 .orc-action__dismiss {
-  flex-shrink: 0;
-  width: 28px;
+  position: absolute;
+  top: 50%;
+  right: 10px;
+  transform: translateY(-50%);
+  width: 24px;
+  height: 24px;
   background: transparent;
   border: none;
   color: #C4B8D8;
-  font-size: 18px;
+  font-size: 16px;
   line-height: 1;
   cursor: pointer;
-  border-radius: 8px;
+  border-radius: 6px;
   display: flex;
   align-items: center;
   justify-content: center;
   transition: background 0.15s, color 0.15s;
   -webkit-tap-highlight-color: transparent;
+  z-index: 2;
 }
 .orc-action__dismiss:hover { background: rgba(201,184,232,0.25); color: #7C6FA0; }
 

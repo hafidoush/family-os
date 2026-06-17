@@ -140,19 +140,30 @@
   margin: 0;
 }
 
-/* ── Suggestions : 2 colonnes → 3e centré dessous ── */
+/* ── Suggestions : colonne unique sur mobile, 2 col sur tablette+ ── */
 .widget-hero__suggestions {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
+  display: flex;
+  flex-direction: column;
   gap: 10px;
   width: 100%;
   margin: 16px 0;
 }
 
-/* 3e chip centré sur sa propre ligne */
-.widget-hero__chip:last-child {
-  grid-column: 1 / -1;
-  justify-self: center;
+.widget-hero__chip {
+  width: 100%;
+  text-align: center;
+}
+
+@media (min-width: 768px) {
+  .widget-hero__suggestions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+  }
+  .widget-hero__chip:last-child {
+    grid-column: 1 / -1;
+    justify-self: center;
+    width: auto;
+  }
 }
 
 .widget-hero__chip {
@@ -167,8 +178,10 @@
   cursor: pointer;
   transition: opacity 0.15s ease, transform 0.12s ease;
   -webkit-tap-highlight-color: transparent;
-  white-space: nowrap;
+  white-space: normal;
   text-align: center;
+  overflow: hidden;
+  word-break: break-word;
 }
 
 .widget-hero__chip:hover {

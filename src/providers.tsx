@@ -7,6 +7,8 @@ import { emit } from './core/automation/engine'
 import { searchService } from './core/search/SearchService'
 import { seedDatabase } from './core/db/seed'
 import { useNotificationsStore } from './shared/stores/notificationsStore'
+import { AuthProvider } from './core/auth/AuthContext'
+import { useSyncOnMount } from './core/sync/useSyncOnMount'
 
 // ─── DnD Backend detection (F-01 fix) ───────────────────────────────────────
 // HTML5Backend for desktop, TouchBackend for iPhone/iPad
@@ -104,6 +106,11 @@ function useExportReminder() {
   }, [addToast]);
 }
 
+function SyncBridge() {
+  useSyncOnMount()
+  return null
+}
+
 export function AppProviders({ children }: AppProvidersProps) {
   const backend = useDnDBackend()
   const { ready, error } = useDbInit()
@@ -172,8 +179,11 @@ export function AppProviders({ children }: AppProvidersProps) {
   }
 
   return (
-    <DndProvider backend={backend} options={{ enableMouseEvents: true }}>
-      {children}
-    </DndProvider>
+    <AuthProvider>
+      <SyncBridge />
+      <DndProvider backend={backend} options={{ enableMouseEvents: true }}>
+        {children}
+      </DndProvider>
+    </AuthProvider>
   )
 }

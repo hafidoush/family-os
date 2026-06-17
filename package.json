@@ -6,10 +6,10 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
+    "deploy": "npm run build && gh-pages -d dist -r https://hafidoush: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@github.com/hafidoush/Family-os.git",
     "preview": "vite preview",
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
-    "type-check": "tsc --noEmit",
-    "deploy": "npm run build && gh-pages -d dist"
+    "type-check": "tsc --noEmit"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.108.2",
@@ -37,7 +37,7 @@
     "eslint": "^8.57.0",
     "eslint-plugin-react-hooks": "^4.6.2",
     "eslint-plugin-react-refresh": "^0.4.7",
-    "gh-pages": "^6.1.1",
+    "gh-pages": "^6.3.0",
     "typescript": "^5.5.3",
     "vite": "^5.3.4",
     "vite-plugin-pwa": "^0.20.1",

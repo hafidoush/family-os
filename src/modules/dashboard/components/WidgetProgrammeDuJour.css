@@ -64,6 +64,10 @@
   box-sizing: border-box;
   cursor: pointer;
   transition: transform 0.15s ease, box-shadow 0.15s ease;
+  transform: translateZ(0);
+  -webkit-transform: translateZ(0);
+  will-change: transform;
+  isolation: isolate;
 }
 
 .programme-card:active {

@@ -59,6 +59,9 @@
   border-radius: 999px;
   padding: 3px;
   gap: 2px;
+  border: none;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
 }
 
 .widget-contextuel-topbar__mode-btn {

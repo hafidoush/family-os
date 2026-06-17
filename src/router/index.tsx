@@ -7,6 +7,8 @@
 import { Routes, Route, Navigate } from 'react-router-dom'
 import { lazy, Suspense } from 'react'
 import AppLayout from '../AppLayout'
+import { useAuth } from '../core/auth/AuthContext'
+import LoginPage from '../modules/auth/LoginPage'
 
 // ── Lazy imports — chaque module est un chunk séparé ─────────────────────────
 const Dashboard        = lazy(() => import('../modules/dashboard'))
@@ -82,13 +84,20 @@ const S = (C: React.ComponentType) => (
  *   /#/pensees/*     → Pensées
  *   /#/*             → Dashboard (fallback)
  */
+function AuthGuard({ children }: { children: React.ReactNode }) {
+  const { session, loading } = useAuth()
+  if (loading) return null
+  if (!session) return <LoginPage />
+  return <>{children}</>
+}
+
 export function AppRouter() {
   return (
     <Routes>
       {/* Route publique — sans AppLayout, accessible par Élies sans compte */}
       <Route path="partage/:token" element={<Suspense fallback={<ModuleFallback />}><PagePartage /></Suspense>} />
 
-      <Route element={<AppLayout />}>
+      <Route element={<AuthGuard><AppLayout /></AuthGuard>}>
         <Route index element={<Navigate to="/dashboard" replace />} />
 
         <Route path="dashboard"    element={S(Dashboard)}  />

@@ -589,6 +589,55 @@
  * La palette brute reste identique — seule la sémantique change.
  * ──────────────────────────────────────────────────────────────────────────── */
 
+/* ── Dark mode tokens — class explicite (toggle utilisateur) ── */
+[data-theme="dark"] {
+  --bg-app:        hsl(240, 12%, 9%);
+  --bg-base:       hsl(240, 12%, 11%);
+  --bg-elevated:   hsl(240, 11%, 14%);
+  --bg-sunken:     hsl(240, 13%, 7%);
+  --surface-1:     hsl(240, 11%, 15%);
+  --surface-2:     hsl(240, 10%, 12%);
+  --surface-3:     hsl(262, 20%, 16%);
+  --surface-overlay: hsla(240, 20%, 5%, 0.70);
+  --text-primary:   hsl(240, 15%, 92%);
+  --text-secondary: hsl(240, 10%, 65%);
+  --text-tertiary:  hsl(240, 8%, 45%);
+  --text-disabled:  hsl(240, 6%, 30%);
+  --text-brand:     var(--color-lavender-300);
+  --text-link:      var(--color-sky-300);
+  --text-link-hover:var(--color-sky-200);
+  --border-subtle:  hsla(240, 10%, 100%, 0.06);
+  --border-default: hsla(240, 10%, 100%, 0.10);
+  --border-strong:  hsla(240, 10%, 100%, 0.16);
+  --border-brand:   var(--color-lavender-600);
+  --glass-bg-light:      hsla(262, 20%, 20%, 0.55);
+  --glass-border-light:  hsla(0, 0%, 100%, 0.12);
+  --glass-bg:            hsla(262, 18%, 16%, 0.68);
+  --glass-border:        hsla(0, 0%, 100%, 0.16);
+  --glass-bg-strong:     hsla(262, 16%, 14%, 0.85);
+  --glass-border-strong: hsla(0, 0%, 100%, 0.20);
+  --glass-bg-tinted:     hsla(262, 35%, 18%, 0.72);
+  --glass-border-tinted: hsla(262, 60%, 70%, 0.25);
+  --bg-gradient-app: linear-gradient(135deg, hsl(262, 40%, 8%) 0%, hsl(208, 40%, 9%) 30%, hsl(278, 35%, 9%) 55%, hsl(240, 30%, 7%) 100%);
+  --nav-bottom-bg:      hsla(240, 15%, 10%, 0.88);
+  --nav-bottom-border:  hsla(240, 15%, 100%, 0.08);
+  --nav-sidebar-bg:     hsla(240, 15%, 12%, 0.80);
+  --card-bg:     var(--glass-bg);
+  --card-border: var(--glass-border);
+  --input-bg:           hsl(240, 12%, 14%);
+  --input-border:       var(--border-default);
+  --input-focus-bg:     hsl(240, 12%, 16%);
+  --input-focus-shadow: 0 0 0 3px hsla(262, 45%, 58%, 0.20);
+  /* Shell overrides */
+  --color-cream:    hsl(240, 12%, 9%);
+  --color-bg:       hsl(240, 12%, 11%);
+  --color-surface:  hsl(240, 11%, 15%);
+  --color-text:     hsl(240, 15%, 92%);
+  --color-text-2:   hsl(240, 10%, 65%);
+  --color-muted:    hsl(240, 8%, 45%);
+  --color-border:   hsla(240, 10%, 100%, 0.10);
+}
+
 @media (prefers-color-scheme: dark) {
   :root {
     /* Fonds */
@@ -596,6 +645,14 @@
     --bg-base:       hsl(240, 12%, 11%);
     --bg-elevated:   hsl(240, 11%, 14%);
     --bg-sunken:     hsl(240, 13%, 7%);
+    /* Shell overrides */
+    --color-cream:   hsl(240, 12%, 9%);
+    --color-bg:      hsl(240, 12%, 11%);
+    --color-surface: hsl(240, 11%, 15%);
+    --color-text:    hsl(240, 15%, 92%);
+    --color-text-2:  hsl(240, 10%, 65%);
+    --color-muted:   hsl(240, 8%, 45%);
+    --color-border:  hsla(240, 10%, 100%, 0.10);
 
     /* Surfaces */
     --surface-1:     hsl(240, 11%, 15%);

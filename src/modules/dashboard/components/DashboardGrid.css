@@ -9,6 +9,7 @@
   min-height: 100%;
   background: transparent;
   padding: var(--space-4);
+  padding-bottom: calc(var(--bottom-bar-h) + 16px + env(safe-area-inset-bottom));
   gap: var(--space-4);
   overflow-y: auto;
   overflow-x: hidden;
@@ -113,17 +114,17 @@
   grid-column: 1 / -1;
 }
 
-/* ── Duo côte à côte : Pensées + À acheter ── */
+/* ── Duo : colonne sur mobile, côte à côte sur tablette+ ── */
 .dashboard-duo {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: 1fr;
   gap: 12px;
   align-items: stretch;
 }
 
-@media (max-width: 380px) {
+@media (min-width: 768px) {
   .dashboard-duo {
-    grid-template-columns: 1fr;
+    grid-template-columns: 1fr 1fr;
   }
 }
 

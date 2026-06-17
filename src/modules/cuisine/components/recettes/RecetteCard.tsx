@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
-import { toggleFavori, toggleKidsFavorite } from '../../services/recetteService'
+import { toggleFavori } from '../../services/recetteService'
 import type { Recette, CategorieRecette } from '../../../../shared/types'
-import { IconHeart, IconStarMinimalistic, IconCalendar } from '@shared/components/ui/Icon/Icon'
+import { IconHeart, IconCalendar } from '@shared/components/ui/Icon/Icon'
 import './RecetteCard.css'
 
 interface Props {
@@ -46,11 +46,6 @@ export function RecetteCard({
     toggleFavori(recette.id, !recette.favori)
   }
 
-  const handleKidsFavorite = (e: React.MouseEvent) => {
-    e.stopPropagation()
-    toggleKidsFavorite(recette.id, !recette.kidsFavorite)
-  }
-
   const handleAddToMenu = (e: React.MouseEvent) => {
     e.stopPropagation()
     if (menuDone) return
@@ -88,16 +83,6 @@ export function RecetteCard({
 
       {/* Panneau glass flouté, apparaît progressivement vers le bas */}
       <div className="recette-card__glass" />
-
-      {/* Bouton Kids Favorite */}
-      <button
-        className={`recette-card__kids-btn ${recette.kidsFavorite ? 'recette-card__kids-btn--active' : ''}`}
-        onClick={handleKidsFavorite}
-        aria-label={recette.kidsFavorite ? 'Retirer des Kids Favorites' : 'Ajouter aux Kids Favorites'}
-        title={recette.kidsFavorite ? 'Retirer des Kids Favorites' : 'Kids Favorite'}
-      >
-        <IconStarMinimalistic size={16} />
-      </button>
 
       {/* Bouton favori */}
       <button

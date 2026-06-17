@@ -204,9 +204,15 @@
 
 .recette-form__row {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: 1fr;
   gap: 10px;
   margin-bottom: 14px;
+}
+
+@media (min-width: 480px) {
+  .recette-form__row {
+    grid-template-columns: repeat(3, 1fr);
+  }
 }
 
 /* ─── Difficulté ──────────────────────────────────────────────────────────── */

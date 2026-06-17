@@ -1,5 +1,8 @@
 import './styles/index.css'
+import { initTheme } from './shared/hooks/useTheme'
 import React from 'react'
+
+initTheme()
 import ReactDOM from 'react-dom/client'
 import App from './App'
 
