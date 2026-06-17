@@ -192,9 +192,9 @@ body {
 /* ── Main content ───────────────────────────────────────────────────────── */
 .fos-main {
   flex: 1;
+  min-height: 0;
   overflow-y: auto;
   overflow-x: hidden;
-  height: 100%;
   position: relative;
   /* Pas de padding-bottom ici : chaque module gère son propre espacement bas */
 }
