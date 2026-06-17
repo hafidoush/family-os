@@ -1,32 +1,7 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { useFamilyHumeurs } from '../hooks/useFamilyHumeurs';
 import { useDashboardStore } from '../stores/dashboardStore';
 import './WidgetHumeurs.css';
-
-// ─── Avatar helper ─────────────────────────────────────────────────────────────
-
-function BlobAvatar({ blob, prenom, couleur, size = 44 }: {
-  blob: Blob;
-  prenom: string;
-  couleur?: string;
-  size?: number;
-}) {
-  const [url, setUrl] = useState<string | null>(null);
-  useEffect(() => {
-    const objectUrl = URL.createObjectURL(blob);
-    setUrl(objectUrl);
-    return () => URL.revokeObjectURL(objectUrl);
-  }, [blob]);
-
-  const style: React.CSSProperties = { width: size, height: size, borderRadius: '50%', overflow: 'hidden', flexShrink: 0 };
-
-  if (!url) return (
-    <div style={{ ...style, background: couleur ?? 'var(--primary-light)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-      <span style={{ color: '#fff', fontWeight: 700, fontSize: size * 0.4 }}>{prenom[0].toUpperCase()}</span>
-    </div>
-  );
-  return <img src={url} alt={prenom} style={{ ...style, objectFit: 'cover' }} />;
-}
 
 // ─── Constants ─────────────────────────────────────────────────────────────────
 
@@ -77,7 +52,7 @@ function PersonPickerSheet({
             >
               <div className="mood-picker-person__avatar-wrap">
                 {membre.avatar ? (
-                  <BlobAvatar blob={membre.avatar} prenom={membre.prenom} couleur={membre.couleur} size={56} />
+                  <img src={membre.avatar} alt={membre.prenom} style={{ width: 56, height: 56, borderRadius: '50%', objectFit: 'cover', flexShrink: 0 }} />
                 ) : (
                   <div
                     className="mood-picker-person__initiale"

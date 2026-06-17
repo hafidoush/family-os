@@ -11,9 +11,26 @@ import type { Membre } from '@shared/types/modules';
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
-function blobToUrl(blob: Blob | undefined): string | null {
-  if (!blob || !(blob instanceof Blob)) return null;
-  return URL.createObjectURL(blob);
+function avatarToUrl(avatar: string | undefined): string | null {
+  if (!avatar || typeof avatar !== 'string') return null;
+  return avatar;
+}
+
+function fileToBase64(file: File, maxSize = 256): Promise<string> {
+  return new Promise((resolve) => {
+    const img = new Image();
+    const url = URL.createObjectURL(file);
+    img.onload = () => {
+      URL.revokeObjectURL(url);
+      const scale = Math.min(1, maxSize / Math.max(img.width, img.height));
+      const canvas = document.createElement('canvas');
+      canvas.width = Math.round(img.width * scale);
+      canvas.height = Math.round(img.height * scale);
+      canvas.getContext('2d')!.drawImage(img, 0, 0, canvas.width, canvas.height);
+      resolve(canvas.toDataURL('image/jpeg', 0.8));
+    };
+    img.src = url;
+  });
 }
 
 const COULEURS: string[] = [
@@ -28,10 +45,7 @@ function getInitiales(prenom: string): string {
 // ─── Avatar ───────────────────────────────────────────────────────────────────
 
 function MembreAvatar({ membre, size = 64 }: { membre: Membre; size?: number }) {
-  const [url, setUrl] = useState<string | null>(() => blobToUrl(membre.avatar));
-
-  // Mettre à jour si le blob change
-  if (membre.avatar && !url) setUrl(blobToUrl(membre.avatar));
+  const url = avatarToUrl(membre.avatar);
 
   return url ? (
     <img
@@ -70,16 +84,17 @@ function MembreForm({ membre, onSave, onCancel }: MembreFormProps) {
   const [prenom, setPrenom] = useState(membre?.prenom ?? '');
   const [role, setRole] = useState<Membre['role']>(membre?.role ?? 'parent');
   const [couleur, setCouleur] = useState(membre?.couleur ?? COULEURS[0]);
-  const [avatar, setAvatar] = useState<Blob | undefined>(membre?.avatar);
-  const [previewUrl, setPreviewUrl] = useState<string | null>(() => blobToUrl(membre?.avatar));
+  const [avatar, setAvatar] = useState<string | undefined>(membre?.avatar);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(() => avatarToUrl(membre?.avatar));
   const [saving, setSaving] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
 
-  const handlePhoto = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handlePhoto = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    setAvatar(file);
-    setPreviewUrl(URL.createObjectURL(file));
+    const b64 = await fileToBase64(file);
+    setAvatar(b64);
+    setPreviewUrl(b64);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {

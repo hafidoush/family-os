@@ -567,11 +567,13 @@ class FamilyOSDatabase extends Dexie {
       evenementsDetails: 'id, evenementId, archive, updatedAt',
     })
 
-    // ─── Version 11 — nettoyage avatars corrompus (Blob → {} via sync JSON) ──
+    // ─── Version 11 — migration avatars Blob → base64 string ────────────────
+    // Ancienne v11 supprimait les non-Blob ; désormais avatar est une string base64
+    // On supprime les Blob (non sérialisables) pour forcer un re-upload en string
     this.version(11).stores({}).upgrade(async tx => {
       const membres = await tx.table('membres').toArray()
       for (const m of membres) {
-        if (m.avatar !== undefined && !(m.avatar instanceof Blob)) {
+        if (m.avatar instanceof Blob) {
           await tx.table('membres').update(m.id, { avatar: undefined })
         }
       }

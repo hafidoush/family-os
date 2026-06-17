@@ -225,7 +225,7 @@ export interface Membre extends AuditWithDevice {
   id: string
   prenom: string
   role: RoleMembre
-  avatar?: Blob
+  avatar?: string
   couleur?: string
   actif: boolean
 }

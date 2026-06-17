@@ -13,7 +13,7 @@ export interface Membre extends AuditFields, DeviceField {
   id: string;
   prenom: string;
   role: RoleMembre;
-  avatar?: Blob;
+  avatar?: string;
   couleur?: string;
   actif: boolean;
 }

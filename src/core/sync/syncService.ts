@@ -16,9 +16,8 @@ import { db } from '../db/database'
 import type { RealtimeChannel } from '@supabase/supabase-js'
 
 // Champs Blob non sérialisables en JSON — exclus du push, préservés au pull
-const BLOB_FIELDS: Record<string, string[]> = {
-  membres: ['avatar'],
-}
+// avatar est désormais stocké en base64 (string) et se synchronise normalement
+const BLOB_FIELDS: Record<string, string[]> = {}
 
 // Mapping nom de table Dexie → nom de table Supabase
 const TABLE_MAP: Record<string, string> = {
@@ -54,6 +53,13 @@ const TABLE_MAP: Record<string, string> = {
   transactions:             'transactions',
   programmesPedagogiques:   'programmes_pedagogiques',
   activitesProgramme:       'activites_programme',
+  programmesAnnuels:        'programmes_annuels',
+  evenementsDetails:        'evenements_details',
+  tags:                     'tags',
+  produits:                 'produits',
+  categoriesProduits:       'categories_produits',
+  categoriesRecettes:       'categories_recettes',
+  categoriesActivites:      'categories_activites',
 }
 
 const DEXIE_TABLES = Object.keys(TABLE_MAP)
