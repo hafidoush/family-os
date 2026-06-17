@@ -30,6 +30,7 @@ html {
 
   /* Hauteur pleine — nécessaire pour les layouts full-height PWA */
   height: 100%;
+  height: -webkit-fill-available;
 
   /* Couleur de fond initiale (avant que React monte) */
   background-color: var(--bg-app);
@@ -39,7 +40,7 @@ html {
 
 body {
   height: 100%;
-  min-height: 100dvh;  /* dvh = dynamic viewport height, corrige le bug iOS barre Safari */
+  min-height: 100%;
 
   font-family: var(--font-body);
   font-size: var(--text-base);
@@ -62,7 +63,7 @@ body {
 
 #root {
   height: 100%;
-  min-height: 100dvh;
+  min-height: 100%;
   display: flex;
   flex-direction: column;
   isolation: isolate;

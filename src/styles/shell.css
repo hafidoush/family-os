@@ -67,6 +67,7 @@ body {
 .fos-shell {
   display: flex;
   height: 100dvh;
+  height: -webkit-fill-available;
   width: 100%;
   position: relative;
   overflow: hidden;
