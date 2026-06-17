@@ -23,10 +23,6 @@
   --font-display:         'Roobert', 'SF Pro Display', -apple-system, BlinkMacSystemFont, 'Helvetica Neue', sans-serif;
   --font-body:            'Roobert', 'SF Pro Text', -apple-system, BlinkMacSystemFont, 'Helvetica Neue', sans-serif;
 
-  /* iOS PWA viewport fix */
-  --app-height:           100dvh;
-  --vp-offset:            0px;
-
   /* Dimensions layout */
   --sidebar-w:            72px;
   --sidebar-w-wide:       220px;
@@ -44,8 +40,8 @@ html {
 }
 
 body {
-  min-height: 100%;
-  min-height: -webkit-fill-available;
+  height: 100%;
+  height: -webkit-fill-available;
   overflow: hidden;
   background: var(--color-cream);
   font-family: var(--font-body);
@@ -69,7 +65,7 @@ body {
 /* ── App Shell ──────────────────────────────────────────────────────────── */
 .fos-shell {
   display: flex;
-  height: var(--app-height, 100dvh);
+  height: 100%;
   width: 100%;
   position: relative;
   overflow: hidden;
@@ -232,14 +228,14 @@ body {
 /* ══ Floating pill nav — liquid glass ═══════════════════════ */
 .fos-pill {
   position: fixed;
-  bottom: calc(-1 * var(--vp-offset, 0px));
+  bottom: 0;
   left: 0;
   right: 0;
   z-index: 500;
   display: flex;
   align-items: center;
   gap: 0;
-  padding: 8px 16px calc(16px + var(--vp-offset, 0px));
+  padding: 8px 16px 16px;
 
   background: var(--nav-bottom-bg, hsla(0, 0%, 100%, 0.92));
   backdrop-filter: blur(40px) saturate(180%);
