@@ -216,20 +216,34 @@ html, body, #root {
 /* ══ Floating pill nav — liquid glass ═══════════════════════ */
 .fos-pill {
   position: fixed;
-  bottom: 0;
+  bottom: constant(safe-area-inset-bottom);
+  bottom: env(safe-area-inset-bottom);
   left: 0;
   right: 0;
   z-index: 500;
   display: flex;
   align-items: center;
   gap: 0;
-  padding: 8px 16px calc(12px + env(safe-area-inset-bottom));
-  padding: 8px 16px calc(12px + constant(safe-area-inset-bottom));
+  padding: 8px 16px;
 
   background: var(--nav-bottom-bg, hsla(0, 0%, 100%, 0.92));
   backdrop-filter: blur(40px) saturate(180%);
   -webkit-backdrop-filter: blur(40px) saturate(180%);
   border-top: 1px solid var(--nav-bottom-border, rgba(210, 173, 235, 0.15));
+}
+
+/* Remplissage de la zone safe-area en bas (home indicator) */
+.fos-safe-area-bottom {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: constant(safe-area-inset-bottom);
+  height: env(safe-area-inset-bottom);
+  background: var(--nav-bottom-bg, hsla(0, 0%, 100%, 0.92));
+  backdrop-filter: blur(40px) saturate(180%);
+  -webkit-backdrop-filter: blur(40px) saturate(180%);
+  z-index: 499;
 }
 
 .fos-pill-item {
