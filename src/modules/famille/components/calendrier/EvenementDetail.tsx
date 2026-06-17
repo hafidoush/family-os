@@ -5,6 +5,7 @@
 
 import { useState } from 'react';
 import type { ReactNode } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Drawer } from '@shared/components/ui/Drawer';
 import { Modal } from '@shared/components/ui/Modal';
 import { db } from '@core/db/database';
@@ -62,6 +63,7 @@ export default function EvenementDetail({ evenementId, onClose, onEdit }: Props)
   const membres = useLiveQuery(() => db.membres.toArray(), []) as Membre[] | undefined;
 
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const navigate = useNavigate();
 
   if (!evenementId) return null;
 
@@ -170,6 +172,18 @@ export default function EvenementDetail({ evenementId, onClose, onEdit }: Props)
             </div>
 
             <div className="detail-actions">
+              <button
+                onClick={() => { onClose(); navigate(`/receptions/${evenement.id}`); }}
+                style={{
+                  width: '100%', padding: '11px', borderRadius: 12, border: 'none',
+                  background: 'rgba(111,126,214,0.12)', color: '#6F7ED6',
+                  fontSize: 14, fontWeight: 600, cursor: 'pointer',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+                  marginBottom: 10, fontFamily: 'inherit',
+                }}
+              >
+                🎉 Préparer cet événement
+              </button>
               <button className="detail-btn-edit" onClick={() => onEdit(evenement.id)}>
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M15.5 4.5 19.5 8.5 8.5 19.5 4 20l.5-4.5z"/><path d="M13.5 6.5 17.5 10.5"/></svg> Modifier
               </button>

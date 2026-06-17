@@ -28,6 +28,8 @@ const Pensees          = lazy(() => import('../modules/pensees'))
 // Hubs navigation
 const Foyer            = lazy(() => import('../modules/foyer'))
 const Nous             = lazy(() => import('../modules/nous'))
+// Module Réceptions
+const Receptions       = lazy(() => import('../modules/receptions'))
 // Dashboard pages dédiées
 const ActivitesDuJour  = lazy(() => import('../modules/dashboard/pages/ActivitesPlanifieesPage'))
 const ProgrammeDuJour  = lazy(() => import('../modules/dashboard/pages/ProgrammeDuJourPage'))
@@ -116,6 +118,7 @@ export function AppRouter() {
         <Route path="pensees/*"         element={S(Pensees)}         />
         <Route path="foyer/*"           element={S(Foyer)}           />
         <Route path="nous/*"            element={S(Nous)}            />
+        <Route path="receptions/*"      element={S(Receptions)}      />
         <Route path="activites-du-jour" element={S(ActivitesDuJour)} />
         <Route path="programme-du-jour" element={S(ProgrammeDuJour)} />
         <Route path="menage-du-jour"    element={S(MenageDuJour)}    />

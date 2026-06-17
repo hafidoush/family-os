@@ -9,7 +9,7 @@ import type {
   CategorieRecette, CategorieActivite, ParametreSync, ExportSnapshot,
   Pensee, Routine, RoutineItem, CroissanceMesure, SessionPreparation,
   ProgrammePedagogique, ActiviteProgramme, ProgrammeAnnuel,
-  ImportRecetteIA, ContactPartage, ListePartagee,
+  ImportRecetteIA, ContactPartage, ListePartagee, EvenementDetail,
 } from '@shared/types'
 
 // ─── Version du schéma — incrémenter à chaque migration ──────────────────────
@@ -71,6 +71,9 @@ class FamilyOSDatabase extends Dexie {
   // Partage Familial
   contactsPartage!: Table<ContactPartage, string>
   listesPartagees!: Table<ListePartagee, string>
+
+  // Réceptions
+  evenementsDetails!: Table<EvenementDetail, string>
 
   // Entités de référence
   tags!: Table<Tag, string>
@@ -557,6 +560,11 @@ class FamilyOSDatabase extends Dexie {
         'updatedAt',
         '*competencesTravaillees',
       ].join(', '),
+    })
+
+    // ─── Version 10 — table evenementsDetails (module Réceptions) ────────
+    this.version(10).stores({
+      evenementsDetails: 'id, evenementId, archive, updatedAt',
     })
 
     // ─── Version 9 — correction dates de naissance enfants ───────────────

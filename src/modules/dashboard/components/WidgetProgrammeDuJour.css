@@ -275,12 +275,16 @@
   margin: 0 0 10px 0;
   position: relative;
   z-index: 3;
+  -webkit-transform: translateZ(0);
+  transform: translateZ(0);
 }
 
 /* Barre de progression */
 .programme-card__progress-bar {
   position: relative;
   z-index: 3;
+  -webkit-transform: translateZ(0);
+  transform: translateZ(0);
   width: 100%;
   height: 3px;
   background: rgba(0, 0, 0, 0.1);
@@ -306,6 +310,8 @@
   color: #6b6b6b;
   position: relative;
   z-index: 3;
+  -webkit-transform: translateZ(0);
+  transform: translateZ(0);
 }
 
 .programme-card__events {

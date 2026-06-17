@@ -871,6 +871,46 @@ export interface ImportRecetteIA extends AuditWithDevice {
   archive: boolean
 }
 
+// ─── RÉCEPTIONS ───────────────────────────────────────────────────────────────
+
+export interface ChecklistItem {
+  id: string
+  label: string
+  coche: boolean
+}
+
+export type TypeMenuItem = 'plat' | 'dessert' | 'boisson' | 'autre'
+
+export interface EvenementMenuItem {
+  id: string
+  type: TypeMenuItem
+  label: string
+  recetteId?: string  // Recette.id — si liée à une recette existante
+}
+
+export interface EvenementCoursesItem {
+  id: string
+  label: string
+  quantite?: number
+  unite?: string
+  coche: boolean
+  produitId?: string  // Produit.id — si lié au catalogue
+}
+
+export interface EvenementDetail extends AuditWithDevice {
+  id: string          // = evenement.id
+  evenementId: string // FK → Evenement.id
+  nbAdultes?: number
+  nbEnfants?: number
+  prenomInvites?: string[]
+  menuItems?: EvenementMenuItem[]
+  coursesItems?: EvenementCoursesItem[]
+  checklistPrep?: ChecklistItem[]
+  checklistDeco?: ChecklistItem[]
+  suggestionIA?: string
+  archive: boolean
+}
+
 // ─── PARTAGE FAMILIAL ─────────────────────────────────────────────────────────
 
 export type MethodeEnvoiPartage = 'whatsapp' | 'sms' | 'email' | 'copier_lien'

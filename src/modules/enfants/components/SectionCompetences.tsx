@@ -80,7 +80,7 @@ export function SectionCompetences() {
   const [domaineFiltreActif, setDomaineFiltreActif] = useState<string | null>(null);
 
   const { membres } = useEnfants();
-  const enfantColor = activeEnfantId === 'membre-manel' ? '#F9A8D4' : '#86EFAC';
+  const enfantColor = activeEnfantId === 'membre-manel' ? '#DBBFEE' : '#6F7ED6';
 
   const suiviMap = new Map(suivis.map((s) => [s.competence, s]));
 

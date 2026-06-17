@@ -6,7 +6,7 @@ import { db } from '../../core/db/database'
 const C = {
   lavender:  '#6F7ED6',
   lilac:     '#DBBFEE',
-  orange:    '#FD7746',
+  orange:    '#DBBFEE',
   amber:     '#FEC355',
   offwhite:  '#F0EEEA',
   text:      '#1a1a2e',
@@ -318,6 +318,29 @@ export default function FoyerHub() {
             </div>
           ))
         )}
+      </div>
+
+      {/* ── Réceptions — hero card ── */}
+      <div onClick={() => navigate('/receptions')} style={{
+        background: `linear-gradient(135deg, #A78BFA, #DBBFEE)`,
+        borderRadius: 20, padding: '18px 20px', cursor: 'pointer',
+        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+        boxShadow: '0 6px 24px rgba(167,139,250,0.35)',
+        position: 'relative', overflow: 'hidden',
+        marginBottom: 14,
+        WebkitTapHighlightColor: 'transparent',
+      }}>
+        <div style={{ position: 'absolute', right: -16, top: -16, width: 80, height: 80, borderRadius: '50%', background: 'rgba(255,255,255,0.10)', pointerEvents: 'none' }} />
+        <div style={{ position: 'absolute', right: 32, bottom: -22, width: 50, height: 50, borderRadius: '50%', background: 'rgba(255,255,255,0.07)', pointerEvents: 'none' }} />
+        <div style={{ position: 'relative' }}>
+          <div style={{ fontSize: 11, fontWeight: 600, color: 'rgba(255,255,255,0.70)', letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 4 }}>
+            Réceptions
+          </div>
+          <div style={{ fontSize: 18, fontWeight: 700, color: 'white', letterSpacing: '-0.3px' }}>
+            Préparer un événement
+          </div>
+        </div>
+        <div style={{ position: 'relative', flexShrink: 0, fontSize: 28 }}>🎉</div>
       </div>
 
       {/* ── Maison & Déco — hero card ── */}
