@@ -124,6 +124,11 @@
   background: #F0EFEB;
 }
 
+.recette-detail__action-btn--kids {
+  background: rgba(251, 191, 36, 0.15);
+  color: rgba(251, 191, 36, 1);
+}
+
 .recette-detail__action-btn--danger:hover {
   background: #FEE2E2;
 }

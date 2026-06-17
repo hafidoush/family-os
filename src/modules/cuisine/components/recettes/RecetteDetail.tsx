@@ -2,9 +2,9 @@ import { useState, useEffect, useCallback } from 'react'
 import { useRecette, useRecetteIngredients, useCategoriesRecettes } from '../../hooks/useRecettes'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { db } from '../../../../core/db/database'
-import { toggleFavori, deleteRecette } from '../../services/recetteService'
+import { toggleFavori, toggleKidsFavorite, deleteRecette } from '../../services/recetteService'
 import { MenuService as menuService } from '../../services/MenuService'
-import { IconHeart, IconPen, IconTrash, IconLadle, IconFlame } from '@shared/components/ui/Icon/Icon'
+import { IconHeart, IconStarMinimalistic, IconPen, IconTrash, IconLadle, IconFlame } from '@shared/components/ui/Icon/Icon'
 import './RecetteDetail.css'
 
 interface Props {
@@ -142,6 +142,13 @@ export function RecetteDetail({ recetteId, onBack, onEdit }: Props) {
             aria-label="Favori"
           >
             <IconHeart size={18} style={{ opacity: recette.favori ? 1 : 0.5 }} />
+          </button>
+          <button
+            className={`recette-detail__action-btn ${recette.kidsFavorite ? 'recette-detail__action-btn--kids' : ''}`}
+            onClick={() => toggleKidsFavorite(recetteId, !recette.kidsFavorite)}
+            aria-label="Favori enfants"
+          >
+            <IconStarMinimalistic size={18} style={{ opacity: recette.kidsFavorite ? 1 : 0.5 }} />
           </button>
           <button
             className="recette-detail__action-btn"
