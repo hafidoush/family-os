@@ -17,7 +17,7 @@ export default defineConfig({
         short_name: 'FamilyOS',
         description: 'Système de gestion familiale — Local First',
         theme_color: '#6B5B95',
-        background_color: '#FAF9FF',
+        background_color: '#FFFFFF',
         display: 'standalone',
         orientation: 'portrait',
         scope: '/family-os/',
