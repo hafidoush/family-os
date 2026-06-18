@@ -358,11 +358,22 @@ async function persisterProgramme(
   }))
 
   // 3. Insérer toutes les activités et collecter leurs ids par semaine
+  // Charger les IDs de compétences valides pour filtrer les UUIDs inventés par l'IA
+  const competencesValides = await db.competences.filter(c => !c.archive).toArray()
+  const competenceIdsValides = new Set(competencesValides.map(c => c.id))
+
   const activiteIdsBySemaine: Record<number, string[]> = {}
 
   for (const semaineIA of brut.semaines) {
     const ids: string[] = []
-    const activitesValidees = (semaineIA.activites ?? []).map((a, i) => validerActiviteIA(a, i))
+    const activitesValidees = (semaineIA.activites ?? []).map((a, i) => {
+      const activite = validerActiviteIA(a, i)
+      // Filtrer les compétences : ne garder que les IDs qui existent réellement en base
+      activite.competencesTravaillees = activite.competencesTravaillees.filter(
+        id => competenceIdsValides.has(id)
+      )
+      return activite
+    })
 
     for (const activiteData of activitesValidees) {
       const activite = withDevice(withAudit({

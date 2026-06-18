@@ -18,6 +18,19 @@ async function pushInitialActivites() {
   await db.parametresSync.put({ id: uuid(), cle: CLE, valeur: 'true', derniereModification: now, createdAt: now, updatedAt: now })
 }
 
+// Push one-shot des programmes annuels locaux — nécessaire après ajout de la table Supabase
+async function pushInitialProgrammesAnnuels() {
+  const CLE = 'programmes_annuels_pushed_v1'
+  const already = await db.parametresSync.where('cle').equals(CLE).first()
+  if (already) return
+
+  const programmes = await db.programmesAnnuels.toArray()
+  await Promise.all(programmes.map(p => pushRecord('programmesAnnuels', p as unknown as Record<string, unknown>)))
+
+  const now = new Date()
+  await db.parametresSync.put({ id: uuid(), cle: CLE, valeur: 'true', derniereModification: now, createdAt: now, updatedAt: now })
+}
+
 export function useSyncOnMount() {
   const { session } = useAuth()
 
@@ -28,6 +41,7 @@ export function useSyncOnMount() {
 
     // Démarrage : rejouer les pushes en attente puis faire un pull complet
     pushInitialActivites()
+      .then(() => pushInitialProgrammesAnnuels())
       .then(() => drainQueue())
       .then(() => pullAll())
 

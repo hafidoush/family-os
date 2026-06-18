@@ -28,6 +28,9 @@ html {
   /* Comportement de défilement */
   scroll-behavior: smooth;
 
+  /* Bloquer le swipe horizontal du navigateur (back/forward entre routes) */
+  overscroll-behavior-x: none;
+
   /* Hauteur pleine — nécessaire pour les layouts full-height PWA */
   height: 100%;
 

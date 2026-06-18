@@ -29,11 +29,7 @@ export function useRecettes(filters: RecettesFilters = {}) {
       recettes = recettes.filter((r) => r.nom.toLowerCase().includes(q))
     }
 
-    recettes.sort((a, b) => {
-      if (a.favori && !b.favori) return -1
-      if (!a.favori && b.favori) return 1
-      return a.nom.localeCompare(b.nom, 'fr')
-    })
+    recettes.sort((a, b) => a.nom.localeCompare(b.nom, 'fr'))
 
     return recettes
   }, [filters.categorieId, filters.favoriSeulement, filters.kidsFavoriteSeulement, filters.recherche])

@@ -28,10 +28,10 @@ export function ActiviteDetail({ activite, onClose }: ActiviteDetailProps) {
   const [confirmerSaut, setConfirmerSaut] = useState(false)
 
   const competencesMap = useLiveQuery(async () => {
-    if (!activite.competencesTravaillees?.length) return new Map<string, string>()
+    if (!activite.competencesTravaillees?.length) return new Map<string, { nom: string; description?: string }>()
     const comps = await db.competences.where('id').anyOf(activite.competencesTravaillees).toArray()
-    return new Map(comps.map(c => [c.id, c.nom]))
-  }, [activite.competencesTravaillees?.join(',')]) ?? new Map<string, string>()
+    return new Map(comps.map(c => [c.id, { nom: c.nom, description: c.description }]))
+  }, [activite.competencesTravaillees?.join(',')]) ?? new Map<string, { nom: string; description?: string }>()
 
   const phase = PHASE_CONFIG[activite.phase]
   const estRealisee = activite.statutRealisation === 'realise'
@@ -193,13 +193,19 @@ export function ActiviteDetail({ activite, onClose }: ActiviteDetailProps) {
           {/* Compétences travaillées */}
           {activite.competencesTravaillees.length > 0 && (
             <div className="ad-section">
-              <h3 className="ad-section__title">Compétences</h3>
-              <div className="ad-tags">
-                {activite.competencesTravaillees.map((c, i) => (
-                  <span key={i} className="ad-tag">
-                    {competencesMap.get(c) ?? c}
-                  </span>
-                ))}
+              <h3 className="ad-section__title">Compétences travaillées</h3>
+              <div className="ad-competences">
+                {activite.competencesTravaillees.map((c, i) => {
+                  const comp = competencesMap.get(c)
+                  return (
+                    <div key={i} className="ad-competence-item">
+                      <span className="ad-competence-nom">{comp?.nom ?? c}</span>
+                      {comp?.description && (
+                        <p className="ad-competence-desc">{comp.description}</p>
+                      )}
+                    </div>
+                  )
+                })}
               </div>
             </div>
           )}
