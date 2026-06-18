@@ -9,8 +9,8 @@
 import { useState, useCallback } from 'react'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { db } from '../../../core/db/database'
-import { newEntity } from '../../../core/db/helpers'
-import type { Activite, CategorieActivite, PlanificationActivite } from '../../../shared/types'
+import { newEntity, withUpdate } from '../../../core/db/helpers'
+import type { Activite, CategorieActivite, PlanificationActivite, ActiviteProgramme } from '../../../shared/types'
 
 // ─── Types ─────────────────────────────────────────────────────────────────────
 
@@ -41,6 +41,14 @@ let _draftCounter = 0
 function newDraftId(): string { return `draft_${++_draftCounter}_${Date.now()}` }
 
 const JOURS_DEFAUT = new Set([0, 1, 2, 3]) // lun–jeu
+
+// ─── Calcul semaine programme ──────────────────────────────────────────────────
+
+function semaineEnCours(dateDebut: string, today = new Date()): number {
+  const debut = new Date(dateDebut)
+  const diff = Math.floor((today.getTime() - debut.getTime()) / (7 * 24 * 60 * 60 * 1000))
+  return Math.max(1, diff + 1)
+}
 
 // ─── Algorithme de suggestion ─────────────────────────────────────────────────
 
@@ -118,6 +126,66 @@ export function SectionPlanning() {
 
   const catById      = new Map(categories.map(c => [c.id, c]))
   const activiteById = new Map(activites.map(a => [a.id, a]))
+
+  // ── Activités programme à placer ─────────────────────────────────────────────
+
+  const [placingId, setPlacingId] = useState<string | null>(null)
+
+  const activitesPlacer = useLiveQuery(async () => {
+    const programmes = await db.programmesPedagogiques
+      .where('statut').equals('actif')
+      .filter(p => !p.archive && !p.deletedAt)
+      .toArray()
+    if (programmes.length === 0) return []
+    const result: (ActiviteProgramme & { semainePasse: boolean; programmeNom: string })[] = []
+    for (const prog of programmes) {
+      const semaineCourante = semaineEnCours(prog.dateDebut)
+      const semainePrec = semaineCourante - 1
+      const acts = await db.activitesProgramme
+        .where('programmeId').equals(prog.id)
+        .filter(a =>
+          !a.archive && !a.deletedAt && !a.datePlanifiee &&
+          a.statutRealisation !== 'realise' && a.statutRealisation !== 'saute' &&
+          (a.semaineNumero === semaineCourante || (semainePrec >= 1 && a.semaineNumero === semainePrec))
+        )
+        .toArray()
+      for (const a of acts) {
+        result.push({ ...a, semainePasse: a.semaineNumero === semainePrec, programmeNom: prog.titre })
+      }
+    }
+    return result.sort((a, b) => {
+      if (a.semainePasse !== b.semainePasse) return a.semainePasse ? 1 : -1
+      return a.ordre - b.ordre
+    })
+  }, []) ?? []
+
+  // Activités programme placées dans la semaine affichée
+  const activitesProgrammeSemaine = useLiveQuery(async () => {
+    return db.activitesProgramme
+      .filter(a => !a.archive && !a.deletedAt && !!a.datePlanifiee &&
+        a.datePlanifiee >= lundiISO && a.datePlanifiee <= dimancheISO)
+      .toArray()
+  }, [lundiISO, dimancheISO]) ?? []
+
+  async function placerActivite(activiteId: string, iso: string) {
+    await db.activitesProgramme.update(activiteId, withUpdate({
+      datePlanifiee: iso,
+      statutRealisation: 'planifie',
+    }))
+    setPlacingId(null)
+  }
+
+  async function toggleActiviteProgramme(a: ActiviteProgramme) {
+    const newStatut = a.statutRealisation === 'realise' ? 'planifie' : 'realise'
+    await db.activitesProgramme.update(a.id, withUpdate({
+      statutRealisation: newStatut,
+      dateRealisation: newStatut === 'realise' ? toISO(new Date()) : undefined,
+    }))
+  }
+
+  async function retirerActiviteProgramme(id: string) {
+    await db.activitesProgramme.update(id, withUpdate({ datePlanifiee: undefined, statutRealisation: 'a_faire' }))
+  }
 
   // ── Helpers drafts ───────────────────────────────────────────────────────────
 
@@ -315,6 +383,24 @@ export function SectionPlanning() {
                   )
                 })}
 
+                {/* Activités programme placées ce jour */}
+                {activitesProgrammeSemaine.filter(a => a.datePlanifiee === iso).map(a => {
+                  const done = a.statutRealisation === 'realise'
+                  return (
+                    <div key={a.id} className={`planning-slot__activite planning-slot__activite--prog${done ? ' planning-slot__activite--done' : ''}`}>
+                      <span className="planning-slot__cat-icone">📚</span>
+                      <span className="planning-slot__nom">{a.titre}</span>
+                      {done
+                        ? <span className="planning-slot__done-badge">✓</span>
+                        : <>
+                            <button className="planning-slot__btn-check" onClick={() => toggleActiviteProgramme(a)} title="Faite">✓</button>
+                            <button className="planning-slot__btn-del" onClick={() => retirerActiviteProgramme(a.id)} title="Retirer">×</button>
+                          </>
+                      }
+                    </div>
+                  )
+                })}
+
                 {/* Drafts en attente */}
                 {draftsDuJour.map(d => (
                   <div key={d.draftId} className="planning-slot__activite planning-slot__activite--draft">
@@ -373,6 +459,52 @@ export function SectionPlanning() {
         <p className="planning-footer__pending">
           {drafts.length} activité{drafts.length > 1 ? 's' : ''} en attente de confirmation
         </p>
+      )}
+
+      {/* Section "À placer cette semaine" */}
+      {activitesPlacer.length > 0 && (
+        <div className="aplacer-section">
+          <h3 className="aplacer-section__titre">À placer cette semaine</h3>
+          <p className="aplacer-section__sub">Activités du programme — appuyez pour choisir le jour</p>
+          <div className="aplacer-list">
+            {activitesPlacer.map(a => (
+              <div key={a.id} className={`aplacer-card${placingId === a.id ? ' aplacer-card--open' : ''}`}>
+                <button
+                  className="aplacer-card__header"
+                  onClick={() => setPlacingId(placingId === a.id ? null : a.id)}
+                >
+                  <span className="aplacer-card__emoji">📚</span>
+                  <div className="aplacer-card__info">
+                    <span className="aplacer-card__nom">{a.titre}</span>
+                    <span className="aplacer-card__prog">{a.programmeNom}</span>
+                  </div>
+                  {a.semainePasse && <span className="aplacer-card__badge">Sem. passée</span>}
+                  {a.duree && <span className="aplacer-card__duree">⏱ {a.duree} min</span>}
+                </button>
+
+                {placingId === a.id && (
+                  <div className="aplacer-card__jours">
+                    {jours.map((jour, i) => {
+                      const iso = toISO(jour)
+                      const isToday = iso === todayISO
+                      const isPast = iso < todayISO
+                      return (
+                        <button
+                          key={iso}
+                          className={`aplacer-jour${isToday ? ' aplacer-jour--today' : ''}${isPast ? ' aplacer-jour--past' : ''}`}
+                          onClick={() => placerActivite(a.id, iso)}
+                        >
+                          <span className="aplacer-jour__label">{NOMS_JOURS[i]}</span>
+                          <span className="aplacer-jour__date">{jour.getDate()}</span>
+                        </button>
+                      )
+                    })}
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
       )}
     </div>
   )

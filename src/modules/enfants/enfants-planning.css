@@ -286,3 +286,161 @@
   color: hsl(262, 43%, 55%);
   text-align: center;
 }
+
+/* ── Section "À placer cette semaine" ── */
+.aplacer-section {
+  margin-top: 20px;
+  padding-top: 18px;
+  border-top: 1.5px dashed rgba(0,0,0,0.08);
+}
+
+.aplacer-section__titre {
+  font-size: 15px;
+  font-weight: 700;
+  color: hsl(262, 43%, 28%);
+  margin: 0 0 3px;
+}
+
+.aplacer-section__sub {
+  font-size: 11.5px;
+  color: hsl(262, 15%, 60%);
+  margin: 0 0 12px;
+  font-style: italic;
+}
+
+.aplacer-list {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+
+.aplacer-card {
+  background: #F7F6F4;
+  border-radius: 12px;
+  border: 1.5px solid rgba(0,0,0,0.06);
+  overflow: hidden;
+  transition: border-color 0.15s;
+}
+
+.aplacer-card--open {
+  border-color: hsl(262, 48%, 72%);
+}
+
+.aplacer-card__header {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 10px 12px;
+  width: 100%;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  text-align: left;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.aplacer-card__emoji {
+  font-size: 18px;
+  width: 34px;
+  height: 34px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(167, 139, 250, 0.12);
+  border-radius: 9px;
+  flex-shrink: 0;
+}
+
+.aplacer-card__info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.aplacer-card__nom {
+  font-size: 13.5px;
+  font-weight: 600;
+  color: hsl(262, 43%, 18%);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.aplacer-card__prog {
+  font-size: 10.5px;
+  color: hsl(262, 15%, 60%);
+}
+
+.aplacer-card__badge {
+  font-size: 10px;
+  font-weight: 600;
+  padding: 2px 7px;
+  border-radius: 999px;
+  background: rgba(251, 191, 36, 0.18);
+  color: #92400e;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.aplacer-card__duree {
+  font-size: 11px;
+  color: hsl(262, 15%, 60%);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.aplacer-card__jours {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 4px;
+  padding: 4px 12px 12px;
+}
+
+.aplacer-jour {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 7px 2px;
+  border-radius: 9px;
+  border: 1.5px solid transparent;
+  background: white;
+  cursor: pointer;
+  transition: all 0.15s;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.aplacer-jour:active { transform: scale(0.90); }
+
+.aplacer-jour--today {
+  border-color: hsl(262, 48%, 72%);
+  background: rgba(167, 139, 250, 0.08);
+}
+
+.aplacer-jour--past { opacity: 0.4; }
+
+.aplacer-jour__label {
+  font-size: 9.5px;
+  font-weight: 600;
+  color: hsl(262, 15%, 60%);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.aplacer-jour--today .aplacer-jour__label { color: hsl(262, 48%, 52%); }
+
+.aplacer-jour__date {
+  font-size: 14px;
+  font-weight: 700;
+  color: hsl(262, 43%, 18%);
+}
+
+.aplacer-jour--today .aplacer-jour__date { color: hsl(262, 48%, 52%); }
+
+/* Badge "Programme" dans le slot jour */
+.planning-slot__activite--prog {
+  background: rgba(167, 139, 250, 0.07);
+  border-left: 2px solid hsl(262, 48%, 72%);
+}
