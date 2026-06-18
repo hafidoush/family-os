@@ -42,6 +42,49 @@ function newDraftId(): string { return `draft_${++_draftCounter}_${Date.now()}` 
 
 const JOURS_DEFAUT = new Set([0, 1, 2, 3]) // lun–jeu
 
+// ─── Matériel de la semaine (lecture seule) ───────────────────────────────────
+
+function MaterielSemaine({ activitesProgrammeSemaine }: { activitesProgrammeSemaine: import('../../../shared/types').ActiviteProgramme[] }) {
+  const [ouvert, setOuvert] = useState(false)
+
+  const materielMap = new Map<string, { nom: string; activites: string[] }>()
+  for (const act of activitesProgrammeSemaine) {
+    const items = [...(act.materielNecessaire ?? []), ...(act.materielOptionnel ?? [])]
+    for (const item of items) {
+      const key = item.nom.toLowerCase().trim()
+      if (materielMap.has(key)) {
+        const e = materielMap.get(key)!
+        if (!e.activites.includes(act.titre)) e.activites.push(act.titre)
+      } else {
+        materielMap.set(key, { nom: item.nom, activites: [act.titre] })
+      }
+    }
+  }
+
+  const liste = Array.from(materielMap.values())
+  if (liste.length === 0) return null
+
+  return (
+    <div className="materiel-semaine">
+      <button className="materiel-semaine__toggle" onClick={() => setOuvert(v => !v)}>
+        <span>📦 Matériel cette semaine</span>
+        <span className="materiel-semaine__count">{liste.length} item{liste.length > 1 ? 's' : ''}</span>
+        <span>{ouvert ? '▲' : '▼'}</span>
+      </button>
+      {ouvert && (
+        <ul className="materiel-semaine__list">
+          {liste.map(item => (
+            <li key={item.nom} className="materiel-semaine__item">
+              <span className="materiel-semaine__nom">{item.nom}</span>
+              <span className="materiel-semaine__acts">{item.activites.join(', ')}</span>
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  )
+}
+
 // ─── Calcul semaine programme ──────────────────────────────────────────────────
 
 function semaineEnCours(dateDebut: string, today = new Date()): number {
@@ -476,6 +519,9 @@ export function SectionPlanning() {
           {drafts.length} activité{drafts.length > 1 ? 's' : ''} en attente de confirmation
         </p>
       )}
+
+      {/* Matériel de la semaine */}
+      <MaterielSemaine activitesProgrammeSemaine={activitesProgrammeSemaine} />
 
       {/* Section "À placer" */}
       {activitesPlacer.length > 0 && (

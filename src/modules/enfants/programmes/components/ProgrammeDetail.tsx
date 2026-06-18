@@ -3,6 +3,7 @@ import './ProgrammeDetail.css'
 import { useProgrammeDetail, useActivitesSemaine } from '../hooks/useProgrammes'
 import { activerProgramme, archiverProgramme } from '../services/programmeService'
 import { ActiviteDetail } from './ActiviteDetail'
+import { SectionMateriel } from './SectionMateriel'
 import type { ActiviteProgramme } from '../../../../shared/types'
 
 // ─── Utilitaires ──────────────────────────────────────────────────────────────
@@ -110,6 +111,7 @@ interface ProgrammeDetailProps {
 
 export function ProgrammeDetail({ programmeId, onClose }: ProgrammeDetailProps) {
   const { programme, isLoading } = useProgrammeDetail(programmeId)
+  const [onglet, setOnglet] = useState<'activites' | 'materiel'>('activites')
   const [semaineActive, setSemaineActive] = useState(1)
   const [activiteOuverte, setActiviteOuverte] = useState<ActiviteProgramme | null>(null)
   const [confirmArchive, setConfirmArchive] = useState(false)
@@ -201,51 +203,76 @@ export function ProgrammeDetail({ programmeId, onClose }: ProgrammeDetailProps) 
             </div>
           </div>
 
-          {/* Navigation semaines */}
-          <div className="pd-semaine-nav">
+          {/* Onglets Activités / Matériel */}
+          <div className="pd-onglets">
             <button
-              className="pd-semaine-nav__btn"
-              disabled={semaineActive <= 1}
-              onClick={() => setSemaineActive(s => Math.max(1, s - 1))}
+              className={`pd-onglet${onglet === 'activites' ? ' pd-onglet--active' : ''}`}
+              onClick={() => setOnglet('activites')}
             >
-              ←
+              Activités
             </button>
-            <div className="pd-semaine-nav__center">
-              {semaine ? (
-                <>
-                  <span className="pd-semaine-nav__titre">{semaine.titre}</span>
-                  <span className="pd-semaine-nav__num">Semaine {semaineActive} / {totalSemaines}</span>
-                </>
-              ) : (
-                <span className="pd-semaine-nav__num">Semaine {semaineActive} / {totalSemaines}</span>
-              )}
-            </div>
             <button
-              className="pd-semaine-nav__btn"
-              disabled={semaineActive >= totalSemaines}
-              onClick={() => setSemaineActive(s => Math.min(totalSemaines, s + 1))}
+              className={`pd-onglet${onglet === 'materiel' ? ' pd-onglet--active' : ''}`}
+              onClick={() => setOnglet('materiel')}
             >
-              →
+              📦 Matériel
             </button>
           </div>
 
-          {/* Objectif de la semaine */}
-          {semaine?.objectif && (
-            <div className="pd-objectif">
-              <span className="pd-objectif__icon">🎯</span>
-              <p className="pd-objectif__text">{semaine.objectif}</p>
+          {/* Vue Matériel */}
+          {onglet === 'materiel' && (
+            <div className="pd-content">
+              <SectionMateriel programme={programme} />
             </div>
           )}
 
-          {/* Contenu semaine */}
-          <div className="pd-content">
-            <SemaineSection
-              programmeId={programmeId}
-              semaineNumero={semaineActive}
-              totalSemaines={totalSemaines}
-              onSelect={setActiviteOuverte}
-            />
-          </div>
+          {/* Vue Activités */}
+          {onglet === 'activites' && (
+            <>
+              <div className="pd-semaine-nav">
+                <button
+                  className="pd-semaine-nav__btn"
+                  disabled={semaineActive <= 1}
+                  onClick={() => setSemaineActive(s => Math.max(1, s - 1))}
+                >
+                  ←
+                </button>
+                <div className="pd-semaine-nav__center">
+                  {semaine ? (
+                    <>
+                      <span className="pd-semaine-nav__titre">{semaine.titre}</span>
+                      <span className="pd-semaine-nav__num">Semaine {semaineActive} / {totalSemaines}</span>
+                    </>
+                  ) : (
+                    <span className="pd-semaine-nav__num">Semaine {semaineActive} / {totalSemaines}</span>
+                  )}
+                </div>
+                <button
+                  className="pd-semaine-nav__btn"
+                  disabled={semaineActive >= totalSemaines}
+                  onClick={() => setSemaineActive(s => Math.min(totalSemaines, s + 1))}
+                >
+                  →
+                </button>
+              </div>
+
+              {semaine?.objectif && (
+                <div className="pd-objectif">
+                  <span className="pd-objectif__icon">🎯</span>
+                  <p className="pd-objectif__text">{semaine.objectif}</p>
+                </div>
+              )}
+
+              <div className="pd-content">
+                <SemaineSection
+                  programmeId={programmeId}
+                  semaineNumero={semaineActive}
+                  totalSemaines={totalSemaines}
+                  onSelect={setActiviteOuverte}
+                />
+              </div>
+            </>
+          )}
 
           {/* Actions */}
           <div className="pd-footer">

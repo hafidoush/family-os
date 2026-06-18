@@ -444,3 +444,71 @@
   background: rgba(167, 139, 250, 0.07);
   border-left: 2px solid hsl(262, 48%, 72%);
 }
+
+/* ── Matériel cette semaine ── */
+.materiel-semaine {
+  margin-top: 16px;
+  border-top: 1px solid rgba(0,0,0,0.06);
+  padding-top: 14px;
+}
+
+.materiel-semaine__toggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 600;
+  color: hsl(262, 43%, 28%);
+  padding: 0;
+  text-align: left;
+}
+
+.materiel-semaine__count {
+  font-size: 11px;
+  font-weight: 500;
+  background: rgba(167, 139, 250, 0.15);
+  color: hsl(262, 48%, 52%);
+  padding: 2px 8px;
+  border-radius: 999px;
+  margin-left: auto;
+}
+
+.materiel-semaine__list {
+  margin: 10px 0 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.materiel-semaine__item {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 8px;
+  padding: 7px 10px;
+  background: #F7F6F4;
+  border-radius: 9px;
+}
+
+.materiel-semaine__nom {
+  font-size: 13px;
+  font-weight: 500;
+  color: #1a1a2e;
+}
+
+.materiel-semaine__acts {
+  font-size: 10.5px;
+  color: #9ca3af;
+  text-align: right;
+  flex-shrink: 0;
+  max-width: 50%;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}

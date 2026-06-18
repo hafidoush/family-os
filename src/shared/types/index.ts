@@ -809,6 +809,7 @@ export interface ProgrammePedagogique extends AuditWithDevice {
 
   statut: StatutProgramme
   progression: number                  // 0–100 — calculé à la volée
+  materielStatuts?: Record<string, 'a_verifier' | 'possede' | 'a_acheter'>  // clé = nom normalisé
   archive: boolean
 }
 

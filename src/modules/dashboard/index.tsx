@@ -1,3 +1,4 @@
+import { BandeauMateriel }          from './components/BandeauMateriel';
 import { WidgetContextuel }        from './components/WidgetContextuel';
 import { WidgetProgrammeActif }    from './components/WidgetProgrammeActif';
 import { WidgetCapturePensee }     from './components/WidgetCapturePensee';
@@ -22,6 +23,7 @@ export default function Dashboard() {
       <WidgetRushMatin />
       <WidgetBilanSemaine />
       <NotificationBanner />
+      <BandeauMateriel />
       <WidgetContextuel />
       <WidgetCapturePensee />
       <WidgetOrchestrateur />
