@@ -34,6 +34,19 @@ async function pushInitialRecettesIngredients() {
   await db.parametresSync.put({ id: uuid(), cle: CLE, valeur: 'true', derniereModification: now, createdAt: now, updatedAt: now })
 }
 
+// Push one-shot des produits locaux — table Supabase créée après coup
+async function pushInitialProduits() {
+  const CLE = 'produits_pushed_v1'
+  const already = await db.parametresSync.where('cle').equals(CLE).first()
+  if (already) return
+
+  const produits = await db.produits.toArray()
+  await Promise.all(produits.map(p => pushRecord('produits', p as unknown as Record<string, unknown>)))
+
+  const now = new Date()
+  await db.parametresSync.put({ id: uuid(), cle: CLE, valeur: 'true', derniereModification: now, createdAt: now, updatedAt: now })
+}
+
 // Push one-shot des programmes annuels locaux — nécessaire après ajout de la table Supabase
 async function pushInitialProgrammesAnnuels() {
   const CLE = 'programmes_annuels_pushed_v1'
@@ -58,6 +71,7 @@ export function useSyncOnMount() {
     // Démarrage : rejouer les pushes en attente puis faire un pull complet
     pushInitialActivites()
       .then(() => pushInitialRecettesIngredients())
+      .then(() => pushInitialProduits())
       .then(() => pushInitialProgrammesAnnuels())
       .then(() => drainQueue())
       .then(() => pullAll())
