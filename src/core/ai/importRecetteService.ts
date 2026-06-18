@@ -173,7 +173,7 @@ export async function matcherIngredientsProduits(
     const cible = normaliser(ing.nom)
     const match = produits.find(p => {
       const nom = normaliser(p.nomNormalise ?? p.nom)
-      return nom === cible || nom.includes(cible) || cible.includes(nom)
+      return nom === cible
     })
     return match ? { ...ing, produitMatchId: match.id } : ing
   })
