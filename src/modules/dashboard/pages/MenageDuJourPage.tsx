@@ -59,26 +59,30 @@ function useTaches() {
     const cetteSemaine:   typeof all   = [];
 
     for (const t of all) {
-      // Tâche complétée aujourd'hui → section Aujourd'hui, case cochée
-      if (t.statut === 'fait' && t.completeeLe) {
-        const d = startOfDay(new Date(t.completeeLe));
-        if (d.getTime() === todayTime) { completedToday.push(t); continue; }
-        // Complétée un autre jour → on ignore (la prochaine échéance est future)
-        continue;
-      }
-
-      // Tâche non faite → classer par nextDueDate
       const due = nextDueDate(t);
-      if (!due) continue; // sans fréquence ni échéance : on ignore
+      if (!due) continue;
 
       const dueTime = startOfDay(due).getTime();
 
+      // Complétée aujourd'hui → section Aujourd'hui, case cochée
+      if (t.statut === 'fait' && t.completeeLe) {
+        const d = startOfDay(new Date(t.completeeLe));
+        if (d.getTime() === todayTime) { completedToday.push(t); continue; }
+        // Complétée un autre jour : si nextDueDate est dans le futur cette semaine
+        // → montrer comme "à faire" dans Cette semaine (prochaine échéance)
+        // Si nextDue <= aujourd'hui → elle est due à nouveau (en retard ou aujourd'hui)
+      }
+
+      // Classer par nextDueDate (pour toutes les tâches, fait ou non)
       if (dueTime < todayTime) {
-        enRetard.push(t);
+        // Due à nouveau et dépassée → En retard (on affiche comme à_faire)
+        enRetard.push({ ...t, statut: 'a_faire' });
       } else if (dueTime === todayTime) {
-        aujourd_hui.push(t);
+        // Due aujourd'hui → si déjà faite aujourd'hui on l'a capturée plus haut
+        if (t.statut !== 'fait') aujourd_hui.push(t);
       } else if (due <= eow) {
-        cetteSemaine.push(t);
+        // Prochaine échéance dans la semaine → Cette semaine (non comptabilisée dans la jauge)
+        cetteSemaine.push({ ...t, statut: 'a_faire' });
       }
       // Au-delà de la semaine → on n'affiche pas
     }
