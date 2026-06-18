@@ -14,6 +14,7 @@
 import { supabase } from '../supabase/client'
 import { db } from '../db/database'
 import type { RealtimeChannel } from '@supabase/supabase-js'
+import { addToQueue, removeFromQueue, getQueue, setLastPullAt, setLastError, clearLastError } from './syncQueue'
 
 // Champs Blob non sérialisables en JSON — exclus du push, préservés au pull
 // avatar est désormais stocké en base64 (string) et se synchronise normalement
@@ -88,7 +89,13 @@ export async function pushRecord(dexieTable: string, record: Record<string, unkn
       deleted_at: record.deletedAt ? new Date(record.deletedAt as string).toISOString() : null,
     }, { onConflict: 'id' })
 
-  if (error) console.warn(`[sync] push ${dexieTable}:`, error.message)
+  if (error) {
+    console.warn(`[sync] push ${dexieTable}:`, error.message)
+    await addToQueue(dexieTable, record.id as string)
+    await setLastError(`${dexieTable}: ${error.message}`)
+  } else {
+    await removeFromQueue(dexieTable, record.id as string)
+  }
 }
 
 // ── Soft-delete sur Supabase ──────────────────────────────────────────────────
@@ -174,6 +181,9 @@ export async function pullAll() {
 
     await table.bulkPut(records)
   }
+
+  await setLastPullAt()
+  await clearLastError()
 }
 
 // ── Hooks Dexie : intercepte toutes les écritures ────────────────────────────
@@ -252,6 +262,25 @@ export function startRealtime() {
   realtimeChannel.subscribe((status) => {
     if (status === 'SUBSCRIBED') console.log('[sync] realtime actif')
   })
+}
+
+// ── Rejoue les pushes échoués ─────────────────────────────────────────────────
+export async function drainQueue(): Promise<void> {
+  const { data: { session } } = await supabase.auth.getSession()
+  if (!session) return
+
+  const queue = await getQueue()
+  if (queue.length === 0) return
+
+  console.log(`[sync] drainQueue — ${queue.length} élément(s) en attente`)
+
+  for (const item of queue) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const table = (db as any)[item.table]
+    if (!table) continue
+    const record = await table.get(item.id)
+    if (record) await pushRecord(item.table, record)
+  }
 }
 
 export function stopRealtime() {

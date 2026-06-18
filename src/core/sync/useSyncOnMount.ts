@@ -1,6 +1,6 @@
 import { useEffect } from 'react'
 import { useAuth } from '../auth/AuthContext'
-import { pullAll, installDexieHooks, startRealtime, stopRealtime, pushRecord } from './syncService'
+import { pullAll, installDexieHooks, startRealtime, stopRealtime, pushRecord, drainQueue } from './syncService'
 import { db } from '../db/database'
 import { v4 as uuid } from 'uuid'
 
@@ -25,9 +25,30 @@ export function useSyncOnMount() {
     if (!session) return
 
     installDexieHooks()
-    pushInitialActivites().then(() => pullAll())
+
+    // Démarrage : rejouer les pushes en attente puis faire un pull complet
+    pushInitialActivites()
+      .then(() => drainQueue())
+      .then(() => pullAll())
+
     startRealtime()
 
-    return () => stopRealtime()
+    // Retour en ligne : rejouer la file + pull complet
+    function handleOnline() {
+      console.log('[sync] retour en ligne — drain + pull')
+      drainQueue().then(() => pullAll())
+    }
+    window.addEventListener('online', handleOnline)
+
+    // Pull périodique toutes les 5 minutes si l'app reste ouverte
+    const interval = setInterval(() => {
+      if (navigator.onLine) pullAll()
+    }, 5 * 60 * 1000)
+
+    return () => {
+      stopRealtime()
+      window.removeEventListener('online', handleOnline)
+      clearInterval(interval)
+    }
   }, [session?.user.id])
 }

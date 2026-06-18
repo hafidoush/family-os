@@ -8,6 +8,8 @@ import { usePersistedTab } from '../../shared/hooks/usePersistedTab';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { db, SCHEMA_VERSION } from '../../core/db/database';
 import { newEntity, withUpdate, softDeleteFields } from '../../core/db/helpers';
+import { useSyncStatus } from '../../core/sync/useSyncStatus';
+import { drainQueue, pullAll } from '../../core/sync/syncService';
 import { getGeminiKey, setGeminiKey } from '../../core/ai/geminiService';
 import { getOpenAIKey, setOpenAIKey } from '../../core/ai/openaiService';
 import { ConfirmModal } from '../../shared/components/ui/ConfirmModal';
@@ -18,7 +20,7 @@ import './ParametresModule.css';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
-type Tab = 'membres' | 'categories' | 'habitudes' | 'donnees' | 'ia';
+type Tab = 'membres' | 'categories' | 'habitudes' | 'donnees' | 'ia' | 'sync';
 
 // ─── Section Membres ──────────────────────────────────────────────────────────
 
@@ -788,6 +790,113 @@ function SectionIA() {
 
 // ─── ParametresModule ─────────────────────────────────────────────────────────
 
+// ─── Section Synchronisation ──────────────────────────────────────────────────
+
+function SectionSync() {
+  const { state, lastPullAt, pendingCount, lastError, isOnline } = useSyncStatus()
+  const [syncing, setSyncing] = useState(false)
+  const [done, setDone] = useState(false)
+
+  async function forceSync() {
+    if (syncing) return
+    setSyncing(true)
+    setDone(false)
+    try {
+      await drainQueue()
+      await pullAll()
+      setDone(true)
+      setTimeout(() => setDone(false), 3000)
+    } finally {
+      setSyncing(false)
+    }
+  }
+
+  const STATE_LABEL: Record<string, string> = {
+    synced:  'Synchronisé',
+    pending: 'En attente',
+    syncing: 'Synchronisation…',
+    error:   'Erreur',
+    offline: 'Hors ligne',
+  }
+  const STATE_COLOR: Record<string, string> = {
+    synced:  '#22c55e',
+    pending: '#f59e0b',
+    syncing: '#a78bfa',
+    error:   '#ef4444',
+    offline: '#9ca3af',
+  }
+
+  function formatDate(d: Date | null) {
+    if (!d) return '—'
+    const now = new Date()
+    const diff = Math.floor((now.getTime() - d.getTime()) / 1000)
+    if (diff < 60)   return `il y a ${diff}s`
+    if (diff < 3600) return `il y a ${Math.floor(diff / 60)} min`
+    return d.toLocaleString('fr-FR', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })
+  }
+
+  return (
+    <div className="param-section">
+      <h2 className="param-section__title">Synchronisation</h2>
+
+      {/* Statut global */}
+      <div className="sync-status-card">
+        <div className="sync-status-card__row">
+          <span className="sync-status-card__label">État</span>
+          <span className="sync-status-card__value" style={{ color: STATE_COLOR[state], fontWeight: 600 }}>
+            <span className="sync-dot" style={{ background: STATE_COLOR[state] }} />
+            {STATE_LABEL[state]}
+          </span>
+        </div>
+        <div className="sync-status-card__row">
+          <span className="sync-status-card__label">Connexion</span>
+          <span className="sync-status-card__value">{isOnline ? 'En ligne' : 'Hors ligne'}</span>
+        </div>
+        <div className="sync-status-card__row">
+          <span className="sync-status-card__label">Dernière sync</span>
+          <span className="sync-status-card__value">{formatDate(lastPullAt)}</span>
+        </div>
+        <div className="sync-status-card__row">
+          <span className="sync-status-card__label">En attente</span>
+          <span className="sync-status-card__value" style={{ color: pendingCount > 0 ? '#f59e0b' : undefined }}>
+            {pendingCount > 0 ? `${pendingCount} élément${pendingCount > 1 ? 's' : ''}` : 'Aucun'}
+          </span>
+        </div>
+        {lastError && (
+          <div className="sync-status-card__row sync-status-card__row--error">
+            <span className="sync-status-card__label">Dernière erreur</span>
+            <span className="sync-status-card__value sync-status-card__error">{lastError}</span>
+          </div>
+        )}
+      </div>
+
+      {/* Bouton forcer */}
+      <button
+        className="param-btn param-btn--primary"
+        onClick={forceSync}
+        disabled={syncing || !isOnline}
+        style={{ marginTop: 16 }}
+      >
+        {syncing ? 'Synchronisation en cours…' : done ? '✓ Synchronisé' : '↻ Forcer la synchronisation'}
+      </button>
+      {!isOnline && (
+        <p className="param-hint" style={{ marginTop: 8 }}>
+          Synchronisation impossible hors ligne. Les données seront envoyées au retour de la connexion.
+        </p>
+      )}
+
+      {/* Explication */}
+      <div className="sync-info-box">
+        <p className="sync-info-box__text">
+          La synchronisation est automatique : chaque modification est envoyée vers le cloud dès l'enregistrement.
+          En cas d'erreur réseau, les éléments sont mis en file d'attente et rejoués automatiquement au retour de la connexion.
+          Un pull complet se déclenche également toutes les 5 minutes.
+        </p>
+      </div>
+    </div>
+  )
+}
+
 export default function ParametresModule() {
   const [tab, setTab] = usePersistedTab<Tab>('parametres', 'membres');
 
@@ -803,6 +912,7 @@ export default function ParametresModule() {
         <button className={`param-tab${tab === 'habitudes' ? ' param-tab--active' : ''}`} onClick={() => setTab('habitudes')}>Habitudes</button>
         <button className={`param-tab${tab === 'donnees' ? ' param-tab--active' : ''}`} onClick={() => setTab('donnees')}>Données</button>
         <button className={`param-tab${tab === 'ia' ? ' param-tab--active' : ''}`} onClick={() => setTab('ia')}>IA ✦</button>
+        <button className={`param-tab${tab === 'sync' ? ' param-tab--active' : ''}`} onClick={() => setTab('sync')}>Sync</button>
       </div>
 
       {tab === 'membres'    && <SectionMembres />}
@@ -810,6 +920,7 @@ export default function ParametresModule() {
       {tab === 'habitudes'  && <SectionHabitudes />}
       {tab === 'donnees'    && <SectionDonnees />}
       {tab === 'ia'         && <SectionIA />}
+      {tab === 'sync'       && <SectionSync />}
     </div>
   );
 }
