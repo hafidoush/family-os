@@ -4,6 +4,8 @@ import { db } from '../../../../core/db/database'
 import { useRecette, useRecetteIngredients, useCategoriesRecettes } from '../../hooks/useRecettes'
 import { createRecette, updateRecette, compressImageToBase64 } from '../../services/recetteService'
 import type { IngredientFormData } from '../../services/recetteService'
+import { newEntity } from '../../../../core/db/helpers'
+import type { Produit } from '../../../../shared/types'
 import { IconCameraAdd, IconClose } from '@shared/components/ui/Icon/Icon'
 import './RecetteForm.css'
 
@@ -234,8 +236,28 @@ export function RecetteForm({ recetteId, onSave, onCancel }: Props) {
 
     try {
       const etapesFiltrees = etapes.filter((e) => e.trim())
-      const ingredientsFiltres: IngredientFormData[] = ingredients
-        .filter((i) => i.produit)
+
+      // Auto-créer les produits manquants (nom tapé mais pas sélectionné dans la liste)
+      const ingredientsAvecProduit = await Promise.all(
+        ingredients
+          .filter((i) => i._nomRecherche.trim())
+          .map(async (i) => {
+            if (i.produit) return i
+            const nom = i._nomRecherche.trim()
+            // Chercher un produit existant avec ce nom (insensible à la casse)
+            const existant = tousLesProduits?.find(
+              (p) => p.nom.toLowerCase() === nom.toLowerCase()
+            )
+            if (existant) return { ...i, produit: existant.id }
+            // Créer le produit à la volée
+            const nouveau = newEntity<Produit>({ nom, type: 'consommable', categorie: '', archive: false })
+            await db.produits.add(nouveau)
+            return { ...i, produit: nouveau.id }
+          })
+      )
+
+      const ingredientsFiltres: IngredientFormData[] = ingredientsAvecProduit
+        .filter((i) => i.quantite > 0)
         .map(({ produit, quantite, unite, optionnel }) => ({
           produit,
           quantite,
