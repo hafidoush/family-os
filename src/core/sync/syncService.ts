@@ -144,7 +144,7 @@ export async function pullAll() {
     // 2. Récupérer et appliquer les enregistrements vivants
     const { data, error } = await supabase
       .from(supaTable)
-      .select('id, data, deleted_at')
+      .select('id, data, updated_at, deleted_at')
       .eq('user_id', session.user.id)
       .is('deleted_at', null)
 
@@ -154,15 +154,27 @@ export async function pullAll() {
     }
     if (!data?.length) continue
 
-    let records = data.map((row: { data: Record<string, unknown> }) => row.data)
+    // Charger les enregistrements locaux pour la résolution de conflits
+    const existing = await table.toArray()
+    const localMap = new Map<string, Record<string, unknown>>(
+      existing.map((r: Record<string, unknown>) => [r.id as string, r])
+    )
+
+    let records = data
+      .filter((row: { id: string; updated_at: string; data: Record<string, unknown> }) => {
+        const local = localMap.get(row.id)
+        if (!local) return true // nouvel enregistrement → accepter
+        // Ne pas écraser si la version locale est plus récente (modification non encore pushée)
+        const localUpdatedAt = local.updatedAt instanceof Date
+          ? local.updatedAt.toISOString()
+          : String(local.updatedAt ?? '')
+        return row.updated_at >= localUpdatedAt
+      })
+      .map((row: { data: Record<string, unknown> }) => row.data)
 
     // Préserver les champs Blob locaux (non synchronisés via Supabase)
     const blobFields = BLOB_FIELDS[dexieTable]
     if (blobFields?.length) {
-      const existing = await table.toArray()
-      const localMap = new Map<string, Record<string, unknown>>(
-        existing.map((r: Record<string, unknown>) => [r.id as string, r])
-      )
       records = records.map((r: Record<string, unknown>) => {
         const local = localMap.get(r.id as string)
         if (!local) return r
