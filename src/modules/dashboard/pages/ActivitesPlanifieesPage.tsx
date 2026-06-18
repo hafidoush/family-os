@@ -1,8 +1,10 @@
 import { useState } from 'react';
+import { useLiveQuery } from 'dexie-react-hooks';
 import { useNavigate } from 'react-router-dom';
 import { db } from '../../../core/db/database';
 import { withUpdate } from '../../../core/db/helpers';
 import { useTodayActivites } from '../hooks/useTodayActivites';
+import { useActivitesPlacer } from '../hooks/useActivitesPlacer';
 import type { PlanificationActivite as PlanifType } from '../../../shared/types';
 import './ActivitesPlanifieesPage.css';
 
@@ -162,11 +164,165 @@ function ActivitePlanifCard({ planif }: { planif: PlanifWithActivite }) {
   );
 }
 
+// ── Composant carte "À placer" ────────────────────────────────────────────────
+
+const JOURS_SEMAINE = ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'];
+const JOURS_SEMAINE_FULL = ['Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi', 'Dimanche'];
+
+function getJoursSemaineCourante(): { label: string; labelCourt: string; date: string; isToday: boolean }[] {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  // Lundi de cette semaine
+  const lundi = new Date(today);
+  const jourSemaine = today.getDay(); // 0=dim, 1=lun…
+  const diffLundi = jourSemaine === 0 ? -6 : 1 - jourSemaine;
+  lundi.setDate(today.getDate() + diffLundi);
+
+  return Array.from({ length: 7 }, (_, i) => {
+    const d = new Date(lundi);
+    d.setDate(lundi.getDate() + i);
+    const isToday = d.getTime() === today.getTime();
+    return {
+      label: JOURS_SEMAINE_FULL[i],
+      labelCourt: JOURS_SEMAINE[i],
+      date: d.toISOString().split('T')[0],
+      isToday,
+    };
+  });
+}
+
+function APlacer() {
+  const activites = useActivitesPlacer();
+  const [placing, setPlacing] = useState<string | null>(null);
+  const jours = getJoursSemaineCourante();
+  const today = new Date().toISOString().split('T')[0];
+
+  if (activites.length === 0) return null;
+
+  async function placer(activiteId: string, date: string) {
+    await db.activitesProgramme.update(activiteId, withUpdate({
+      datePlanifiee: date,
+      statutRealisation: 'planifie',
+    }));
+    setPlacing(null);
+  }
+
+  const emoji = (titre: string) => CATEGORIES_ICONS[titre] ?? '🎯';
+
+  return (
+    <div className="aplacer-section">
+      <h2 className="aplacer-section__titre">À placer cette semaine</h2>
+      <p className="aplacer-section__sub">Appuyez sur une activité pour choisir son jour</p>
+      <div className="aplacer-list">
+        {activites.map(a => (
+          <div key={a.id} className={`aplacer-card${placing === a.id ? ' aplacer-card--open' : ''}`}>
+            <button
+              className="aplacer-card__header"
+              onClick={() => setPlacing(placing === a.id ? null : a.id)}
+            >
+              <span className="aplacer-card__emoji">{emoji(a.titre)}</span>
+              <div className="aplacer-card__info">
+                <span className="aplacer-card__nom">{a.titre}</span>
+                <span className="aplacer-card__prog">{a.programmeNom}</span>
+              </div>
+              {a.semainePasse && (
+                <span className="aplacer-card__badge">Sem. passée</span>
+              )}
+              {a.duree && (
+                <span className="aplacer-card__duree">⏱ {a.duree} min</span>
+              )}
+            </button>
+
+            {placing === a.id && (
+              <div className="aplacer-card__jours">
+                {jours.map(j => (
+                  <button
+                    key={j.date}
+                    className={`aplacer-jour${j.isToday ? ' aplacer-jour--today' : ''}${j.date < today ? ' aplacer-jour--past' : ''}`}
+                    onClick={() => placer(a.id, j.date)}
+                  >
+                    <span className="aplacer-jour__label">{j.labelCourt}</span>
+                    <span className="aplacer-jour__date">{j.date.slice(8)}</span>
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// ── Section activités programme placées aujourd'hui ───────────────────────────
+
+function ActiviteProgrammeCard({ activite }: { activite: import('../../../shared/types').ActiviteProgramme }) {
+  const [done, setDone] = useState(activite.statutRealisation === 'realise');
+  const [loading, setLoading] = useState(false);
+
+  async function handleToggle() {
+    if (loading) return;
+    setLoading(true);
+    try {
+      const newStatut = done ? 'planifie' : 'realise';
+      await db.activitesProgramme.update(activite.id, withUpdate({
+        statutRealisation: newStatut,
+        dateRealisation: done ? undefined : new Date().toISOString().split('T')[0],
+      }));
+      setDone(!done);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  const emoji = CATEGORIES_ICONS[activite.titre] ?? '🎯';
+
+  return (
+    <div className={`activite-card activite-card--programme${done ? ' activite-card--realisee' : ''}`}>
+      <div className="activite-card__header" style={{ cursor: 'default' }}>
+        <span className="activite-card__emoji">{emoji}</span>
+        <div className="activite-card__meta">
+          <p className="activite-card__nom">{activite.titre}</p>
+          <div className="activite-card__pills">
+            {activite.duree && (
+              <span className="activite-card__pill activite-card__pill--purple">⏱ {activite.duree} min</span>
+            )}
+            <span className="activite-card__pill activite-card__pill--blue">Programme</span>
+            {done && <span className="activite-card__pill activite-card__pill--green">Réalisée</span>}
+          </div>
+        </div>
+        <button
+          className={`activite-card__btn-commencer ${done ? 'activite-card__btn-commencer--done' : 'activite-card__btn-commencer--start'}`}
+          style={{ minWidth: 90, fontSize: '0.75rem' }}
+          onClick={handleToggle}
+          disabled={loading}
+        >
+          {loading ? '...' : done ? '✓ Réalisée' : 'Commencer'}
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function useTodayProgrammeActivites() {
+  const today = new Date().toISOString().split('T')[0];
+  return useLiveQuery(
+    () => db.activitesProgramme
+      .filter(a => !a.archive && !a.deletedAt && a.datePlanifiee === today)
+      .toArray(),
+    [],
+    []
+  );
+}
+
 // ── Page principale ───────────────────────────────────────────────────────────
 
 export default function ActivitesPlanifieesPage() {
   const navigate = useNavigate();
   const planifs = useTodayActivites() ?? [];
+  const progActivites = useTodayProgrammeActivites();
+
+  const hasContent = planifs.length > 0 || (progActivites && progActivites.length > 0);
 
   return (
     <div className="activites-page">
@@ -176,19 +332,26 @@ export default function ActivitesPlanifieesPage() {
       </header>
 
       <div className="activites-page__content">
-        {planifs.length === 0 ? (
+        {!hasContent ? (
           <div className="activites-page__empty">
             <span className="activites-page__empty-icon">🌿</span>
             <p className="activites-page__empty-text">
               Aucune activité planifiée pour aujourd'hui.<br />
-              Ajoutez-en depuis le catalogue Enfants.
+              Placez-en depuis la section ci-dessous.
             </p>
           </div>
         ) : (
-          planifs.map(p => (
-            <ActivitePlanifCard key={p.id} planif={p as PlanifWithActivite} />
-          ))
+          <>
+            {planifs.map(p => (
+              <ActivitePlanifCard key={p.id} planif={p as PlanifWithActivite} />
+            ))}
+            {progActivites?.map(a => (
+              <ActiviteProgrammeCard key={a.id} activite={a} />
+            ))}
+          </>
         )}
+
+        <APlacer />
       </div>
     </div>
   );

@@ -775,6 +775,7 @@ export interface ActiviteProgramme extends AuditWithDevice {
   ordre: number
   statutRealisation: StatutRealisationActivite
   dateRealisation?: string             // "YYYY-MM-DD"
+  datePlanifiee?: string               // "YYYY-MM-DD" — jour choisi par l'utilisateur
   notesParent?: string
   archive: boolean
 }
