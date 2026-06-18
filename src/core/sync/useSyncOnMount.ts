@@ -19,17 +19,18 @@ async function pushInitialActivites() {
 }
 
 // Push one-shot de tous les ingrédients locaux — bulkAdd ne déclenchait pas les hooks
+// v2 : passe par modify() pour déclencher les vrais hooks Dexie plutôt que pushRecord direct
 async function pushInitialRecettesIngredients() {
-  const CLE = 'recettes_ingredients_pushed_v1'
+  const CLE = 'recettes_ingredients_pushed_v2'
   const already = await db.parametresSync.where('cle').equals(CLE).first()
   if (already) return
 
-  const ingredients = await db.recettesIngredients.toArray()
-  for (const ing of ingredients) {
-    await pushRecord('recettesIngredients', ing as unknown as Record<string, unknown>)
-  }
-
+  // modify() déclenche le hook 'updating' pour chaque enregistrement → pushRecord via le hook
   const now = new Date()
+  await db.recettesIngredients
+    .filter(i => !i.deletedAt)
+    .modify({ updatedAt: now })
+
   await db.parametresSync.put({ id: uuid(), cle: CLE, valeur: 'true', derniereModification: now, createdAt: now, updatedAt: now })
 }
 
