@@ -10,6 +10,8 @@
 
 import { db } from '../../../core/db/database'
 import { newEntity, withUpdate, softDeleteFields } from '../../../core/db/helpers'
+import { normaliserNom } from '../../../core/produits/ProduitService'
+import type { Produit } from '../../../shared/types'
 import { createRecette } from './recetteService'
 import { emit } from '../../../core/automation/engine'
 import {
@@ -108,17 +110,40 @@ export async function validerEtSauvegarder(
   const entry = await db.importsRecettesIA.get(importId)
   if (!entry) throw new Error(`Import ${importId} introuvable`)
 
-  // Construire les ingredients pour createRecette
-  // Les ingrédients sans produitId sont ignorés (pas de produit catalogue associé)
-  // On crée d'abord les produits manquants si besoin — pour MVP on passe les liés uniquement
-  const ingredientsLies = data.ingredients
-    .filter(i => i.produitId)
-    .map(i => ({
-      produit:  i.produitId!,
-      quantite: i.quantite ?? 1,
-      unite:    i.unite,
-      optionnel: i.optionnel,
-    }))
+  // Construire les ingrédients — auto-créer les produits manquants (⚠️ sans produitId)
+  const tousProduits = await db.produits.filter(p => !p.archive && !p.deletedAt).toArray()
+  const ingredientsLies = await Promise.all(
+    data.ingredients
+      .filter(i => i.nomLibre.trim())
+      .map(async i => {
+        let produitId = i.produitId
+        if (!produitId) {
+          const nomNorm = normaliserNom(i.nomLibre.trim())
+          const existant = tousProduits.find(p =>
+            (p.nomNormalise ?? normaliserNom(p.nom)) === nomNorm
+          )
+          if (existant) {
+            produitId = existant.id
+          } else {
+            const nouveau = newEntity<Produit>({
+              nom: i.nomLibre.trim(),
+              nomNormalise: nomNorm,
+              type: 'consommable',
+              categorie: '',
+              archive: false,
+            })
+            await db.produits.add(nouveau)
+            produitId = nouveau.id
+          }
+        }
+        return {
+          produit:   produitId,
+          quantite:  i.quantite ?? 1,
+          unite:     i.unite,
+          optionnel: i.optionnel,
+        }
+      })
+  )
 
   const recetteId = await createRecette(
     {
