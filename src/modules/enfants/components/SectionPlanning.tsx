@@ -93,6 +93,17 @@ function semaineEnCours(dateDebut: string, today = new Date()): number {
   return Math.max(1, diff + 1)
 }
 
+// Répartit N items sur une liste de jours avec espacement maximal
+// Ex: 3 items sur [lun,mar,mer,jeu,ven,sam,dim] → [lun,mer,ven]
+function espacerItems(n: number, jours: string[]): string[] {
+  if (n <= 0 || jours.length === 0) return []
+  if (n >= jours.length) return jours.slice(0, n)
+  const step = (jours.length - 1) / (n - 1 || 1)
+  return Array.from({ length: n }, (_, i) =>
+    jours[Math.min(Math.round(i * step), jours.length - 1)]
+  )
+}
+
 // ─── Algorithme de suggestion ─────────────────────────────────────────────────
 
 function suggerer(
@@ -301,32 +312,66 @@ export function SectionPlanning() {
     setDrafts(prev => prev.filter(d => d.draftId !== draftId))
   }, [])
 
-  // ── Générer la semaine (lun–jeu par défaut, 1 par jour si vide) ───────────
+  // ── Générer la semaine — priorité programme, espacement minimum 1 jour ────
 
-  const genererSemaine = useCallback(() => {
+  const genererSemaine = useCallback(async () => {
     const nouveaux: Draft[] = []
-    jours.forEach((jour, i) => {
-      if (!JOURS_DEFAUT.has(i)) return
-      const iso = toISO(jour)
-      const dejaCount =
-        planifSemaine.filter(p => draftISO(p.datePrevue) === iso).length +
-        drafts.filter(d => d.iso === iso).length
-      if (dejaCount >= 2) return  // déjà assez planifié
-      const nbAAjouter = Math.max(0, 1 - dejaCount)
+
+    // Jours disponibles (toute la semaine, pas uniquement lun-jeu)
+    const tousLesJours = jours.map(j => toISO(j))
+
+    // Jours déjà occupés (planif confirmée ou draft en attente)
+    const occupe = new Set<string>([
+      ...planifSemaine.map(p => draftISO(p.datePrevue)),
+      ...drafts.map(d => d.iso),
+      ...activitesProgrammeSemaine.map(a => a.datePlanifiee!),
+    ])
+
+    // Jours libres (max 1 activité par jour)
+    const libres = tousLesJours.filter(iso => !occupe.has(iso))
+
+    // ── 1. Placer les activités programme en priorité avec espacement ─────────
+    // activitesPlacer contient déjà les activités sans datePlanifiee
+    // On priorise la semaine courante (non-semainePasse), puis les retards
+    const progActives = [
+      ...activitesPlacer.filter(a => !a.semainePasse),
+      ...activitesPlacer.filter(a => a.semainePasse),
+    ]
+
+    if (progActives.length > 0 && libres.length > 0) {
+      // Répartir avec espacement maximum
+      const joursEspaces = espacerItems(progActives.length, libres)
+      const placements: Promise<void>[] = []
+      joursEspaces.forEach((iso, idx) => {
+        if (idx < progActives.length) {
+          placements.push(
+            db.activitesProgramme.update(progActives[idx].id, withUpdate({
+              datePlanifiee: iso,
+              statutRealisation: 'planifie',
+            })).then(() => undefined)
+          )
+          occupe.add(iso)
+        }
+      })
+      await Promise.all(placements)
+    }
+
+    // ── 2. Remplir les jours restants avec des activités catalogue ────────────
+    const restants = tousLesJours.filter(iso => !occupe.has(iso) && JOURS_DEFAUT.has(jours.findIndex(j => toISO(j) === iso)))
+
+    for (const iso of restants) {
       const dejaIDs = new Set([
         ...planifSemaine.filter(p => draftISO(p.datePrevue) === iso).map(p => p.activite),
         ...drafts.filter(d => d.iso === iso).map(d => d.activite.id),
       ])
-      for (let k = 0; k < nbAAjouter; k++) {
-        const activite = suggerer(activites, categories, recentes, dejaIDs)
-        if (activite) {
-          dejaIDs.add(activite.id)
-          nouveaux.push({ draftId: newDraftId(), iso, activite, editing: false })
-        }
+      const activite = suggerer(activites, categories, recentes, dejaIDs)
+      if (activite) {
+        nouveaux.push({ draftId: newDraftId(), iso, activite, editing: false })
       }
-    })
-    setDrafts(prev => [...prev, ...nouveaux])
-  }, [jours, activites, categories, recentes, planifSemaine, drafts])
+    }
+
+    if (nouveaux.length > 0) setDrafts(prev => [...prev, ...nouveaux])
+  }, [jours, lundi, activites, categories, recentes, planifSemaine, drafts, activitesPlacer, activitesProgrammeSemaine])
 
   // ── Marquer comme réalisée ────────────────────────────────────────────────
 
