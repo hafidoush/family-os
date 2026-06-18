@@ -7,7 +7,7 @@
   inset: 0;
   background: rgba(0, 0, 0, 0.45);
   backdrop-filter: blur(4px);
-  z-index: 500;
+  z-index: 600;
   display: flex;
   align-items: flex-end;
   animation: ps-fade-in 0.15s ease;

@@ -1,4 +1,5 @@
 import { useState, useRef, useCallback, useEffect } from 'react'
+import { createPortal } from 'react-dom'
 import type { ReactNode } from 'react'
 import { useLiveQuery } from 'dexie-react-hooks'
 import './ImportRecetteSheet.css'
@@ -505,7 +506,7 @@ export function ImportRecetteSheet({ onClose, onSuccess }: Props) {
   const isValidation = etat.etape === 'validation' || etat.etape === 'sauvegarde'
   const canSave = nom.trim().length > 0 && categorieId.length > 0 && !saving
 
-  return (
+  return createPortal(
     <div className="import-overlay" onClick={e => { if (e.target === e.currentTarget) onClose() }}>
       <div className="import-sheet">
         <div className="import-handle" />
@@ -572,6 +573,7 @@ export function ImportRecetteSheet({ onClose, onSuccess }: Props) {
           </div>
         )}
       </div>
-    </div>
+    </div>,
+    document.body
   )
 }
