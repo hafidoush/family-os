@@ -1,6 +1,8 @@
 import { useState } from 'react'
+import { useLiveQuery } from 'dexie-react-hooks'
 import './ActiviteDetail.css'
 import { marquerActiviteRealisee, marquerActiviteSautee } from '../services/programmeService'
+import { db } from '../../../../core/db/database'
 import type { ActiviteProgramme } from '../../../../shared/types'
 
 // ─── Utilitaires ──────────────────────────────────────────────────────────────
@@ -24,6 +26,12 @@ export function ActiviteDetail({ activite, onClose }: ActiviteDetailProps) {
   const [notes, setNotes] = useState(activite.notesParent ?? '')
   const [enCours, setEnCours] = useState(false)
   const [confirmerSaut, setConfirmerSaut] = useState(false)
+
+  const competencesMap = useLiveQuery(async () => {
+    if (!activite.competencesTravaillees?.length) return new Map<string, string>()
+    const comps = await db.competences.where('id').anyOf(activite.competencesTravaillees).toArray()
+    return new Map(comps.map(c => [c.id, c.nom]))
+  }, [activite.competencesTravaillees?.join(',')]) ?? new Map<string, string>()
 
   const phase = PHASE_CONFIG[activite.phase]
   const estRealisee = activite.statutRealisation === 'realise'
@@ -188,7 +196,9 @@ export function ActiviteDetail({ activite, onClose }: ActiviteDetailProps) {
               <h3 className="ad-section__title">Compétences</h3>
               <div className="ad-tags">
                 {activite.competencesTravaillees.map((c, i) => (
-                  <span key={i} className="ad-tag">{c}</span>
+                  <span key={i} className="ad-tag">
+                    {competencesMap.get(c) ?? c}
+                  </span>
                 ))}
               </div>
             </div>
