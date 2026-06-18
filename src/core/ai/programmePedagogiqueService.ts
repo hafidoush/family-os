@@ -132,89 +132,122 @@ function buildPromptProgramme(
   const nbSemaines = calculerNbSemaines(params.duree)
   const activitesParSemaine = params.frequenceParSemaine
   const totalActivites = nbSemaines * activitesParSemaine
-
   const phasesParSemaine = repartirPhases(nbSemaines)
+  const dureeMax = params.ageMin <= 3 ? '15–20 min' : params.ageMin <= 4 ? '20–30 min' : '30–45 min'
 
-  return `Tu es un expert en pédagogie Montessori, Reggio Emilia et éducation parentale bienveillante.
-Génère un programme pédagogique complet au format JSON strict pour des enfants.
+  // Filtre le catalogue : uniquement les activités dont le titre/objectif/tags contiennent des mots du thème
+  const themeWords = params.theme.toLowerCase().split(/[\s_\-,]+/).filter(w => w.length > 3)
+  const catalogueThematique = catalogue.filter(a => {
+    const text = `${a.nom} ${a.objectifPedagogique ?? ''} ${(a.tags ?? []).join(' ')}`.toLowerCase()
+    return themeWords.some(w => text.includes(w))
+  })
+  const catalogueGeneral = catalogue.filter(a => !catalogueThematique.includes(a))
 
-PARAMÈTRES :
-- Thème : "${params.theme}"
-- Tranche d'âge : ${params.ageMin}–${params.ageMax} ans
-- Nombre d'enfants : ${params.nbEnfants}
-- Durée : ${nbSemaines} semaine(s)
-- Fréquence : ${activitesParSemaine} activité(s) par semaine
-- Soit ${totalActivites} activités au total
-- Difficulté : ${params.difficulte}
-${params.objectifsSpecifiques?.length ? `- Objectifs spécifiques : ${params.objectifsSpecifiques.join(', ')}` : ''}
+  return `Tu es un concepteur pédagogique expert en éducation de la petite enfance (approches Montessori, Reggio Emilia, pédagogie active).
 
-CATALOGUE D'ACTIVITÉS EXISTANTES (à réutiliser EN PRIORITÉ, référencer par leur id) :
-${resumeCatalogue(catalogue)}
+═══════════════════════════════════════════════════════
+MISSION : Créer un programme d'apprentissage THÉMATIQUE
+Thème central : "${params.theme}"
+Enfants : ${params.ageMin}–${params.ageMax} ans | ${params.nbEnfants} enfant(s)
+Durée : ${nbSemaines} semaine(s) × ${activitesParSemaine} activité(s) = ${totalActivites} activités au total
+Difficulté : ${params.difficulte}
+${params.objectifsSpecifiques?.length ? `Objectifs parentaux : ${params.objectifsSpecifiques.join(' / ')}` : ''}
+═══════════════════════════════════════════════════════
+
+PRINCIPE FONDAMENTAL — À RESPECTER POUR CHAQUE ACTIVITÉ :
+Chaque activité doit directement servir la compréhension du thème "${params.theme}".
+TEST OBLIGATOIRE avant de proposer une activité : "Est-ce que cette activité apprend quelque chose de précis sur ${params.theme} ?"
+Si la réponse est non → rejeter l'activité et en trouver une autre.
+Une activité générique comme "collage libre" ou "transvasement d'eau" n'est acceptable QUE si elle est thématisée (ex: "collage de silhouettes du corps humain", "transvasement pour comprendre le cycle de l'eau").
+
+ÉTAPE 1 — PLANIFIER LA PROGRESSION THÉMATIQUE :
+Avant toute activité, définis la progression en ${nbSemaines} sous-thème(s) distincts sur "${params.theme}" :
+- Commence par les aspects concrets et observables
+- Progresse vers les concepts plus abstraits ou les liens entre les éléments
+- Chaque semaine explore UN aspect spécifique du thème (pas le thème en entier)
+
+Phases imposées par semaine :
+${phasesParSemaine.map(({ semaine, phase }) => `  Semaine ${semaine} → phase "${phase}"`).join('\n')}
+
+ÉTAPE 2 — CONCEVOIR LES ACTIVITÉS THÉMATIQUES :
+Pour chaque activité, l'objectifPedagogique doit répondre à : "À la fin de cette activité, l'enfant sera capable de [verbe d'action] sur [aspect du thème]".
+Exemples CORRECTS pour le thème "corps humain" :
+  ✓ "Nommer les parties du visage en les plaçant sur un schéma"
+  ✓ "Associer chaque organe sensoriel à son sens correspondant"
+  ✓ "Reconstituer une silhouette humaine en identifiant les membres"
+Exemples INCORRECTS (activités génériques sans lien thématique) :
+  ✗ "Développer la motricité fine" (sans lien au thème)
+  ✗ "Explorer différentes textures" (trop générique)
+  ✗ "Stimuler la créativité" (pas thématique)
+
+ÉTAPE 3 — FORMAT DE CHAQUE ACTIVITÉ :
+description : 2 phrases expliquant le contexte ET le lien au thème
+objectifPedagogique : ce que l'enfant apprend sur le thème (verbe d'action précis)
+deroulement : 3–5 étapes concrètes, chacune en lien avec l'exploration du thème
+variantes : adaptations selon l'âge ${params.ageMin}–${params.ageMax} ans (simplification ou approfondissement)
+
+CATALOGUE D'ACTIVITÉS THÉMATIQUES À RÉUTILISER EN PRIORITÉ :
+${catalogueThematique.length > 0 ? resumeCatalogue(catalogueThematique) : '(aucune activité thématique dans le catalogue — générer entièrement)'}
+
+CATALOGUE GÉNÉRAL (réutiliser UNIQUEMENT si l'activité peut être adaptée au thème, sinon ignorer) :
+${resumeCatalogue(catalogueGeneral.slice(0, 20))}
+
+RÈGLE CATALOGUE : Pour utiliser une activité du catalogue (source: "catalogue"), son objectifPedagogique doit contenir un lien explicite au thème "${params.theme}". Sinon, créer une nouvelle activité (source: "generee_ia") spécifiquement thématique.
 
 COMPÉTENCES DISPONIBLES :
 ${resumeCompetences(competences)}
 
-PROGRESSION PÉDAGOGIQUE OBLIGATOIRE :
-${phasesParSemaine.map(({ semaine, phase }) => `- Semaine ${semaine} → phase "${phase}"`).join('\n')}
+CONTRAINTES TECHNIQUES :
+- Durée par activité : ${dureeMax} (adapté à l'âge)
+- Matériel : accessible, réaliste (maison, papeterie, imprimable, nature)
+- aAcheter: true uniquement pour les éléments non courants
+- Tâches de préparation : anticipent la semaine suivante (urgence: "prochaine_semaine") ou courante (urgence: "cette_semaine")
 
-RÈGLES ABSOLUES :
-1. Réutiliser les activités du catalogue si l'âge et le thème correspondent (source: "catalogue", activiteCatalogueId: l'id exact)
-2. Générer de nouvelles activités uniquement si le catalogue est insuffisant (source: "generee_ia")
-3. Chaque activité DOIT avoir un objectif pédagogique distinct et précis
-4. Le matériel doit être réaliste et accessible (maison, papeterie, nature)
-5. Le déroulement doit être en 3–6 étapes claires et autonomes
-6. aAcheter: true uniquement pour les éléments non disponibles en maison courante
-7. Les tâches de préparation anticipent les besoins de la semaine SUIVANTE (urgence: "prochaine_semaine") ou de la semaine même (urgence: "cette_semaine" ou "immediate")
-8. Varier les types d'activités : sensoriel, moteur, cognitif, créatif, langagier, vie pratique
-9. Adapter la durée à l'âge : ${params.ageMin <= 3 ? '10–20 min max pour les tout-petits' : '20–45 min pour les 3 ans et plus'}
-
-FORMAT JSON ATTENDU (répondre UNIQUEMENT avec ce JSON, sans markdown) :
+FORMAT JSON (répondre UNIQUEMENT avec ce JSON, sans markdown, sans texte avant/après) :
 {
-  "titre": "Titre du programme",
-  "description": "Description courte (2 phrases)",
-  "objectifsPedagogiques": ["objectif 1", "objectif 2", "objectif 3"],
+  "titre": "Titre précis incluant le thème",
+  "description": "Description en 2 phrases mentionnant le thème et la progression",
+  "objectifsPedagogiques": ["Objectif thématique 1", "Objectif thématique 2", "Objectif thématique 3"],
   "competencesCiblees": ["id_competence_1", "id_competence_2"],
   "semaines": [
     {
       "numero": 1,
-      "titre": "Semaine 1 — Découverte",
-      "objectif": "Objectif de la semaine",
+      "titre": "Semaine 1 — [Sous-thème précis de la semaine]",
+      "objectif": "Ce que l'enfant comprendra sur [aspect du thème] cette semaine",
       "phase": "decouverte",
       "activites": [
         {
-          "source": "catalogue",
-          "activiteCatalogueId": "id-exact-du-catalogue",
-          "titre": "Nom de l'activité",
-          "description": "Description en 1–2 phrases",
-          "objectifPedagogique": "Ce que l'enfant va apprendre",
+          "source": "generee_ia",
+          "titre": "Nom de l'activité (doit évoquer le thème)",
+          "description": "Ce qu'on fait ET pourquoi c'est lié au thème.",
+          "objectifPedagogique": "À la fin, l'enfant sera capable de [verbe] sur [aspect du thème]",
           "phase": "decouverte",
           "competencesTravaillees": ["id_competence"],
-          "materielNecessaire": [{"nom": "riz", "quantite": "500g", "aAcheter": false}],
+          "materielNecessaire": [{"nom": "silhouette du corps à imprimer", "quantite": "1", "aAcheter": false}],
           "materielOptionnel": [],
           "tempsPreparation": 10,
-          "duree": 25,
+          "duree": 20,
           "ageRecommande": "${params.ageMin}–${params.ageMax} ans",
           "deroulement": [
-            {"ordre": 1, "texte": "Étape 1 en détail.", "duree": 5},
-            {"ordre": 2, "texte": "Étape 2 en détail.", "duree": 10}
+            {"ordre": 1, "texte": "Étape concrète en lien avec le thème.", "duree": 5, "conseil": "Conseil pratique."},
+            {"ordre": 2, "texte": "Étape suivante.", "duree": 10}
           ],
-          "variantes": [{"ageMin": ${params.ageMin}, "ageMax": ${params.ageMin + 1}, "adaptation": "Simplifier en..."}]
+          "variantes": [
+            {"ageMin": ${params.ageMin}, "ageMax": ${Math.min(params.ageMin + 1, params.ageMax)}, "adaptation": "Version simplifiée pour les plus jeunes."},
+            {"ageMin": ${Math.max(params.ageMax - 1, params.ageMin)}, "ageMax": ${params.ageMax}, "adaptation": "Version enrichie pour les plus grands."}
+          ]
         }
       ],
       "tachesPreparation": [
-        {
-          "titre": "Imprimer les images de la ferme",
-          "type": "imprimer",
-          "urgence": "cette_semaine",
-          "dureeEstimee": 10
-        }
+        {"titre": "Préparer le matériel thématique", "type": "imprimer", "urgence": "cette_semaine", "dureeEstimee": 15}
       ]
     }
   ]
 }
 
 Génère exactement ${nbSemaines} semaine(s) avec exactement ${activitesParSemaine} activité(s) chacune.
-Réponds UNIQUEMENT avec le JSON valide, sans texte avant ni après.`
+RAPPEL FINAL : Chaque activité doit enseigner quelque chose de précis sur "${params.theme}". Rejette mentalement toute activité qui pourrait figurer dans n'importe quel autre programme sans modification.
+Réponds UNIQUEMENT avec le JSON valide.`
 }
 
 // ─── Répartition des phases sur les semaines ─────────────────────────────────
