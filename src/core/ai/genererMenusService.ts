@@ -30,23 +30,30 @@ type PlanSemaineIA = Record<JourMenu, RepasIA>
 // ─── Prompt ───────────────────────────────────────────────────────────────────
 
 function buildPromptMenus(recettesExistantes: string[], nbPersonnes: number): string {
-  const recettesSection = recettesExistantes.length > 0
-    ? `\nRecettes disponibles dans l'application (privilégie-les si pertinentes) :\n${recettesExistantes.slice(0, 40).map(r => `- ${r}`).join('\n')}`
-    : ''
+  if (recettesExistantes.length === 0) {
+    throw new Error('Aucune recette disponible. Ajoutez des recettes avant de générer un menu.')
+  }
 
-  return `Tu es un assistant culinaire pour une famille française. Génère un plan de repas équilibré pour une semaine complète (déjeuner + dîner) pour ${nbPersonnes} personne${nbPersonnes > 1 ? 's' : ''}.
+  const listeRecettes = recettesExistantes.slice(0, 60).map(r => `- ${r}`).join('\n')
 
-Contraintes :
-- Repas variés (pas deux fois la même viande consécutive)
-- Équilibre protéines / légumes / féculents
-- Noms de plats simples et réalistes en français
-- Le week-end : repas un peu plus festifs ou en famille${recettesSection}
+  return `Tu es un assistant culinaire pour une famille française. Génère un plan de repas pour une semaine complète (déjeuner + dîner) pour ${nbPersonnes} personne${nbPersonnes > 1 ? 's' : ''}.
+
+RÈGLE ABSOLUE : tu dois choisir EXCLUSIVEMENT parmi les recettes listées ci-dessous.
+Ne crée AUCUNE nouvelle recette. N'invente aucun plat. Si une case ne peut pas être remplie avec une recette de la liste, utilise une recette existante plutôt qu'en inventer une.
+
+Recettes disponibles :
+${listeRecettes}
+
+Contraintes supplémentaires :
+- Repas variés (pas deux fois la même recette dans la même semaine si possible)
+- Le week-end : privilégie les recettes plus festives ou familiales si disponibles
+- Utilise le nom exact de la recette tel qu'il apparaît dans la liste ci-dessus
 
 Retourne UNIQUEMENT un objet JSON valide sans markdown, sans backticks, sans commentaires.
 
 Format attendu :
 {
-  "lundi":    { "dejeuner": "nom du plat", "diner": "nom du plat" },
+  "lundi":    { "dejeuner": "nom exact de la recette", "diner": "nom exact de la recette" },
   "mardi":    { "dejeuner": "...", "diner": "..." },
   "mercredi": { "dejeuner": "...", "diner": "..." },
   "jeudi":    { "dejeuner": "...", "diner": "..." },
@@ -73,7 +80,7 @@ function normaliser(s: string): string {
 }
 
 async function trouverRecetteId(nomPlat: string): Promise<string | undefined> {
-  const recettes = await db.recettes.filter(r => !r.archive).toArray()
+  const recettes = await db.recettes.filter(r => !r.archive && !r.deletedAt).toArray()
   const cible = normaliser(nomPlat)
 
   // Correspondance exacte
@@ -101,8 +108,8 @@ export async function genererMenusIA(
   nbPersonnes = 4,
   assignerJours = true,
 ): Promise<ResultatGeneration> {
-  // 1. Charger les recettes existantes pour le prompt
-  const recettes = await db.recettes.filter(r => !r.archive).toArray()
+  // 1. Charger les recettes existantes pour le prompt (exclure supprimées ET archivées)
+  const recettes = await db.recettes.filter(r => !r.archive && !r.deletedAt).toArray()
   const nomsRecettes = recettes.map(r => r.nom)
 
   // 2. Appel OpenAI
@@ -130,16 +137,23 @@ export async function genererMenusIA(
       if (!nomPlat) continue
 
       const recetteId = await trouverRecetteId(nomPlat)
-      if (recetteId) recettesMatchées++
 
+      // Si l'IA a respecté la consigne, recetteId est toujours défini.
+      // En cas d'invention malgré tout, on ignore le slot plutôt que de
+      // créer un repas sans recette réelle.
+      if (!recetteId) {
+        console.warn(`[MenuIA] Recette introuvable ignorée : "${nomPlat}"`)
+        continue
+      }
+
+      recettesMatchées++
       await db.menuSlots.add(newEntity<MenuSlot>({
-        menu:             menuId,
-        jour:             assignerJours ? jour : undefined,
-        repas:            type,
-        recette:          recetteId,
-        descriptionLibre: recetteId ? undefined : nomPlat,
-        statut:           'prevue',
-        archive:          false,
+        menu:    menuId,
+        jour:    assignerJours ? jour : undefined,
+        repas:   type,
+        recette: recetteId,
+        statut:  'prevue',
+        archive: false,
       }))
       slotsCreés++
     }

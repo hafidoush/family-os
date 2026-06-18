@@ -39,10 +39,18 @@ export function useWeekEvents() {
     endOfWeek.setDate(endOfWeek.getDate() + 7);
     endOfWeek.setHours(23, 59, 59, 999);
 
-    return db.evenements
-      .where('dateDebut')
-      .between(startOfDay, endOfWeek, true, true)
-      .and((e) => !e.deletedAt && !e.archive)
-      .sortBy('dateDebut');
+    // Filtre JS plutôt que between() Dexie : les dateDebut synchronisées depuis
+    // Supabase arrivent sous forme de string ISO, incompatibles avec la comparaison
+    // d'index Dexie basée sur des objets Date.
+    const all = await db.evenements
+      .filter((e) => !e.deletedAt && !e.archive)
+      .toArray();
+
+    return all
+      .filter((e) => {
+        const d = new Date(e.dateDebut);
+        return d >= startOfDay && d <= endOfWeek;
+      })
+      .sort((a, b) => new Date(a.dateDebut).getTime() - new Date(b.dateDebut).getTime());
   }, []);
 }

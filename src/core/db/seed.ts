@@ -35,6 +35,8 @@ async function _seedDatabase(): Promise<void> {
   await dedupCategoriesRecettes()
   await dedupCategoriesProduits()
   await dedupPieces()
+  // Répare les catégories produits si elles ont été effacées (ex: sync Supabase)
+  await repairerCatalogueCategories()
   // Migration catégories produits — tourne à chaque démarrage
   await migrerCategoriesProduits()
   // Renommage "Végétarien" → "Accompagnement"
@@ -265,6 +267,67 @@ async function dedupCategoriesRecettes(): Promise<void> {
   }
 
   if (toDelete.length > 0) await db.categoriesRecettes.bulkDelete(toDelete)
+}
+
+// ─── Réparation catalogue produits ────────────────────────────────────────────
+// Si les catégories principales ont disparu (sync Supabase écrasant la base locale),
+// on les recrée sans toucher aux catégories et produits déjà présents.
+async function repairerCatalogueCategories(): Promise<void> {
+  const cats = await db.categoriesProduits.toArray()
+  const noms = new Set(cats.map(c => c.nom))
+
+  const categoriesPrincipales = [
+    'Viande & Charcuterie', 'Poissons', 'Épicerie salée',
+    'Épicerie sucrée', 'Conserves', 'Surgelés', 'Épices',
+  ]
+  const aucunePrincipale = categoriesPrincipales.every(n => !noms.has(n))
+
+  // On a aussi le cas "split déjà effectué" : Fruits + Légumes sans Fruits & Légumes
+  const splitFait = noms.has('Fruits') || noms.has('Légumes')
+  const fruitsLegumesMissing = !noms.has('Fruits & Légumes') && !splitFait
+
+  if (!aucunePrincipale && !fruitsLegumesMissing) return
+
+  console.log('[FamilyOS] Catégories produits incomplètes — restauration en cours...')
+
+  // Catégories à ajouter si absentes (seedCategoriesProduits a une guard "if existing > 0"
+  // donc on insère manuellement les manquantes)
+  const maxOrdre = Math.max(...cats.map(c => c.ordre ?? 0), 0)
+  const aAjouter: Array<{ nom: string; icone: string }> = [
+    { nom: 'Fruits & Légumes',     icone: '🥬' },
+    { nom: 'Viande & Charcuterie', icone: '🥩' },
+    { nom: 'Poissons',             icone: '🐟' },
+    { nom: 'Épicerie salée',       icone: '🫙' },
+    { nom: 'Épicerie sucrée',      icone: '🍫' },
+    { nom: 'Conserves',            icone: '🥫' },
+    { nom: 'Surgelés',             icone: '🧊' },
+    { nom: 'Épices',               icone: '🌿' },
+    { nom: 'Asiatique',            icone: '🥢' },
+    { nom: 'Bio',                  icone: '🌱' },
+    { nom: 'Hygiène',              icone: '🧼' },
+    { nom: 'Entretien',            icone: '🧹' },
+  ]
+
+  let offset = 1
+  for (const cat of aAjouter) {
+    if (!noms.has(cat.nom)) {
+      await db.categoriesProduits.add({
+        id: uuid(), nom: cat.nom, icone: cat.icone,
+        typeProduit: 'consommable' as const,
+        ordre: maxOrdre + offset,
+        personnalisee: false,
+        ...withAudit({}),
+      })
+      offset++
+    }
+  }
+
+  // Re-seeder les produits si la base est presque vide
+  const produitsCount = await db.produits.filter(p => !p.archive && !p.deletedAt).count()
+  if (produitsCount < 30) {
+    await seedProduitsCatalog()
+    console.log('[FamilyOS] Produits restaurés.')
+  }
 }
 
 async function dedupCategoriesProduits(): Promise<void> {
