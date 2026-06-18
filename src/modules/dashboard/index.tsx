@@ -11,6 +11,7 @@ import { WidgetRushMatin }         from './components/WidgetRushMatin';
 import { WidgetBilanSemaine }      from './components/WidgetBilanSemaine';
 import { WidgetOrchestrateur }     from './components/WidgetOrchestrateur';
 import { NotificationBanner }      from './components/NotificationBanner';
+import { HumeurSaisieSheet }       from './components/HumeurSaisieSheet';
 import './components/DashboardGrid.css';
 import './components/WidgetCard.css';
 
