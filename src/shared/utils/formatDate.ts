@@ -29,9 +29,10 @@ export function formatDateShort(date: DateLike): string {
   return toDate(date).toLocaleDateString('fr-FR')
 }
 
-/** "YYYY-MM-DD" — format stocké en base */
+/** "YYYY-MM-DD" — format stocké en base (heure locale, pas UTC) */
 export function toISODate(date: DateLike): string {
-  return toDate(date).toISOString().split('T')[0]
+  const d = toDate(date)
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
 }
 
 /** "HH:mm" */
