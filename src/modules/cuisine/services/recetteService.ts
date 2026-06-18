@@ -65,17 +65,18 @@ export async function createRecette(
 
   await db.recettes.add(recette)
 
-  // Ingrédients en batch
-  const ingredientEntities = ingredients.map((ing) =>
-    newEntity<RecetteIngredient>({
-      recette: recette.id,
-      produit: ing.produit,
-      quantite: ing.quantite,
-      unite: ing.unite,
-      optionnel: ing.optionnel,
-    })
-  )
-  await db.recettesIngredients.bulkAdd(ingredientEntities)
+  // Ingrédients — add() individuel pour déclencher les hooks de sync (bulkAdd les bypasse)
+  for (const ing of ingredients) {
+    await db.recettesIngredients.add(
+      newEntity<RecetteIngredient>({
+        recette: recette.id,
+        produit: ing.produit,
+        quantite: ing.quantite,
+        unite: ing.unite,
+        optionnel: ing.optionnel,
+      })
+    )
+  }
 
   return recette.id
 }
@@ -101,16 +102,18 @@ export async function updateRecette(
       )
     )
 
-    const nouveaux = ingredients.map((ing) =>
-      newEntity<RecetteIngredient>({
-        recette: id,
-        produit: ing.produit,
-        quantite: ing.quantite,
-        unite: ing.unite,
-        optionnel: ing.optionnel,
-      })
-    )
-    await db.recettesIngredients.bulkAdd(nouveaux)
+    // add() individuel pour déclencher les hooks de sync (bulkAdd les bypasse)
+    for (const ing of ingredients) {
+      await db.recettesIngredients.add(
+        newEntity<RecetteIngredient>({
+          recette: id,
+          produit: ing.produit,
+          quantite: ing.quantite,
+          unite: ing.unite,
+          optionnel: ing.optionnel,
+        })
+      )
+    }
   }
 }
 
