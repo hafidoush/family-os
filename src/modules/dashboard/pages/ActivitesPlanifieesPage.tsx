@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { toISODate } from '../../../shared/utils/formatDate';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { useNavigate } from 'react-router-dom';
 import { db } from '../../../core/db/database';
@@ -185,7 +186,7 @@ function getJoursSemaineCourante(): { label: string; labelCourt: string; date: s
     return {
       label: JOURS_SEMAINE_FULL[i],
       labelCourt: JOURS_SEMAINE[i],
-      date: d.toISOString().split('T')[0],
+      date: toISODate(d),
       isToday,
     };
   });
@@ -195,7 +196,7 @@ function APlacer() {
   const activites = useActivitesPlacer();
   const [placing, setPlacing] = useState<string | null>(null);
   const jours = getJoursSemaineCourante();
-  const today = new Date().toISOString().split('T')[0];
+  const today = toISODate(new Date());
 
   if (activites.length === 0) return null;
 
@@ -267,7 +268,7 @@ function ActiviteProgrammeCard({ activite }: { activite: import('../../../shared
       const newStatut = done ? 'planifie' : 'realise';
       await db.activitesProgramme.update(activite.id, withUpdate({
         statutRealisation: newStatut,
-        dateRealisation: done ? undefined : new Date().toISOString().split('T')[0],
+        dateRealisation: done ? undefined : toISODate(new Date()),
       }));
       setDone(!done);
     } finally {
@@ -305,7 +306,7 @@ function ActiviteProgrammeCard({ activite }: { activite: import('../../../shared
 }
 
 function useTodayProgrammeActivites() {
-  const today = new Date().toISOString().split('T')[0];
+  const today = toISODate(new Date());
   return useLiveQuery(
     () => db.activitesProgramme
       .filter(a => !a.archive && !a.deletedAt && a.datePlanifiee === today)
