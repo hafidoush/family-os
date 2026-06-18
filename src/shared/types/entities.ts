@@ -51,6 +51,7 @@ export interface Tache extends AuditFields, DeviceField {
   evenementAssocie?: string; // Evenement.id — sous-tâche d'un événement
   projetAssocie?: string; // ProjetMaison.id
   completeeLe?: Date;
+  dateReference?: Date; // date de départ pour le calcul de la prochaine échéance
   archive: boolean;
 }
 

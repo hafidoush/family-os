@@ -6,6 +6,7 @@ import { useDayTasks }       from '../hooks/useDayTasks';
 import { toISODate }         from '../../../shared/utils/formatDate';
 import { db }                from '../../../core/db/database';
 import { withUpdate }        from '../../../core/db/helpers';
+import { nextDueDate }       from '../../menage/utils/nextDueDate';
 import type { Pensee }       from '../../../shared/types';
 import './WidgetProgrammeDuJour.css';
 
@@ -31,11 +32,35 @@ export function WidgetProgrammeDuJour() {
     ? Math.round((evenements.filter(e => new Date(e.dateDebut) < now).length / evenements.length) * 100)
     : 0;
 
-  // MÉNAGE — tâches moduleOrigine maison
-  const tachesMenage   = allTasks.filter(t => t.moduleOrigine === 'maison');
-  const totalMenage    = tachesMenage.length;
-  const faitesMenage   = tachesMenage.filter(t => t.statut === 'fait' || t.statut === 'terminee' || t.statut === 'realisee').length;
-  const pctMenage      = totalMenage > 0 ? Math.round((faitesMenage / totalMenage) * 100) : 0;
+  // MÉNAGE — aujourd'hui + en retard (même périmètre que la jauge de MenageDuJourPage)
+  const menageData = useLiveQuery(async () => {
+    const todayStart = new Date(); todayStart.setHours(0, 0, 0, 0);
+    const todayEnd   = new Date(); todayEnd.setHours(23, 59, 59, 999);
+
+    const all = await db.taches
+      .filter(t => !t.archive && !t.deletedAt && t.moduleOrigine === 'maison')
+      .toArray();
+
+    let total = 0; let faites = 0;
+    for (const t of all) {
+      // Complétée aujourd'hui → compte dans la jauge
+      if (t.statut === 'fait' && t.completeeLe) {
+        const d = new Date(t.completeeLe); d.setHours(0,0,0,0);
+        if (d.getTime() === todayStart.getTime()) { total++; faites++; continue; }
+        continue; // complétée un autre jour → pas dans le périmètre du jour
+      }
+      // Non faite : inclure si due aujourd'hui ou en retard
+      const due = nextDueDate(t);
+      if (!due) continue;
+      const dueStart = new Date(due); dueStart.setHours(0,0,0,0);
+      if (dueStart <= todayStart) { total++; } // aujourd'hui ou retard
+    }
+    return { total, faites };
+  }, [today]) ?? { total: 0, faites: 0 };
+
+  const pctMenage = menageData.total > 0
+    ? Math.round((menageData.faites / menageData.total) * 100)
+    : 0;
 
   // À FAIRE — pensées marquées aFaire
   const tachesAFaire = useLiveQuery(

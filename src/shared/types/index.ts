@@ -60,6 +60,7 @@ export interface Tache extends AuditWithDevice {
   evenementAssocie?: string // Evenement.id
   projetAssocie?: string // ProjetMaison.id
   completeeLe?: Date
+  dateReference?: Date
   archive: boolean
 }
 

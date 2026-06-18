@@ -25,6 +25,8 @@ export interface TacheEntretienInput {
   dureeEstimee?: number; // minutes
   description?: string;
   impactScore?: number; // points de propreté restaurés à la complétion (défaut 20)
+  dateReference?: Date; // ancre pour le calcul de la prochaine échéance
+  completeeLe?: Date;   // dernière réalisation (override manuel depuis le formulaire)
 }
 
 /** Recalcule le score d'une pièce en fonction du ratio de tâches complétées. */
@@ -47,7 +49,7 @@ export const TacheService = {
   async addTache(input: TacheEntretienInput): Promise<string> {
     const tache = newEntity<Tache>({
       titre: input.titre.trim(),
-      statut: 'a_faire',
+      statut: input.completeeLe ? 'fait' : 'a_faire',
       moduleOrigine: 'maison',
       pieceAssociee: input.pieceId,
       projetAssocie: input.projetId,
@@ -58,6 +60,8 @@ export const TacheService = {
       joursSemaine: input.joursSemaine,
       dureeEstimee: input.dureeEstimee,
       description: input.description?.trim(),
+      dateReference: input.dateReference,
+      completeeLe: input.completeeLe,
       archive: false,
     });
     await db.taches.add(tache);
@@ -76,6 +80,11 @@ export const TacheService = {
     if (input.joursSemaine !== undefined) patch.joursSemaine = input.joursSemaine;
     if (input.dureeEstimee !== undefined) patch.dureeEstimee = input.dureeEstimee;
     if (input.description !== undefined) patch.description = input.description?.trim();
+    if (input.dateReference !== undefined) patch.dateReference = input.dateReference;
+    if (input.completeeLe !== undefined) {
+      patch.completeeLe = input.completeeLe;
+      patch.statut = 'fait';
+    }
     await db.taches.update(id, withUpdate<Tache>(patch));
   },
 

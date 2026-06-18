@@ -187,11 +187,18 @@ interface TacheFormProps {
   moduleOriginePrefill?: string | null;
 }
 
+function toInputDate(d: Date | undefined): string {
+  if (!d) return '';
+  return new Date(d).toISOString().split('T')[0];
+}
+
 export function TacheForm({ isOpen, onClose, editId, piecePrefill, projetPrefill, frequencePrefill }: TacheFormProps) {
   const [titre, setTitre] = useState('');
   const [pieceId, setPieceId] = useState('');
   const [frequence, setFrequence] = useState<FrequenceTache>('trimestrielle');
   const [duree, setDuree] = useState('');
+  const [dateReference, setDateReference] = useState('');
+  const [derniereRealisation, setDerniereRealisation] = useState('');
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState('');
 
@@ -209,12 +216,16 @@ export function TacheForm({ isOpen, onClose, editId, piecePrefill, projetPrefill
         setPieceId(t.pieceAssociee ?? '');
         setFrequence(t.frequence ?? 'trimestrielle');
         setDuree(t.dureeEstimee?.toString() ?? '');
+        setDateReference(toInputDate(t.dateReference));
+        setDerniereRealisation(toInputDate(t.completeeLe));
       });
     } else {
       setTitre('');
       setPieceId(piecePrefill ?? '');
       setFrequence(frequencePrefill ?? 'trimestrielle');
       setDuree('');
+      setDateReference('');
+      setDerniereRealisation('');
     }
     setError('');
   }, [isOpen, editId, piecePrefill, projetPrefill, frequencePrefill]);
@@ -229,6 +240,8 @@ export function TacheForm({ isOpen, onClose, editId, piecePrefill, projetPrefill
         recurrence: frequence !== 'ponctuelle',
         frequence,
         dureeEstimee: duree ? parseInt(duree) : undefined,
+        dateReference: dateReference ? new Date(dateReference) : undefined,
+        completeeLe: derniereRealisation ? new Date(derniereRealisation) : undefined,
       };
       if (editId) await TacheService.updateTache(editId, input);
       else await TacheService.addTache(input);
@@ -281,6 +294,29 @@ export function TacheForm({ isOpen, onClose, editId, piecePrefill, projetPrefill
             <Input type="number" min="0" value={duree} onChange={e => setDuree(e.target.value)} placeholder="30" />
           </div>
         </div>
+
+        {frequence !== 'ponctuelle' && (
+          <div className="tache-form__row">
+            <div className="tache-form__field">
+              <label className="tache-form__label">Date de départ</label>
+              <Input
+                type="date"
+                value={dateReference}
+                onChange={e => setDateReference(e.target.value)}
+              />
+              <span className="tache-form__hint">Ancre du calcul de la prochaine échéance</span>
+            </div>
+            <div className="tache-form__field">
+              <label className="tache-form__label">Dernière réalisation</label>
+              <Input
+                type="date"
+                value={derniereRealisation}
+                onChange={e => setDerniereRealisation(e.target.value)}
+              />
+              <span className="tache-form__hint">Remplace la date de départ si renseignée</span>
+            </div>
+          </div>
+        )}
 
         <div className="tache-form__actions">
           <Button variant="ghost" onClick={onClose} disabled={isSaving}>Annuler</Button>

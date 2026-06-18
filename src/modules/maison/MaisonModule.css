@@ -586,6 +586,7 @@
 }
 .tache-form__row { display: flex; gap: 10px; }
 .tache-form__row .tache-form__field { flex: 1; }
+.tache-form__hint { font-size: 0.72rem; color: var(--color-text-muted, #9ca3af); line-height: 1.3; }
 
 .tache-form__toggle-label {
   display: flex;
