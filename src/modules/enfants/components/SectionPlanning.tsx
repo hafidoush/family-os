@@ -131,33 +131,49 @@ export function SectionPlanning() {
 
   const [placingId, setPlacingId] = useState<string | null>(null)
 
+  // Activités à placer : celles de la semaine affichée dans le programme (± fenêtre 3 sem.)
   const activitesPlacer = useLiveQuery(async () => {
     const programmes = await db.programmesPedagogiques
       .where('statut').equals('actif')
       .filter(p => !p.archive && !p.deletedAt)
       .toArray()
     if (programmes.length === 0) return []
+
     const result: (ActiviteProgramme & { semainePasse: boolean; programmeNom: string })[] = []
+
     for (const prog of programmes) {
       const semaineCourante = semaineEnCours(prog.dateDebut)
-      const semainePrec = semaineCourante - 1
+      // Semaine du programme correspondant à la semaine affichée
+      const semaineAffichee = semaineEnCours(prog.dateDebut, lundi)
+      // Fenêtre : semaine affichée ± jusqu'à 3 semaines en arrière (non sautées)
+      const semaineMin = Math.max(1, semaineCourante - 2)
+
       const acts = await db.activitesProgramme
         .where('programmeId').equals(prog.id)
         .filter(a =>
           !a.archive && !a.deletedAt && !a.datePlanifiee &&
           a.statutRealisation !== 'realise' && a.statutRealisation !== 'saute' &&
-          (a.semaineNumero === semaineCourante || (semainePrec >= 1 && a.semaineNumero === semainePrec))
+          // Semaine affichée ou en retard dans la fenêtre des 3 semaines
+          (a.semaineNumero === semaineAffichee ||
+           (a.semaineNumero >= semaineMin && a.semaineNumero < semaineCourante))
         )
         .toArray()
+
       for (const a of acts) {
-        result.push({ ...a, semainePasse: a.semaineNumero === semainePrec, programmeNom: prog.titre })
+        result.push({
+          ...a,
+          semainePasse: a.semaineNumero < semaineCourante,
+          programmeNom: prog.titre,
+        })
       }
     }
+
     return result.sort((a, b) => {
+      // Semaine courante en premier, retards après
       if (a.semainePasse !== b.semainePasse) return a.semainePasse ? 1 : -1
       return a.ordre - b.ordre
     })
-  }, []) ?? []
+  }, [lundiISO]) ?? []
 
   // Activités programme placées dans la semaine affichée
   const activitesProgrammeSemaine = useLiveQuery(async () => {
@@ -461,11 +477,16 @@ export function SectionPlanning() {
         </p>
       )}
 
-      {/* Section "À placer cette semaine" */}
+      {/* Section "À placer" */}
       {activitesPlacer.length > 0 && (
         <div className="aplacer-section">
-          <h3 className="aplacer-section__titre">À placer cette semaine</h3>
-          <p className="aplacer-section__sub">Activités du programme — appuyez pour choisir le jour</p>
+          <h3 className="aplacer-section__titre">
+            {isCurrentWeek ? 'À placer cette semaine' : 'À placer sur cette semaine'}
+          </h3>
+          <p className="aplacer-section__sub">
+            Activités du programme — appuyez pour choisir le jour
+            {!isCurrentWeek && ' · Vous planifiez une semaine future'}
+          </p>
           <div className="aplacer-list">
             {activitesPlacer.map(a => (
               <div key={a.id} className={`aplacer-card${placingId === a.id ? ' aplacer-card--open' : ''}`}>

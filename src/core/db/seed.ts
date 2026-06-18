@@ -37,6 +37,8 @@ async function _seedDatabase(): Promise<void> {
   await dedupPieces()
   // Répare les catégories produits si elles ont été effacées (ex: sync Supabase)
   await repairerCatalogueCategories()
+  // Nettoie les activités programme : reporter les non-réalisées passées, sauter les trop anciennes
+  await nettoyerActivitesProgramme()
   // Migration catégories produits — tourne à chaque démarrage
   await migrerCategoriesProduits()
   // Renommage "Végétarien" → "Accompagnement"
@@ -272,6 +274,37 @@ async function dedupCategoriesRecettes(): Promise<void> {
 // ─── Réparation catalogue produits ────────────────────────────────────────────
 // Si les catégories principales ont disparu (sync Supabase écrasant la base locale),
 // on les recrée sans toucher aux catégories et produits déjà présents.
+async function nettoyerActivitesProgramme(): Promise<void> {
+  const today = new Date(); today.setHours(0, 0, 0, 0)
+  const todayISO = today.toISOString().split('T')[0]
+
+  const programmes = await db.programmesPedagogiques
+    .where('statut').equals('actif')
+    .filter(p => !p.archive && !p.deletedAt)
+    .toArray()
+
+  for (const prog of programmes) {
+    const debut = new Date(prog.dateDebut)
+    const semaineCourante = Math.max(1, Math.floor((today.getTime() - debut.getTime()) / (7 * 24 * 60 * 60 * 1000)) + 1)
+
+    const activites = await db.activitesProgramme
+      .where('programmeId').equals(prog.id)
+      .filter(a => !a.archive && !a.deletedAt && a.statutRealisation !== 'realise' && a.statutRealisation !== 'saute')
+      .toArray()
+
+    for (const a of activites) {
+      // Activité placée sur un jour passé mais non réalisée → reporter (effacer la date)
+      if (a.datePlanifiee && a.datePlanifiee < todayISO) {
+        await db.activitesProgramme.update(a.id, { datePlanifiee: undefined, statutRealisation: 'a_faire', updatedAt: new Date() })
+      }
+      // Activité de semaine trop ancienne (> 3 semaines de retard) → sauter silencieusement
+      else if (!a.datePlanifiee && a.semaineNumero < semaineCourante - 2) {
+        await db.activitesProgramme.update(a.id, { statutRealisation: 'saute', updatedAt: new Date() })
+      }
+    }
+  }
+}
+
 async function repairerCatalogueCategories(): Promise<void> {
   const cats = await db.categoriesProduits.toArray()
   const noms = new Set(cats.map(c => c.nom))
