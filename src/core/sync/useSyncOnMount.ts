@@ -18,6 +18,21 @@ async function pushInitialActivites() {
   await db.parametresSync.put({ id: uuid(), cle: CLE, valeur: 'true', derniereModification: now, createdAt: now, updatedAt: now })
 }
 
+// Push one-shot de tous les ingrédients locaux — bulkAdd ne déclenchait pas les hooks
+async function pushInitialRecettesIngredients() {
+  const CLE = 'recettes_ingredients_pushed_v1'
+  const already = await db.parametresSync.where('cle').equals(CLE).first()
+  if (already) return
+
+  const ingredients = await db.recettesIngredients.toArray()
+  for (const ing of ingredients) {
+    await pushRecord('recettesIngredients', ing as unknown as Record<string, unknown>)
+  }
+
+  const now = new Date()
+  await db.parametresSync.put({ id: uuid(), cle: CLE, valeur: 'true', derniereModification: now, createdAt: now, updatedAt: now })
+}
+
 // Push one-shot des programmes annuels locaux — nécessaire après ajout de la table Supabase
 async function pushInitialProgrammesAnnuels() {
   const CLE = 'programmes_annuels_pushed_v1'
@@ -41,6 +56,7 @@ export function useSyncOnMount() {
 
     // Démarrage : rejouer les pushes en attente puis faire un pull complet
     pushInitialActivites()
+      .then(() => pushInitialRecettesIngredients())
       .then(() => pushInitialProgrammesAnnuels())
       .then(() => drainQueue())
       .then(() => pullAll())
