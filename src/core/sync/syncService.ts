@@ -55,8 +55,9 @@ const TABLE_MAP: Record<string, string> = {
   programmesPedagogiques:   'programmes_pedagogiques',
   activitesProgramme:       'activites_programme',
   programmesAnnuels:        'programmes_annuels',
+  produits:                 'produits',
   // Tables non créées côté Supabase — à ajouter quand les migrations SQL seront faites
-  // evenementsDetails, tags, produits, categoriesProduits, categoriesRecettes, categoriesActivites
+  // evenementsDetails, tags, categoriesProduits, categoriesRecettes, categoriesActivites
 }
 
 const DEXIE_TABLES = Object.keys(TABLE_MAP)

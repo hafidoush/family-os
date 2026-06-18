@@ -73,9 +73,10 @@
   -webkit-overflow-scrolling: touch;
 }
 
-/* Le formulaire prend toute la hauteur sans padding */
+/* Le formulaire prend toute la hauteur sans padding lateral, mais compense la bottom nav */
 .cuisine-module__content--form {
   padding: 0;
+  padding-bottom: var(--bottom-bar-h, 65px);
   overflow: hidden;
   display: flex;
   flex-direction: column;
