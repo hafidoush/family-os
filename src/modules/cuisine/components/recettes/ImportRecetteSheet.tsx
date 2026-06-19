@@ -505,13 +505,17 @@ export function ImportRecetteSheet({ onClose, onSuccess }: Props) {
             Ingrédients — {ingredients.filter(i => i.produitId).length}/{ingredients.length} liés au catalogue
           </p>
 
-          {ingredients.map(ing => (
+          {ingredients.map(ing => {
+            const hasValue    = ing.nomLibre.trim().length > 0
+            const isMatched   = hasValue && !!ing.produitId
+            const isUnmatched = hasValue && !ing.produitId
+            return (
             <div
               key={ing._key}
-              className={`import-ingredient-row${ing.produitId ? ' import-ingredient-row--matched' : ' import-ingredient-row--unmatched'}`}
+              className={`import-ingredient-row${isMatched ? ' import-ingredient-row--matched' : isUnmatched ? ' import-ingredient-row--unmatched' : ''}`}
             >
               <span className="import-ingredient__status">
-                {ing.produitId ? '✓' : <IconShieldWarning size={14} />}
+                {isMatched ? '✓' : isUnmatched ? <IconShieldWarning size={14} /> : null}
               </span>
               <IngredientNomInput
                 value={ing.nomLibre}
@@ -537,7 +541,8 @@ export function ImportRecetteSheet({ onClose, onSuccess }: Props) {
                 onClick={() => removeIngredient(ing._key)}
               ><IconClose size={14} /></button>
             </div>
-          ))}
+            )
+          })}
 
           <button
             className="import-add-btn"
