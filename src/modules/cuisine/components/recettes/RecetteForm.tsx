@@ -28,6 +28,7 @@ const TAGS_RECETTES_FORM = [
   { id: 'bébé',          label: 'Bébé' },
   { id: 'réconfortant',  label: 'Réconfortant' },
   { id: 'frais & léger', label: 'Frais & léger' },
+  { id: 'apéro',         label: 'Apéro' },
 ] as const
 
 interface Props {
