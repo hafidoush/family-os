@@ -164,18 +164,115 @@ function normaliser(s: string): string {
     .trim()
 }
 
+// Mots décrivant l'état, la découpe ou la préparation — à ignorer lors du matching
+const MOTS_PREP = new Set([
+  // états
+  'cuit','cuits','cuite','cuites','cru','crus','crue','crues',
+  'frais','fraiche','fraiches','fraîche','fraîches',
+  'sec','secs','seche','seches',
+  'surgele','surgeles','surgelee','surgelees',
+  'congele','congeles','congelee','congelees',
+  'decongele','decongeles','decongelee','decongelees',
+  // découpes
+  'emince','emincee','eminces','emincees',
+  'hache','hachee','haches','hachees',
+  'rape','rapee','rapes','rapees',
+  'coupe','coupee','coupes','coupees',
+  'tranche','tranchee','tranches','tranchees',
+  'concasse','concassee','concasses','concassees',
+  'cisele','ciselee','ciseles','ciselee',
+  'pele','pelee','peles','pelees',
+  'epluche','epluchee','epluches','epluchees',
+  'vide','videe','vides','videes',
+  'egoutte','egouttee','egouttes','egouttees',
+  'sale','salee','sales','salees',
+  'poivre','poivree','poivres','poivrees',
+  'marine','marinee','marines','marinees',
+  'grille','grillee','grilles','grillees',
+  'roti','rotie','rotis','roties',
+  'fondu','fondue','fondus','fondues',
+  'broye','broyee','broyes','broyees',
+  'moulu','moulue','moulus','moulues',
+  'blanchi','blanchie','blanchis','blanchies',
+  'dore','doree','dores','dorees',
+  'entier','entiere','entiers','entieres',
+  'mixe','mixee','mixes','mixees',
+  'egrene','egrenee','egrenes','egrenees',
+  'monde','mondee','mondes','mondees',
+  'effile','effiilee','effiles','effilees',
+  // adverbes et qualificatifs
+  'finement','grossierement','bien','tres','environ',
+])
+
+// Locutions complètes à supprimer avant le découpage en mots
+const LOCUTIONS_PREP = [
+  'en des','en rondelles','en lamelles','en julienne','en fines tranches',
+  'en tranches','en morceaux','en quartiers','en cubes','en batonnets',
+  'en feuilles','en poudre','en sauce','en conserve','en boite',
+  'a la julienne','au naturel',
+]
+
+function stripDescripteurs(s: string): string {
+  let r = s
+  for (const loc of LOCUTIONS_PREP) {
+    r = r.replace(new RegExp(`\\b${loc}\\b`, 'g'), ' ')
+  }
+  r = r
+    .split(' ')
+    .filter(w => w.length > 0 && !MOTS_PREP.has(w))
+    .join(' ')
+    .replace(/\s+/g, ' ')
+    .trim()
+  return r.length > 0 ? r : s
+}
+
 export async function matcherIngredientsProduits(
   ingredients: IngredientExtrait[],
 ): Promise<IngredientExtrait[]> {
   const produits = await db.produits.filter(p => !p.archive).toArray()
 
+  // Pré-normaliser tous les produits une seule fois
+  const produitsNorm = produits.map(p => ({
+    produit: p,
+    nom: normaliser(p.nomNormalise ?? p.nom),
+  }))
+
   return ingredients.map(ing => {
-    const cible = normaliser(ing.nom)
-    const match = produits.find(p => {
-      const nom = normaliser(p.nomNormalise ?? p.nom)
-      return nom === cible
-    })
-    return match ? { ...ing, produitMatchId: match.id } : ing
+    const cible         = normaliser(ing.nom)
+    const cibleStripped = stripDescripteurs(cible)
+
+    // 1. Correspondance exacte sur le nom brut de l'ingrédient
+    const exact = produitsNorm.find(p => p.nom === cible)
+    if (exact) return { ...ing, produitMatchId: exact.produit.id }
+
+    // 2. Correspondance exacte après suppression des descripteurs de préparation
+    //    ex. "oignons eminces" → "oignons" === "oignons" ✓
+    if (cibleStripped !== cible) {
+      const stripped = produitsNorm.find(p => p.nom === cibleStripped)
+      if (stripped) return { ...ing, produitMatchId: stripped.produit.id }
+    }
+
+    // 3. L'ingrédient commence par le nom d'un produit connu (préfixe)
+    //    On prend le produit dont le nom est le plus long (évite "pommes" sur "pommes de terre")
+    //    Fonctionne aussi sur la version stripped : "pommes coupees en des" → "pommes coupees" → "pommes"
+    const toCheck = cibleStripped !== cible ? [cible, cibleStripped] : [cible]
+    let bestPrefix: (typeof produitsNorm)[0] | undefined
+    for (const variante of toCheck) {
+      const candidates = produitsNorm
+        .filter(p =>
+          p.nom.length >= 3 &&
+          (variante === p.nom || variante.startsWith(p.nom + ' '))
+        )
+        .sort((a, b) => b.nom.length - a.nom.length) // plus long = plus précis
+      if (candidates.length > 0) {
+        if (!bestPrefix || candidates[0].nom.length > bestPrefix.nom.length) {
+          bestPrefix = candidates[0]
+        }
+      }
+    }
+    if (bestPrefix) return { ...ing, produitMatchId: bestPrefix.produit.id }
+
+    return ing
   })
 }
 
