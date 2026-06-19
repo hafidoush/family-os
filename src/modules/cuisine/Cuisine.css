@@ -145,7 +145,8 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 20;
+  z-index: var(--z-fab, 550);
+  box-shadow: 0 4px 16px rgba(111, 126, 214, 0.4);
   transition: transform var(--transition-fast), box-shadow var(--transition-fast);
 }
 
