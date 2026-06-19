@@ -131,13 +131,13 @@
 
 .cuisine-module__fab {
   position: fixed;
-  bottom: max(88px, calc(72px + env(safe-area-inset-bottom)));
+  bottom: max(80px, calc(65px + env(safe-area-inset-bottom)));
   right: 20px;
   width: 52px;
   height: 52px;
   border-radius: 50%;
   border: none;
-  background: var(--color-lavande);
+  background: #6F7ED6;
   color: white;
   font-size: 1.6rem;
   line-height: 1;
@@ -145,8 +145,8 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: var(--z-fab, 550);
-  box-shadow: 0 4px 16px rgba(111, 126, 214, 0.4);
+  z-index: 550;
+  box-shadow: 0 4px 16px rgba(111, 126, 214, 0.45);
   transition: transform var(--transition-fast), box-shadow var(--transition-fast);
 }
 
