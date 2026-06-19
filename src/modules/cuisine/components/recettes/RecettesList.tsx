@@ -1,5 +1,23 @@
 import { useState, useCallback } from 'react'
 import { useRecettes, useCategoriesRecettes } from '../../hooks/useRecettes'
+
+const TAGS_RECETTES = [
+  { id: 'française',   label: 'Française' },
+  { id: 'italienne',   label: 'Italienne' },
+  { id: 'espagnole',   label: 'Espagnole' },
+  { id: 'grecque',     label: 'Grecque' },
+  { id: 'marocaine',   label: 'Marocaine' },
+  { id: 'asiatique',   label: 'Asiatique' },
+  { id: 'indienne',    label: 'Indienne' },
+  { id: 'fast-food',   label: 'Fast-food' },
+  { id: 'mexicaine',   label: 'Mexicaine' },
+  { id: 'autre',       label: 'Autre' },
+  { id: 'réception',   label: 'Réception' },
+  { id: 'batch cooking', label: 'Batch cooking' },
+  { id: 'ramadan',     label: 'Ramadan' },
+  { id: 'enfant',      label: 'Enfant' },
+  { id: 'bébé',        label: 'Bébé' },
+] as const
 import { RecetteCard } from './RecetteCard'
 import { MenuService as menuService } from '../../services/MenuService'
 import { db } from '../../../../core/db/database'
@@ -54,6 +72,7 @@ export function RecettesList({ onSelectRecette, onCreateRecette }: Props) {
   const [favoriSeulement, setFavoriSeulement] = useState(false)
   const [kidsFavoriteSeulement, setKidsFavoriteSeulement] = useState(false)
   const [recherche, setRecherche] = useState('')
+  const [tagsActifs, setTagsActifs] = useState<string[]>([])
 
   // Mode batch cooking
   const [batchMode, setBatchMode] = useState(false)
@@ -62,7 +81,13 @@ export function RecettesList({ onSelectRecette, onCreateRecette }: Props) {
 
   const [importOuvert, setImportOuvert] = useState(false)
 
-  const recettes = useRecettes({ categorieId, favoriSeulement, kidsFavoriteSeulement, recherche })
+  const toggleTag = useCallback((tagId: string) => {
+    setTagsActifs((prev) =>
+      prev.includes(tagId) ? prev.filter((t) => t !== tagId) : [...prev, tagId]
+    )
+  }, [])
+
+  const recettes = useRecettes({ categorieId, favoriSeulement, kidsFavoriteSeulement, recherche, tags: tagsActifs.length > 0 ? tagsActifs : undefined })
   const categories = useCategoriesRecettes()
 
   const categoriesMap = new Map(categories?.map((c) => [c.id, c]))
@@ -199,6 +224,20 @@ export function RecettesList({ onSelectRecette, onCreateRecette }: Props) {
         </div>
       )}
 
+      {/* Chips tags */}
+      <div className="recettes-list__tags">
+        {TAGS_RECETTES.map((tag) => (
+          <button
+            key={tag.id}
+            className={`recettes-list__tag-chip ${tagsActifs.includes(tag.id) ? 'recettes-list__tag-chip--active' : ''}`}
+            onClick={() => toggleTag(tag.id)}
+            aria-pressed={tagsActifs.includes(tag.id)}
+          >
+            {tag.label}
+          </button>
+        ))}
+      </div>
+
       {/* Contenu */}
       {isLoading ? (
         <div className="recettes-list__grid">
@@ -210,11 +249,11 @@ export function RecettesList({ onSelectRecette, onCreateRecette }: Props) {
         <div className="recettes-list__empty">
           <span className="recettes-list__empty-icon">🍽️</span>
           <p>
-            {recherche || categorieId || favoriSeulement || kidsFavoriteSeulement
+            {recherche || categorieId || favoriSeulement || kidsFavoriteSeulement || tagsActifs.length > 0
               ? 'Aucune recette ne correspond à ces filtres'
               : 'Aucune recette pour l\'instant'}
           </p>
-          {!recherche && !categorieId && !favoriSeulement && !kidsFavoriteSeulement && (
+          {!recherche && !categorieId && !favoriSeulement && !kidsFavoriteSeulement && tagsActifs.length === 0 && (
             <button className="recettes-list__cta" onClick={onCreateRecette}>
               Créer ma première recette
             </button>

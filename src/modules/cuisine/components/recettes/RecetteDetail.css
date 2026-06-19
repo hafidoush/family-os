@@ -226,6 +226,32 @@
   border-bottom: none;
 }
 
+.recette-detail__section--notes {
+  border-left: 2px solid rgba(154, 92, 163, 0.25);
+  padding: 4px 16px 4px 20px;
+  margin: 0 16px;
+  border-bottom: none;
+  background: none;
+}
+
+.recette-detail__section--notes .recette-detail__section-title {
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #A89CC0;
+  margin-bottom: 6px;
+}
+
+.recette-detail__notes {
+  font-size: 0.875rem;
+  font-style: italic;
+  color: var(--color-muted);
+  line-height: 1.65;
+  white-space: pre-line;
+  margin: 0;
+}
+
 .recette-detail__section-header {
   display: flex;
   align-items: center;

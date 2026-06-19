@@ -341,6 +341,7 @@ export interface Recette extends AuditWithDevice {
   difficulte?: DifficulteActivite
   categorie: string // CategorieRecette.id
   tags?: string[]
+  notes?: string                       // astuces, variantes, conseils
   etapes: string[]
   favori: boolean
   kidsFavorite?: boolean
@@ -857,6 +858,7 @@ export interface RecetteExtractee {
   ingredients: IngredientExtrait[]
   etapes: string[]
   tags?: string[]
+  notes?: string                       // astuces, variantes, conseils détectés par l'IA
   sourceOriginale: string
   confidenceScore: number              // 0–1
 }

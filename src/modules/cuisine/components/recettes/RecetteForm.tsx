@@ -10,6 +10,24 @@ import type { Produit } from '../../../../shared/types'
 import { IconCameraAdd, IconClose } from '@shared/components/ui/Icon/Icon'
 import './RecetteForm.css'
 
+const TAGS_RECETTES_FORM = [
+  { id: 'française',     label: 'Française' },
+  { id: 'italienne',     label: 'Italienne' },
+  { id: 'espagnole',     label: 'Espagnole' },
+  { id: 'grecque',       label: 'Grecque' },
+  { id: 'marocaine',     label: 'Marocaine' },
+  { id: 'asiatique',     label: 'Asiatique' },
+  { id: 'indienne',      label: 'Indienne' },
+  { id: 'fast-food',     label: 'Fast-food' },
+  { id: 'mexicaine',     label: 'Mexicaine' },
+  { id: 'autre',         label: 'Autre' },
+  { id: 'réception',     label: 'Réception' },
+  { id: 'batch cooking', label: 'Batch cooking' },
+  { id: 'ramadan',       label: 'Ramadan' },
+  { id: 'enfant',        label: 'Enfant' },
+  { id: 'bébé',          label: 'Bébé' },
+] as const
+
 interface Props {
   recetteId?: string        // undefined = création, string = édition
   onSave: (id: string) => void
@@ -59,7 +77,8 @@ export function RecetteForm({ recetteId, onSave, onCancel }: Props) {
   const [tempsCuisson, setTempsCuisson] = useState('')
   const [portions, setPortions] = useState('')
   const [etapes, setEtapes] = useState<string[]>([''])
-  const [tags, setTags] = useState('')
+  const [tags, setTags] = useState<string[]>([])
+  const [notes, setNotes] = useState('')
   const [portionsBase, setPortionsBase] = useState<number | null>(null)
   const [typePreparation, setTypePreparation] = useState<'plat' | 'gouter' | 'dessert' | 'petit_dejeuner' | 'snack' | ''>('')
   const [modeConservation, setModeConservation] = useState('')
@@ -87,7 +106,8 @@ export function RecetteForm({ recetteId, onSave, onCancel }: Props) {
     setPortions(portionsVal?.toString() ?? '')
     setPortionsBase(portionsVal)
     setEtapes(recetteExistante.etapes.length > 0 ? recetteExistante.etapes : [''])
-    setTags(recetteExistante.tags?.join(', ') ?? '')
+    setTags(recetteExistante.tags ?? [])
+    setNotes(recetteExistante.notes ?? '')
     setTypePreparation(recetteExistante.typePreparation ?? '')
     setModeConservation(recetteExistante.modeConservation ?? '')
     setDureeConservation(recetteExistante.dureeConservation?.toString() ?? '')
@@ -286,11 +306,6 @@ export function RecetteForm({ recetteId, onSave, onCancel }: Props) {
           optionnel,
         }))
 
-      const tagsArray = tags
-        .split(',')
-        .map((t) => t.trim())
-        .filter(Boolean)
-
       const formData = {
         nom: nom.trim(),
         categorie: categorieId,
@@ -299,7 +314,8 @@ export function RecetteForm({ recetteId, onSave, onCancel }: Props) {
         tempsCuisson: tempsCuisson ? parseInt(tempsCuisson) : undefined,
         portions: portions ? parseInt(portions) : undefined,
         etapes: etapesFiltrees,
-        tags: tagsArray.length > 0 ? tagsArray : undefined,
+        tags: tags.length > 0 ? tags : undefined,
+        notes: notes.trim() || undefined,
         imageData,
         image: undefined, // on efface le Blob legacy si présent
         typePreparation: typePreparation || undefined,
@@ -461,14 +477,23 @@ export function RecetteForm({ recetteId, onSave, onCancel }: Props) {
           )}
 
           <div className="recette-form__field">
-            <label className="recette-form__label">Tags (séparés par des virgules)</label>
-            <input
-              type="text"
-              className="recette-form__input"
-              value={tags}
-              onChange={(e) => setTags(e.target.value)}
-              placeholder="rapide, végétarien, sans gluten…"
-            />
+            <label className="recette-form__label">Tags</label>
+            <div className="recette-form__tags-grid">
+              {TAGS_RECETTES_FORM.map((tag) => (
+                <button
+                  key={tag.id}
+                  type="button"
+                  className={`recette-form__tag-chip ${tags.includes(tag.id) ? 'recette-form__tag-chip--active' : ''}`}
+                  onClick={() =>
+                    setTags((prev) =>
+                      prev.includes(tag.id) ? prev.filter((t) => t !== tag.id) : [...prev, tag.id]
+                    )
+                  }
+                >
+                  {tag.label}
+                </button>
+              ))}
+            </div>
           </div>
         </section>
 
@@ -604,6 +629,20 @@ export function RecetteForm({ recetteId, onSave, onCancel }: Props) {
             </div>
           </div>
 
+        </section>
+
+        {/* ── Notes / Astuces / Variantes ── */}
+        <section className="recette-form__section">
+          <h3 className="recette-form__section-title">Notes &amp; conseils</h3>
+          <div className="recette-form__field">
+            <textarea
+              className="recette-form__textarea recette-form__textarea--notes"
+              value={notes}
+              onChange={(e) => setNotes(e.target.value)}
+              placeholder="Astuces du chef, variantes possibles, conseils de présentation…"
+              rows={4}
+            />
+          </div>
         </section>
 
       </div>

@@ -186,6 +186,13 @@
 
 .import-field__textarea:focus { border-color: #F59E0B; }
 
+.import-field__textarea--notes {
+  width: 100%;
+  font-size: 0.85rem;
+  color: var(--color-text);
+  line-height: 1.6;
+}
+
 /* ── Zone image ── */
 .import-image-zone {
   width: 100%; height: 160px;

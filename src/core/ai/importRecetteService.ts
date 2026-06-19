@@ -34,6 +34,7 @@ RÈGLES D'EXTRACTION :
 - difficulte : "facile" si < 30 min et peu d'étapes, "difficile" si technique ou > 1h, sinon "moyen"
 - confidenceScore : 0.0–1.0 (1.0 = recette claire et complète, 0.3 = informations partielles)
 - Si le contenu ne contient pas de recette, retourne {"erreur": "Aucune recette détectée"}
+- notes : regroupe TOUT ce qui n'est pas une étape de cuisson — astuces du chef, variantes proposées, conseils de conservation, suggestions de présentation, anecdotes. Si plusieurs éléments, sépare-les par un saut de ligne. Si rien, omets le champ.
 
 FORMAT JSON ATTENDU (sans markdown, sans backticks) :
 {
@@ -51,6 +52,7 @@ FORMAT JSON ATTENDU (sans markdown, sans backticks) :
     "Dans un saladier, mélanger la farine et le sucre.",
     "Incorporer les œufs un à un en remuant vigoureusement."
   ],
+  "notes": "Astuce : remplacer le beurre par de l'huile de coco pour une version plus légère.\nVariante : ajouter des pépites de chocolat pour les enfants.",
   "tags": ["végétarien", "sans gluten", "rapide", "enfants"],
   "sourceOriginale": "${sourceUrl ?? 'collé manuellement'}",
   "confidenceScore": 0.9
@@ -82,6 +84,7 @@ FORMAT JSON ATTENDU :
     {"nom": "beurre", "quantite": 100, "unite": "g", "optionnel": false}
   ],
   "etapes": ["Étape 1 complète.", "Étape 2 complète."],
+  "notes": "Astuce ou variante visible dans l'image, si présente.",
   "tags": ["tag1", "tag2"],
   "sourceOriginale": "${sourceUrl ?? 'image'}",
   "confidenceScore": 0.7
@@ -107,6 +110,7 @@ interface ExtractedRaw {
   ingredients?: RawIngredient[]
   etapes?: string[]
   tags?: string[]
+  notes?: string
   sourceOriginale?: string
   confidenceScore?: number
 }
@@ -143,6 +147,7 @@ function validerExtraction(raw: ExtractedRaw, sourceUrl?: string): RecetteExtrac
     ingredients,
     etapes,
     tags:             Array.isArray(raw.tags) ? raw.tags.filter(t => typeof t === 'string') : [],
+    notes:            typeof raw.notes === 'string' && raw.notes.trim() ? raw.notes.trim() : undefined,
     sourceOriginale:  raw.sourceOriginale ?? sourceUrl ?? '',
     confidenceScore:  typeof raw.confidenceScore === 'number'
                         ? Math.min(1, Math.max(0, raw.confidenceScore))

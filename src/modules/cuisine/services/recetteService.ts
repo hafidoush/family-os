@@ -13,6 +13,7 @@ export interface RecetteFormData {
   portions?: number
   etapes: string[]
   tags?: string[]
+  notes?: string
   image?: Blob       // legacy — ne plus utiliser
   imageData?: string // base64 data URL — fiable iOS
   typePreparation?: Recette['typePreparation']

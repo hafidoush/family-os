@@ -151,6 +151,7 @@ export function ImportRecetteSheet({ onClose, onSuccess }: Props) {
   const [portions, setPortions]       = useState('')
   const [etapes, setEtapes]           = useState<string[]>([])
   const [ingredients, setIngredients] = useState<IngredientEditable[]>([])
+  const [notes, setNotes]             = useState('')
   const [photoB64, setPhotoB64]       = useState<string | null>(null)
   const photoRef = useRef<HTMLInputElement>(null)
   const [saving, setSaving]           = useState(false)
@@ -171,6 +172,7 @@ export function ImportRecetteSheet({ onClose, onSuccess }: Props) {
     setPortions(recette.portions?.toString() ?? '')
     setEtapes(recette.etapes.length > 0 ? recette.etapes : [''])
     setIngredients(recette.ingredients.map(fromExtrait))
+    setNotes(recette.notes ?? '')
     // Catégorie : auto-sélectionner "Autre" si une seule catégorie disponible
     if (categories && categories.length === 1) setCategorieId(categories[0].id)
   }, [categories])
@@ -242,6 +244,7 @@ export function ImportRecetteSheet({ onClose, onSuccess }: Props) {
         tempsCuisson:     tempsCuisson ? parseInt(tempsCuisson) : undefined,
         portions:         portions ? parseInt(portions) : undefined,
         etapes:           etapes.filter(e => e.trim()),
+        notes:            notes.trim() || undefined,
         ingredients:      ingredients.filter(i => i.nomLibre.trim()),
         imageData:        photoB64 ?? undefined,
       }
@@ -580,6 +583,18 @@ export function ImportRecetteSheet({ onClose, onSuccess }: Props) {
           >
             + Ajouter une étape
           </button>
+        </div>
+
+        {/* Astuces & variantes */}
+        <div className="import-section">
+          <p className="import-section__title">Notes &amp; conseils</p>
+          <textarea
+            className="import-field__textarea import-field__textarea--notes"
+            value={notes}
+            onChange={e => setNotes(e.target.value)}
+            rows={4}
+            placeholder="Astuces, variantes ou conseils détectés par l'IA — modifiable"
+          />
         </div>
 
         {/* Espace bas */}

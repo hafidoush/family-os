@@ -36,6 +36,7 @@ export interface RecetteValideeFormData {
   categorieId: string
   etapes: string[]
   tags?: string[]
+  notes?: string
   ingredients: IngredientValideFormData[]
   imageData?: string
 }
@@ -155,6 +156,7 @@ export async function validerEtSauvegarder(
       portions:         data.portions,
       etapes:           data.etapes,
       tags:             data.tags,
+      notes:            data.notes,
       imageData:        data.imageData,
     },
     ingredientsLies,

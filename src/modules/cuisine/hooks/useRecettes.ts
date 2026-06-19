@@ -7,6 +7,7 @@ export interface RecettesFilters {
   favoriSeulement?: boolean
   kidsFavoriteSeulement?: boolean
   recherche?: string
+  tags?: string[]
 }
 
 export function useRecettes(filters: RecettesFilters = {}) {
@@ -28,11 +29,16 @@ export function useRecettes(filters: RecettesFilters = {}) {
       const q = filters.recherche.toLowerCase()
       recettes = recettes.filter((r) => r.nom.toLowerCase().includes(q))
     }
+    if (filters.tags && filters.tags.length > 0) {
+      recettes = recettes.filter((r) =>
+        filters.tags!.every((t) => r.tags?.includes(t))
+      )
+    }
 
     recettes.sort((a, b) => a.nom.localeCompare(b.nom, 'fr'))
 
     return recettes
-  }, [filters.categorieId, filters.favoriSeulement, filters.kidsFavoriteSeulement, filters.recherche])
+  }, [filters.categorieId, filters.favoriSeulement, filters.kidsFavoriteSeulement, filters.recherche, filters.tags])
 }
 
 export function useRecette(id: string | null) {

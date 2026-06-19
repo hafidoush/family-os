@@ -295,6 +295,14 @@ export function RecetteDetail({ recetteId, onBack, onEdit }: Props) {
         </section>
       )}
 
+      {/* Astuces & variantes */}
+      {recette.notes && (
+        <section className="recette-detail__section recette-detail__section--notes">
+          <h2 className="recette-detail__section-title">Notes &amp; conseils</h2>
+          <p className="recette-detail__notes">{recette.notes}</p>
+        </section>
+      )}
+
       {/* Tags */}
       {recette.tags && recette.tags.length > 0 && (
         <section className="recette-detail__section recette-detail__section--tags">
