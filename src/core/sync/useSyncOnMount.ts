@@ -62,7 +62,7 @@ async function pushInitialProgrammesAnnuels() {
 
 // Dédoublonnage one-shot des produits — garde le plus ancien, supprime les copies
 async function deduplicateProduits() {
-  const CLE = 'produits_deduplicated_v1'
+  const CLE = 'produits_deduplicated_v2'
   const already = await db.parametresSync.where('cle').equals(CLE).first()
   if (already) return
 

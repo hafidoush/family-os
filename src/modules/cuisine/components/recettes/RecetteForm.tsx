@@ -633,7 +633,7 @@ function IngredientRow({ ing, index, produitsSuggeres, onUpdate, onRemove, canRe
   }
 
   return (
-    <div className="recette-form__ingredient-row">
+    <div className={`recette-form__ingredient-row${showSuggestions ? ' recette-form__ingredient-row--active' : ''}`}>
       <span className="recette-form__ingredient-num">{index + 1}</span>
 
       {/* Nom du produit avec autocomplete */}

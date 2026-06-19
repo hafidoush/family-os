@@ -257,6 +257,11 @@
   align-items: center;
   gap: 6px;
   position: relative;
+  z-index: 1;
+}
+
+.recette-form__ingredient-row--active {
+  z-index: 100;
 }
 
 .recette-form__ingredient-num {
