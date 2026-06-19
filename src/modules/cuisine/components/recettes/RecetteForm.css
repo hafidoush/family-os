@@ -325,20 +325,16 @@
   font-size: 0.85rem;
 }
 
-/* Autocomplete suggestions */
+/* Autocomplete suggestions — rendu via portal (position fixed injectée inline) */
 .recette-form__suggestions {
-  position: absolute;
-  top: calc(100% + 4px);
-  left: 0;
-  right: 0;
   background: var(--color-surface);
   border: 1.5px solid var(--color-lavande);
   border-radius: var(--radius-md);
-  z-index: 50;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.12);
   list-style: none;
   margin: 0;
   padding: 4px;
-  max-height: 180px;
+  max-height: 200px;
   overflow-y: auto;
 }
 

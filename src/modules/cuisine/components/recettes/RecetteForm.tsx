@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
+import { createPortal } from 'react-dom'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { db } from '../../../../core/db/database'
 import { useRecette, useRecetteIngredients, useCategoriesRecettes } from '../../hooks/useRecettes'
@@ -640,6 +641,8 @@ interface IngredientRowProps {
 
 function IngredientRow({ ing, index, total, produitsSuggeres, onUpdate, onRemove, onMove, canRemove }: IngredientRowProps) {
   const [showSuggestions, setShowSuggestions] = useState(false)
+  const inputRef = useRef<HTMLInputElement>(null)
+  const [dropdownStyle, setDropdownStyle] = useState<React.CSSProperties>({})
 
   const selectProduit = (id: string, nom: string) => {
     onUpdate(ing._key, 'produit', id)
@@ -647,27 +650,47 @@ function IngredientRow({ ing, index, total, produitsSuggeres, onUpdate, onRemove
     setShowSuggestions(false)
   }
 
+  const handleFocus = () => {
+    if (!ing._nomRecherche) return
+    updateDropdownPos()
+    setShowSuggestions(true)
+  }
+
+  const updateDropdownPos = () => {
+    if (!inputRef.current) return
+    const rect = inputRef.current.getBoundingClientRect()
+    setDropdownStyle({
+      position: 'fixed',
+      top: rect.bottom + 4,
+      left: rect.left,
+      width: rect.width,
+      zIndex: 2000,
+    })
+  }
+
   return (
-    <div className={`recette-form__ingredient-row${showSuggestions ? ' recette-form__ingredient-row--active' : ''}`}>
+    <div className="recette-form__ingredient-row">
       <span className="recette-form__ingredient-num">{index + 1}</span>
 
       {/* Nom du produit avec autocomplete */}
       <div className="recette-form__ingredient-produit">
         <input
+          ref={inputRef}
           type="text"
           className="recette-form__input recette-form__input--sm"
           value={ing._nomRecherche}
           onChange={(e) => {
             onUpdate(ing._key, '_nomRecherche', e.target.value)
-            onUpdate(ing._key, 'produit', '') // reset sélection
+            onUpdate(ing._key, 'produit', '')
+            updateDropdownPos()
             setShowSuggestions(true)
           }}
           onBlur={() => setTimeout(() => setShowSuggestions(false), 150)}
-          onFocus={() => ing._nomRecherche && setShowSuggestions(true)}
+          onFocus={handleFocus}
           placeholder="Produit…"
         />
-        {showSuggestions && produitsSuggeres.length > 0 && (
-          <ul className="recette-form__suggestions">
+        {showSuggestions && produitsSuggeres.length > 0 && createPortal(
+          <ul className="recette-form__suggestions" style={dropdownStyle}>
             {produitsSuggeres.map((p) => (
               <li
                 key={p.id}
@@ -677,7 +700,8 @@ function IngredientRow({ ing, index, total, produitsSuggeres, onUpdate, onRemove
                 {p.nom}
               </li>
             ))}
-          </ul>
+          </ul>,
+          document.body
         )}
         {ing._nomRecherche && !ing.produit && (
           <span className="recette-form__ingredient-warning" title="Produit non trouvé dans la base">⚠️</span>
