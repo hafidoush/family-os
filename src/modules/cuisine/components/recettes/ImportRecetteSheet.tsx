@@ -9,6 +9,88 @@ import { compressImageToBase64 } from '../../services/recetteService'
 import type { RecetteExtractee, IngredientExtrait } from '../../../../shared/types'
 import type { RecetteValideeFormData, IngredientValideFormData } from '../../services/importRecetteIAService'
 import { IconLink, IconClipboard, IconCamera, IconCameraAdd, IconClose, IconShieldWarning } from '@shared/components/ui/Icon/Icon'
+import type { Produit } from '../../../../shared/types'
+
+// ─── Autocomplétion ingrédient ────────────────────────────────────────────────
+
+interface IngredientNomInputProps {
+  value: string
+  produitId: string | undefined
+  tousLesProduits: Produit[]
+  onChange: (nomLibre: string, produitId: string | undefined) => void
+}
+
+function normaliser(s: string) {
+  return s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').trim()
+}
+
+function IngredientNomInput({ value, produitId, tousLesProduits, onChange }: IngredientNomInputProps) {
+  const inputRef = useRef<HTMLInputElement>(null)
+  const [showSuggestions, setShowSuggestions] = useState(false)
+  const [dropdownStyle, setDropdownStyle] = useState<React.CSSProperties>({})
+
+  const suggestions = value.trim().length >= 1
+    ? tousLesProduits
+        .filter(p => normaliser(p.nom).includes(normaliser(value)))
+        .slice(0, 6)
+    : []
+
+  const updateDropdownPos = () => {
+    if (!inputRef.current) return
+    const rect = inputRef.current.getBoundingClientRect()
+    setDropdownStyle({
+      position: 'fixed',
+      top: rect.bottom + 4,
+      left: rect.left,
+      width: rect.width,
+      zIndex: 2000,
+    })
+  }
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    onChange(e.target.value, undefined)
+    setShowSuggestions(true)
+    updateDropdownPos()
+  }
+
+  const handleFocus = () => {
+    setShowSuggestions(true)
+    updateDropdownPos()
+  }
+
+  const handleSelect = (produit: Produit) => {
+    onChange(produit.nom, produit.id)
+    setShowSuggestions(false)
+  }
+
+  return (
+    <div className="import-ingredient__nom-wrap">
+      <input
+        ref={inputRef}
+        className="import-ingredient__nom"
+        value={value}
+        onChange={handleChange}
+        onFocus={handleFocus}
+        onBlur={() => setTimeout(() => setShowSuggestions(false), 150)}
+        placeholder="Ingrédient"
+      />
+      {showSuggestions && suggestions.length > 0 && createPortal(
+        <ul className="import-ingredient__suggestions" style={dropdownStyle}>
+          {suggestions.map(p => (
+            <li
+              key={p.id}
+              className="import-ingredient__suggestion"
+              onMouseDown={() => handleSelect(p)}
+            >
+              {p.nom}
+            </li>
+          ))}
+        </ul>,
+        document.body
+      )}
+    </div>
+  )
+}
 
 // ─── Types internes ───────────────────────────────────────────────────────────
 
@@ -74,6 +156,11 @@ export function ImportRecetteSheet({ onClose, onSuccess }: Props) {
   const [saving, setSaving]           = useState(false)
 
   const categories = useLiveQuery(() => db.categoriesRecettes.orderBy('ordre').toArray(), [], [])
+  const tousLesProduits = useLiveQuery(
+    () => db.produits.filter(p => !p.archive && !p.deletedAt).toArray(),
+    [],
+    [] as Produit[]
+  )
 
   // Pré-remplir le formulaire quand l'extraction arrive
   const initialiserFormulaire = useCallback((recette: RecetteExtractee) => {
@@ -426,11 +513,11 @@ export function ImportRecetteSheet({ onClose, onSuccess }: Props) {
               <span className="import-ingredient__status">
                 {ing.produitId ? '✓' : <IconShieldWarning size={14} />}
               </span>
-              <input
-                className="import-ingredient__nom"
+              <IngredientNomInput
                 value={ing.nomLibre}
-                onChange={e => updateIngredient(ing._key, { nomLibre: e.target.value })}
-                placeholder="Ingrédient"
+                produitId={ing.produitId}
+                tousLesProduits={tousLesProduits}
+                onChange={(nomLibre, produitId) => updateIngredient(ing._key, { nomLibre, produitId })}
               />
               <input
                 className="import-ingredient__qte"

@@ -320,13 +320,45 @@
   font-size: 14px; flex-shrink: 0; width: 20px; text-align: center;
 }
 
-.import-ingredient__nom {
+.import-ingredient__nom-wrap {
   flex: 2;
+  position: relative;
+  min-width: 0;
+}
+
+.import-ingredient__nom {
+  width: 100%;
   font-family: var(--font-body);
   font-size: 13px; font-weight: 600;
   color: var(--color-text-primary, #1F2937);
   border: none; background: transparent;
   outline: none; padding: 0;
+}
+
+/* Suggestions — rendues via portal (position: fixed injectée inline) */
+.import-ingredient__suggestions {
+  background: #fff;
+  border: 1.5px solid #F59E0B;
+  border-radius: 10px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.12);
+  list-style: none;
+  margin: 0; padding: 4px;
+  max-height: 180px;
+  overflow-y: auto;
+}
+
+.import-ingredient__suggestion {
+  padding: 8px 10px;
+  border-radius: 7px;
+  font-family: var(--font-body);
+  font-size: 13px;
+  color: var(--color-text-primary, #1F2937);
+  cursor: pointer;
+  transition: background 0.12s ease;
+}
+
+.import-ingredient__suggestion:hover {
+  background: rgba(251,191,36,0.12);
 }
 
 .import-ingredient__qte {
