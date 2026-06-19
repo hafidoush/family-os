@@ -15,8 +15,10 @@ const TAGS_RECETTES = [
   { id: 'réception',   label: 'Réception' },
   { id: 'batch cooking', label: 'Batch cooking' },
   { id: 'ramadan',     label: 'Ramadan' },
-  { id: 'enfant',      label: 'Enfant' },
-  { id: 'bébé',        label: 'Bébé' },
+  { id: 'enfant',        label: 'Enfant' },
+  { id: 'bébé',          label: 'Bébé' },
+  { id: 'réconfortant',  label: 'Réconfortant' },
+  { id: 'frais & léger', label: 'Frais & léger' },
 ] as const
 import { RecetteCard } from './RecetteCard'
 import { MenuService as menuService } from '../../services/MenuService'

@@ -26,6 +26,8 @@ const TAGS_RECETTES_FORM = [
   { id: 'ramadan',       label: 'Ramadan' },
   { id: 'enfant',        label: 'Enfant' },
   { id: 'bébé',          label: 'Bébé' },
+  { id: 'réconfortant',  label: 'Réconfortant' },
+  { id: 'frais & léger', label: 'Frais & léger' },
 ] as const
 
 interface Props {
