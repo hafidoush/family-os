@@ -19,7 +19,8 @@ const TAGS_RECETTES = [
   { id: 'bébé',          label: 'Bébé' },
   { id: 'réconfortant',  label: 'Réconfortant' },
   { id: 'frais & léger', label: 'Frais & léger' },
-  { id: 'apéro',         label: 'Apéro' },
+  { id: 'apéro',           label: 'Apéro' },
+  { id: 'pizza & tartes',  label: 'Pizza & tartes' },
 ] as const
 import { RecetteCard } from './RecetteCard'
 import { MenuService as menuService } from '../../services/MenuService'
