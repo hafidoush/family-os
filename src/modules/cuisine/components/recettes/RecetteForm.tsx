@@ -192,6 +192,17 @@ export function RecetteForm({ recetteId, onSave, onCancel }: Props) {
   }
 
   // ─── Gestion ingrédients ──────────────────────────────────────────────────
+  const moveIngredient = (key: string, direction: 'up' | 'down') => {
+    setIngredients((prev) => {
+      const index = prev.findIndex((i) => i._key === key)
+      const target = direction === 'up' ? index - 1 : index + 1
+      if (target < 0 || target >= prev.length) return prev
+      const next = [...prev]
+      ;[next[index], next[target]] = [next[target], next[index]]
+      return next
+    })
+  }
+
   const updateIngredient = (key: string, field: keyof IngredientRow, value: unknown) => {
     setIngredients((prev) =>
       prev.map((ing) => (ing._key === key ? { ...ing, [field]: value } : ing))
@@ -473,9 +484,11 @@ export function RecetteForm({ recetteId, onSave, onCancel }: Props) {
                 key={ing._key}
                 ing={ing}
                 index={index}
+                total={ingredients.length}
                 produitsSuggeres={getProduitsFiltered(ing._nomRecherche)}
                 onUpdate={updateIngredient}
                 onRemove={removeIngredient}
+                onMove={moveIngredient}
                 canRemove={ingredients.length > 1}
               />
             ))}
@@ -617,13 +630,15 @@ export function RecetteForm({ recetteId, onSave, onCancel }: Props) {
 interface IngredientRowProps {
   ing: IngredientRow
   index: number
+  total: number
   produitsSuggeres: Array<{ id: string; nom: string }>
   onUpdate: (key: string, field: keyof IngredientRow, value: unknown) => void
   onRemove: (key: string) => void
+  onMove: (key: string, direction: 'up' | 'down') => void
   canRemove: boolean
 }
 
-function IngredientRow({ ing, index, produitsSuggeres, onUpdate, onRemove, canRemove }: IngredientRowProps) {
+function IngredientRow({ ing, index, total, produitsSuggeres, onUpdate, onRemove, onMove, canRemove }: IngredientRowProps) {
   const [showSuggestions, setShowSuggestions] = useState(false)
 
   const selectProduit = (id: string, nom: string) => {
@@ -698,6 +713,12 @@ function IngredientRow({ ing, index, produitsSuggeres, onUpdate, onRemove, canRe
         />
         <span>Opt.</span>
       </label>
+
+      {/* Déplacer */}
+      <div className="recette-form__ingredient-move">
+        <button type="button" onClick={() => onMove(ing._key, 'up')} disabled={index === 0} aria-label="Monter">↑</button>
+        <button type="button" onClick={() => onMove(ing._key, 'down')} disabled={index === total - 1} aria-label="Descendre">↓</button>
+      </div>
 
       {/* Supprimer */}
       <button
