@@ -88,7 +88,7 @@ export async function pushRecord(dexieTable: string, record: Record<string, unkn
 
   if (error) {
     console.warn(`[sync] push ${dexieTable}:`, error.message)
-    await addToQueue(dexieTable, record.id as string)
+    await addToQueue(dexieTable, record.id as string, error.message)
     await setLastError(`${dexieTable}: ${error.message}`)
   } else {
     await removeFromQueue(dexieTable, record.id as string)
@@ -155,21 +155,29 @@ export async function pullAll() {
     }
     if (!data?.length) continue
 
-    // Charger les enregistrements locaux pour la résolution de conflits
+    // Charger les enregistrements locaux + la file d'attente pour la résolution de conflits
     const existing = await table.toArray()
     const localMap = new Map<string, Record<string, unknown>>(
       existing.map((r: Record<string, unknown>) => [r.id as string, r])
     )
 
+    // IDs en attente de push : ne jamais les écraser depuis Supabase
+    const pendingQueue = await getQueue()
+    const pendingIds = new Set(
+      pendingQueue.filter(q => q.table === dexieTable).map(q => q.id)
+    )
+
     let records = data
       .filter((row: { id: string; updated_at: string; data: Record<string, unknown> }) => {
+        // Modification locale non encore envoyée — priorité absolue au local
+        if (pendingIds.has(row.id)) return false
         const local = localMap.get(row.id)
         if (!local) return true // nouvel enregistrement → accepter
-        // Ne pas écraser si la version locale est plus récente (modification non encore pushée)
+        // Remote gagne seulement s'il est strictement plus récent
         const localUpdatedAt = local.updatedAt instanceof Date
           ? local.updatedAt.toISOString()
           : String(local.updatedAt ?? '')
-        return row.updated_at >= localUpdatedAt
+        return row.updated_at > localUpdatedAt
       })
       .map((row: { data: Record<string, unknown> }) => row.data)
 
@@ -224,16 +232,16 @@ export function installDexieHooks() {
 
 // ── Realtime : Supabase → Dexie en temps réel ────────────────────────────────
 let realtimeChannel: RealtimeChannel | null = null
+let realtimeRetryTimeout: ReturnType<typeof setTimeout> | null = null
+let realtimeRetryDelay = 5000 // ms, doublé à chaque échec (max 60s)
 
-export function startRealtime() {
-  if (realtimeChannel) return
-
-  realtimeChannel = supabase.channel('family-os-sync')
+function buildRealtimeChannel() {
+  const channel = supabase.channel('family-os-sync')
 
   for (const dexieTable of DEXIE_TABLES) {
     const supaTable = TABLE_MAP[dexieTable]
 
-    realtimeChannel.on(
+    channel.on(
       'postgres_changes',
       { event: '*', schema: 'public', table: supaTable },
       async (payload) => {
@@ -252,7 +260,6 @@ export function startRealtime() {
         if (row.deleted_at) {
           await table.delete(row.data.id)
         } else {
-          // Préserver les champs Blob locaux avant écrasement
           const blobFields = BLOB_FIELDS[dexieTable]
           if (blobFields?.length) {
             const local = await table.get(row.data.id)
@@ -268,9 +275,28 @@ export function startRealtime() {
     )
   }
 
-  realtimeChannel.subscribe((status) => {
-    if (status === 'SUBSCRIBED') console.log('[sync] realtime actif')
+  channel.subscribe((status) => {
+    if (status === 'SUBSCRIBED') {
+      console.log('[sync] realtime actif')
+      realtimeRetryDelay = 5000 // reset backoff après succès
+    } else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT' || status === 'CLOSED') {
+      console.warn(`[sync] realtime ${status} — reconnexion dans ${realtimeRetryDelay / 1000}s`)
+      supabase.removeChannel(channel)
+      realtimeChannel = null
+      if (realtimeRetryTimeout) clearTimeout(realtimeRetryTimeout)
+      realtimeRetryTimeout = setTimeout(() => {
+        realtimeRetryDelay = Math.min(realtimeRetryDelay * 2, 60_000)
+        startRealtime()
+      }, realtimeRetryDelay)
+    }
   })
+
+  return channel
+}
+
+export function startRealtime() {
+  if (realtimeChannel) return
+  realtimeChannel = buildRealtimeChannel()
 }
 
 // ── Rejoue les pushes échoués ─────────────────────────────────────────────────
@@ -293,6 +319,10 @@ export async function drainQueue(): Promise<void> {
 }
 
 export function stopRealtime() {
+  if (realtimeRetryTimeout) {
+    clearTimeout(realtimeRetryTimeout)
+    realtimeRetryTimeout = null
+  }
   if (realtimeChannel) {
     supabase.removeChannel(realtimeChannel)
     realtimeChannel = null

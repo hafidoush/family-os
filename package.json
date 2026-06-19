@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
-    "deploy": "npm run build && gh-pages -d dist -r https://hafidoush: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@github.com/hafidoush/Family-os.git",
+    "deploy": "npm run build && gh-pages -d dist",
     "preview": "vite preview",
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
     "type-check": "tsc --noEmit"

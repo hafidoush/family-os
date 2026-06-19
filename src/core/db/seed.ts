@@ -43,6 +43,8 @@ async function _seedDatabase(): Promise<void> {
   await migrerCategoriesProduits()
   // Renommage "Végétarien" → "Accompagnement"
   await migrerCategorieVegetarienVersAccompagnement()
+  // Renommage "Accompagnement" → "Légumes & Accompagnement"
+  await migrerCategorieAccompagnementVersLegumes()
 
   if (membresCount === 0) {
     console.log('[FamilyOS] Premier lancement — initialisation de la base...')
@@ -434,6 +436,13 @@ async function migrerCategorieVegetarienVersAccompagnement(): Promise<void> {
   }
 }
 
+async function migrerCategorieAccompagnementVersLegumes(): Promise<void> {
+  const cat = await db.categoriesRecettes.filter(c => c.nom === 'Accompagnement').first()
+  if (cat) {
+    await db.categoriesRecettes.update(cat.id, { nom: 'Légumes & Accompagnement', icone: '🥦', updatedAt: new Date() })
+  }
+}
+
 async function seedCategoriesRecettes(): Promise<void> {
   const existing = await db.categoriesRecettes.count()
   if (existing > 0) return
@@ -446,7 +455,7 @@ async function seedCategoriesRecettes(): Promise<void> {
     { id: uuid(), nom: 'Goûter', icone: '🧁', ordre: 5, ...withAudit({}) },
     { id: uuid(), nom: 'Soupe', icone: '🍲', ordre: 6, ...withAudit({}) },
     { id: uuid(), nom: 'Sauce', icone: '🫕', ordre: 7, ...withAudit({}) },
-    { id: uuid(), nom: 'Accompagnement', icone: '🥗', ordre: 8, ...withAudit({}) },
+    { id: uuid(), nom: 'Légumes & Accompagnement', icone: '🥦', ordre: 8, ...withAudit({}) },
   ]
   await db.categoriesRecettes.bulkAdd(categories)
 }
