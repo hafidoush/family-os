@@ -60,6 +60,36 @@ async function pushInitialProgrammesAnnuels() {
   await db.parametresSync.put({ id: uuid(), cle: CLE, valeur: 'true', derniereModification: now, createdAt: now, updatedAt: now })
 }
 
+// Dédoublonnage one-shot des produits — garde le plus ancien, supprime les copies
+async function deduplicateProduits() {
+  const CLE = 'produits_deduplicated_v1'
+  const already = await db.parametresSync.where('cle').equals(CLE).first()
+  if (already) return
+
+  const produits = await db.produits.filter(p => !p.deletedAt && !p.archive).toArray()
+
+  // Grouper par nom normalisé
+  const groupes = new Map<string, typeof produits>()
+  for (const p of produits) {
+    const cle = p.nom.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').trim()
+    if (!groupes.has(cle)) groupes.set(cle, [])
+    groupes.get(cle)!.push(p)
+  }
+
+  const now = new Date()
+  for (const groupe of groupes.values()) {
+    if (groupe.length <= 1) continue
+    // Garder le plus ancien (createdAt le plus petit), supprimer les autres
+    groupe.sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime())
+    const doublons = groupe.slice(1)
+    await Promise.all(doublons.map(d =>
+      db.produits.update(d.id, { deletedAt: now, updatedAt: now, archive: true })
+    ))
+  }
+
+  await db.parametresSync.put({ id: uuid(), cle: CLE, valeur: 'true', derniereModification: now, createdAt: now, updatedAt: now })
+}
+
 export function useSyncOnMount() {
   const { session } = useAuth()
 
@@ -73,6 +103,7 @@ export function useSyncOnMount() {
       .then(() => pushInitialRecettesIngredients())
       .then(() => pushInitialProduits())
       .then(() => pushInitialProgrammesAnnuels())
+      .then(() => deduplicateProduits())
       .then(() => drainQueue())
       .then(() => pullAll())
 

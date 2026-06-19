@@ -207,11 +207,20 @@ export function RecetteForm({ recetteId, onSave, onCancel }: Props) {
     setIngredients((prev) => prev.filter((ing) => ing._key !== key))
   }
 
-  // Recherche produit dans la liste
+  // Recherche produit dans la liste — dédupliqué par nom normalisé
   const getProduitsFiltered = (search: string) => {
     if (!tousLesProduits || search.length < 1) return []
-    const q = search.toLowerCase()
-    return tousLesProduits.filter((p) => p.nom.toLowerCase().includes(q)).slice(0, 6)
+    const q = search.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '')
+    const seen = new Set<string>()
+    return tousLesProduits
+      .filter((p) => {
+        const nom = p.nom.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '')
+        if (!nom.includes(q)) return false
+        if (seen.has(nom)) return false
+        seen.add(nom)
+        return true
+      })
+      .slice(0, 6)
   }
 
   // ─── Validation + soumission ──────────────────────────────────────────────
