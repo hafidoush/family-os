@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from 'react'
+import { useState, useEffect } from 'react'
 import { useLocation } from 'react-router-dom'
 import { usePersistedTab } from '../../shared/hooks/usePersistedTab'
 import { RecettesList } from './components/recettes/RecettesList'
@@ -48,26 +48,6 @@ export default function Cuisine() {
     setView({ type: 'list' })
   }
 
-  // ── Swipe horizontal entre tabs ──────────────────────────────────────────────
-  const TAB_ORDER: CuisineTab[] = ['recettes', 'menus', 'batch']
-  const touchStartX = useRef<number | null>(null)
-
-  const handleTouchStart = useCallback((e: React.TouchEvent) => {
-    touchStartX.current = e.touches[0].clientX
-  }, [])
-
-  const handleTouchEnd = useCallback((e: React.TouchEvent) => {
-    if (touchStartX.current === null || view.type !== 'list') return
-    const deltaX = e.changedTouches[0].clientX - touchStartX.current
-    touchStartX.current = null
-    if (Math.abs(deltaX) < 60) return // seuil minimum
-    const currentIdx = TAB_ORDER.indexOf(activeTab)
-    if (deltaX < 0 && currentIdx < TAB_ORDER.length - 1) {
-      handleTabChange(TAB_ORDER[currentIdx + 1])
-    } else if (deltaX > 0 && currentIdx > 0) {
-      handleTabChange(TAB_ORDER[currentIdx - 1])
-    }
-  }, [activeTab, view.type]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const renderBackBar = (label: string, onBack: () => void) => (
     <div className="cuisine-module__back-bar">
@@ -117,8 +97,6 @@ export default function Cuisine() {
   return (
     <div
       className="cuisine-module"
-      onTouchStart={handleTouchStart}
-      onTouchEnd={handleTouchEnd}
     >
       {view.type !== 'form' && (
         <nav className="cuisine-module__tabs">
