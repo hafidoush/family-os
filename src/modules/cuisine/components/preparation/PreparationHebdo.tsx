@@ -12,24 +12,8 @@ import { useLiveQuery } from 'dexie-react-hooks'
 import { db } from '../../../../core/db/database'
 import { newEntity, withUpdate } from '../../../../core/db/helpers'
 import type { Recette, SessionPreparation } from '../../../../shared/types'
+import { type BatchCategorie, BATCH_CATEGORIES, typesForCategorie } from './batchTypes'
 import './PreparationHebdo.css'
-
-// ─── Catégories batch ─────────────────────────────────────────────────────────
-
-type BatchCategorie = 'gouters_petitdej' | 'desserts' | 'repas'
-
-const BATCH_CATEGORIES: { key: BatchCategorie; label: string; emoji: string; description: string }[] = [
-  { key: 'gouters_petitdej', label: "Goûters & Petits-déj'", emoji: '🥐', description: 'Goûters, snacks et petits-déjeuners maison' },
-  { key: 'desserts',          label: 'Desserts',               emoji: '🍮', description: 'Gâteaux, tartes, crèmes et douceurs' },
-  { key: 'repas',             label: 'Repas',                  emoji: '🍲', description: 'Plats principaux pour la semaine' },
-]
-
-function typesForCategorie(cat: BatchCategorie): Array<string | undefined> {
-  if (cat === 'gouters_petitdej') return ['gouter', 'petit_dejeuner', 'snack']
-  if (cat === 'desserts') return ['dessert']
-  // Repas : plat explicite + recettes sans type (vraisemblablement des plats)
-  return ['plat', undefined, null as unknown as undefined]
-}
 
 // ─── Types de préparation (pour l'affichage des icônes dans la grille) ────────
 

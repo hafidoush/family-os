@@ -1,8 +1,9 @@
 /**
  * FAMILY OS — SwipeGouters
- * Les enfants sélectionnent leurs 7 goûters de la semaine style Tinder.
+ * Les enfants sélectionnent leurs 7 recettes de la semaine style Tinder.
  * Swipe droite = ✅ on prépare, gauche = ❌ pas cette fois.
- * Une fois 7 goûters sélectionnés → résumé + création SessionPreparation batch cooking.
+ * Une fois 7 recettes sélectionnées → résumé + création SessionPreparation batch cooking.
+ * La catégorie (goûters, desserts, repas) est choisie avant de démarrer.
  */
 
 import {
@@ -17,6 +18,7 @@ import { db } from '../../../../core/db/database'
 import { newEntity } from '../../../../core/db/helpers'
 import type { Recette, SessionPreparation } from '../../../../shared/types'
 import { IconHeart, IconClose } from '@shared/components/ui/Icon/Icon'
+import { type BatchCategorie, BATCH_CATEGORIES, typesForCategorie, labelForCategorie } from '../preparation/batchTypes'
 import './SwipeGouters.css'
 
 // ─── Constantes ───────────────────────────────────────────────────────────────
@@ -161,14 +163,18 @@ function SwipeCardComponent({ recette, onLike, onNope, imageUrl }: SwipeCardProp
 
 function ResultScreen({
   selected,
+  categorie,
   onConfirm,
   onReset,
 }: {
   selected: Recette[]
+  categorie: BatchCategorie
   onConfirm: () => Promise<void>
   onReset: () => void
 }) {
   const [saving, setSaving] = useState(false)
+  const catLabel = labelForCategorie(categorie, true).toLowerCase()
+  const catEmoji = BATCH_CATEGORIES.find(c => c.key === categorie)?.emoji ?? '🎉'
 
   const handleConfirm = async () => {
     setSaving(true)
@@ -182,7 +188,7 @@ function ResultScreen({
   return (
     <div className="swipe-result">
       <p className="swipe-result__title">
-        🎉 Tes {TARGET_COUNT} goûters de la semaine
+        {catEmoji} Tes {TARGET_COUNT} {catLabel} de la semaine
       </p>
 
       <ul className="swipe-result__list" role="list">
@@ -210,7 +216,7 @@ function ResultScreen({
           onClick={handleConfirm}
           disabled={saving}
         >
-          {saving ? 'Planification…' : '🧁 Planifier le batch cooking'}
+          {saving ? 'Planification…' : `${catEmoji} Planifier le batch cooking`}
         </button>
         <button className="swipe-result__btn-secondary" onClick={onReset}>
           Recommencer la sélection
@@ -220,23 +226,62 @@ function ResultScreen({
   )
 }
 
+// ─── Sélecteur de catégorie (style enfants) ───────────────────────────────────
+
+function KidsCategoryPicker({ onChoisir }: { onChoisir: (cat: BatchCategorie) => void }) {
+  return (
+    <div style={{
+      display: 'flex', flexDirection: 'column', alignItems: 'center',
+      gap: 16, padding: '32px 20px', textAlign: 'center',
+    }}>
+      <span style={{ fontSize: '3rem' }}>🧒</span>
+      <p style={{ fontSize: '1.1rem', fontWeight: 700, color: 'var(--color-text)', margin: 0 }}>
+        Qu'est-ce qu'on prépare ?
+      </p>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 10, width: '100%', maxWidth: 280 }}>
+        {BATCH_CATEGORIES.map(cat => (
+          <button
+            key={cat.key}
+            onClick={() => onChoisir(cat.key)}
+            style={{
+              display: 'flex', alignItems: 'center', gap: 14,
+              padding: '16px 20px', borderRadius: 16, border: 'none', cursor: 'pointer',
+              background: 'rgba(255,255,255,0.75)',
+              boxShadow: '0 2px 12px rgba(100,80,140,0.1)',
+              textAlign: 'left',
+            }}
+          >
+            <span style={{ fontSize: '2rem', flexShrink: 0 }}>{cat.emoji}</span>
+            <div>
+              <div style={{ fontSize: '1rem', fontWeight: 700, color: 'var(--color-text)' }}>{cat.labelKids}</div>
+              <div style={{ fontSize: '0.78rem', color: 'var(--color-muted)', marginTop: 2 }}>{cat.descriptionKids}</div>
+            </div>
+          </button>
+        ))}
+      </div>
+    </div>
+  )
+}
+
 // ─── Écran d'accueil "mode enfants" ──────────────────────────────────────────
 
-function KidsIntro({ onStart }: { onStart: () => void }) {
+function KidsIntro({ categorie, onStart }: { categorie: BatchCategorie; onStart: () => void }) {
+  const cat = BATCH_CATEGORIES.find(c => c.key === categorie)!
+  const label = labelForCategorie(categorie, true)
   return (
     <div style={{
       display: 'flex', flexDirection: 'column', alignItems: 'center',
       gap: 20, padding: '40px 24px', textAlign: 'center',
     }}>
-      <span style={{ fontSize: '3.5rem' }}>🧒</span>
+      <span style={{ fontSize: '3.5rem' }}>{cat.emoji}</span>
       <div>
         <p style={{ fontSize: '1.2rem', fontWeight: 700, color: 'var(--color-text)', marginBottom: 6 }}>
-          Mode Enfants
+          {label}
         </p>
         <p style={{ fontSize: '0.88rem', color: 'var(--color-muted)', lineHeight: 1.6 }}>
-          Glisse vers la droite pour choisir un goûter,<br />
+          Glisse vers la droite pour choisir,<br />
           vers la gauche pour passer.<br />
-          Sélectionne tes 7 goûters de la semaine.
+          Sélectionne 7 {label.toLowerCase()} pour la semaine.
         </p>
       </div>
       <button
@@ -256,21 +301,22 @@ function KidsIntro({ onStart }: { onStart: () => void }) {
 
 // ─── Jeu (rendu seulement une fois l'intro passée) ────────────────────────────
 
-function SwipeGoutersGame() {
+function SwipeGoutersGame({ categorie }: { categorie: BatchCategorie }) {
+  const typesAutorises = typesForCategorie(categorie)
+
   const allRecettes = useLiveQuery(
     () =>
       db.recettes
-        .filter(
-          r =>
-            !r.archive &&
-            !r.deletedAt &&
-            (r.typePreparation === 'gouter' ||
-             r.typePreparation === 'snack' ||
-             r.typePreparation === 'dessert')
-        )
+        .filter(r => {
+          if (r.archive || r.deletedAt) return false
+          if (categorie === 'repas') {
+            return r.typePreparation === 'plat' || r.typePreparation == null
+          }
+          return typesAutorises.includes(r.typePreparation as string | undefined | null)
+        })
         .toArray()
-        .then(list => list.sort(() => Math.random() - 0.5)), // ordre aléatoire
-    []
+        .then(list => list.sort(() => Math.random() - 0.5)),
+    [categorie]
   )
 
   // State principal
@@ -342,6 +388,9 @@ function SwipeGoutersGame() {
     }
   }, [selected, skipped])
 
+  const catLabel = labelForCategorie(categorie, true).toLowerCase()
+  const catEmoji = BATCH_CATEGORIES.find(c => c.key === categorie)?.emoji ?? '🍽'
+
   const handleConfirm = async () => {
     const dateSession = new Date().toISOString().split('T')[0]
     await db.sessionsPreparation.add(
@@ -349,7 +398,7 @@ function SwipeGoutersGame() {
         dateSession,
         recetteIds: selected.map(r => r.id),
         statut: 'planifiee',
-        notes: `Goûters de la semaine — sélectionnés par les enfants`,
+        notes: `${labelForCategorie(categorie)} de la semaine — sélectionnés par les enfants`,
       })
     )
     setSessionCreated(true)
@@ -371,7 +420,7 @@ function SwipeGoutersGame() {
       <div className="swipe-gouters">
         <div className="swipe-gouters__empty">
           <span className="swipe-gouters__empty-icon">⏳</span>
-          Chargement des goûters…
+          Chargement des recettes…
         </div>
       </div>
     )
@@ -381,10 +430,11 @@ function SwipeGoutersGame() {
     return (
       <div className="swipe-gouters">
         <div className="swipe-gouters__empty">
-          <span className="swipe-gouters__empty-icon">🧁</span>
-          Aucun goûter dans les recettes.<br />
-          Crée des recettes avec le type "goûter" ou "snack"
-          pour pouvoir les sélectionner ici.
+          <span className="swipe-gouters__empty-icon">{catEmoji}</span>
+          Aucune recette dans cette catégorie.<br />
+          {categorie === 'repas'
+            ? 'Ajoute des recettes avec le type "Plat principal".'
+            : `Ajoute des recettes avec le type "${catLabel}".`}
         </div>
       </div>
     )
@@ -411,6 +461,7 @@ function SwipeGoutersGame() {
       <div className="swipe-gouters">
         <ResultScreen
           selected={selected}
+          categorie={categorie}
           onConfirm={handleConfirm}
           onReset={handleReset}
         />
@@ -424,11 +475,11 @@ function SwipeGoutersGame() {
     <div className="swipe-gouters">
       {/* Header */}
       <div className="swipe-gouters__header">
-        <p className="swipe-gouters__title">Choisis tes goûters</p>
+        <p className="swipe-gouters__title">Choisis tes {catLabel}</p>
         <p className="swipe-gouters__subtitle">
           {remaining === TARGET_COUNT
-            ? `Sélectionne ${TARGET_COUNT} goûters pour la semaine`
-            : `Encore ${remaining} goûter${remaining > 1 ? 's' : ''} à choisir`}
+            ? `Sélectionne ${TARGET_COUNT} ${catLabel} pour la semaine`
+            : `Encore ${remaining} à choisir`}
         </p>
       </div>
 
@@ -483,7 +534,7 @@ function SwipeGoutersGame() {
           className="swipe-action-btn swipe-action-btn--like"
           onClick={handleLike}
           disabled={queue.length === 0}
-          aria-label="Je veux ce goûter"
+          aria-label="Je veux cette recette"
         >
           <IconHeart size={20} />
         </button>
@@ -492,12 +543,15 @@ function SwipeGoutersGame() {
   )
 }
 
-// ─── Composant exporté avec écran intro ───────────────────────────────────────
+// ─── Composant exporté avec sélection catégorie + intro ──────────────────────
 
 export function SwipeGouters() {
+  const [categorie, setCategorie] = useState<BatchCategorie | null>(null)
   const [started, setStarted] = useState(false)
-  if (!started) return <KidsIntro onStart={() => setStarted(true)} />
-  return <SwipeGoutersGame />
+
+  if (!categorie) return <KidsCategoryPicker onChoisir={setCategorie} />
+  if (!started) return <KidsIntro categorie={categorie} onStart={() => setStarted(true)} />
+  return <SwipeGoutersGame categorie={categorie} />
 }
 
 export default SwipeGouters
