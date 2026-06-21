@@ -18,6 +18,16 @@ import type { MenuSlot, JourMenu, TypeRepas } from '../../shared/types'
 
 const JOURS: JourMenu[] = ['lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi', 'samedi', 'dimanche']
 
+// ─── Saison ───────────────────────────────────────────────────────────────────
+
+function getSaison(): { nom: string; mois: number; description: string } {
+  const mois = new Date().getMonth() + 1 // 1-12
+  if (mois >= 3 && mois <= 5) return { nom: 'printemps', mois, description: 'plats légers, légumes de saison (asperges, petits pois, radis), saveurs fraîches' }
+  if (mois >= 6 && mois <= 8) return { nom: 'été', mois, description: 'plats frais et légers, salades, grillades, gazpachos, tomates, courgettes, poivrons' }
+  if (mois >= 9 && mois <= 11) return { nom: 'automne', mois, description: 'plats réconfortants, champignons, potiron, courges, pommes, châtaignes' }
+  return { nom: 'hiver', mois, description: 'plats chauds et nourrissants, gratins, soupes, légumineuses, ragoûts, endives, poireaux' }
+}
+
 // ─── Types réponse Gemini ─────────────────────────────────────────────────────
 
 interface RepasIA {
@@ -34,9 +44,14 @@ function buildPromptMenus(recettesExistantes: string[], nbPersonnes: number): st
     throw new Error('Aucune recette disponible. Ajoutez des recettes avant de générer un menu.')
   }
 
-  const listeRecettes = recettesExistantes.slice(0, 60).map(r => `- ${r}`).join('\n')
+  const saison = getSaison()
+  const dateAujourdhui = new Date().toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })
+  const listeRecettes = recettesExistantes.slice(0, 80).map(r => `- ${r}`).join('\n')
 
   return `Tu es un assistant culinaire pour une famille française. Génère un plan de repas pour une semaine complète (déjeuner + dîner) pour ${nbPersonnes} personne${nbPersonnes > 1 ? 's' : ''}.
+
+Date du jour : ${dateAujourdhui}
+Saison actuelle : ${saison.nom} — ${saison.description}
 
 RÈGLE ABSOLUE : tu dois choisir EXCLUSIVEMENT parmi les recettes listées ci-dessous.
 Ne crée AUCUNE nouvelle recette. N'invente aucun plat. Si une case ne peut pas être remplie avec une recette de la liste, utilise une recette existante plutôt qu'en inventer une.
@@ -44,7 +59,14 @@ Ne crée AUCUNE nouvelle recette. N'invente aucun plat. Si une case ne peut pas 
 Recettes disponibles :
 ${listeRecettes}
 
-Contraintes supplémentaires :
+Contraintes de saisonnalité (PRIORITÉ HAUTE) :
+- Nous sommes en ${saison.nom}. Privilégie en priorité les recettes adaptées à cette saison : ${saison.description}.
+- Utilise ton jugement pour identifier quelles recettes de la liste sont légères/estivales vs. consistantes/hivernales.
+- En été : évite les gratins, plats longuement mijotés, raclettes, fondues et plats très riches. Préfère salades composées, grillades, plats froids ou rapides.
+- En hiver : privilégie les plats chauds, soupes, mijotés, réconfortants.
+- Si peu de recettes correspondent à la saison, tu peux utiliser des recettes neutres (pâtes simples, riz, omelettes…).
+
+Autres contraintes :
 - Repas variés (pas deux fois la même recette dans la même semaine si possible)
 - Le week-end : privilégie les recettes plus festives ou familiales si disponibles
 - Utilise le nom exact de la recette tel qu'il apparaît dans la liste ci-dessus

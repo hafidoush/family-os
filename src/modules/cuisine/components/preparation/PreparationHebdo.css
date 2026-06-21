@@ -100,6 +100,86 @@
   color: var(--color-muted, #7A7A9A);
 }
 
+/* ── Sélecteur catégorie ── */
+.prep-categorie__intro {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--color-text, #1A1A2E);
+  margin: 0 0 14px;
+}
+
+.prep-categorie-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+
+.prep-categorie-card {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 16px;
+  background: rgba(255,255,255,0.7);
+  border: 1.5px solid rgba(255,255,255,0.6);
+  border-radius: 16px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  text-align: left;
+}
+
+.prep-categorie-card:hover {
+  border-color: rgba(249,115,22,0.4);
+  background: rgba(249,115,22,0.05);
+}
+
+.prep-categorie-card__emoji { font-size: 1.8rem; flex-shrink: 0; }
+
+.prep-categorie-card__label {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--color-text, #1A1A2E);
+  display: block;
+}
+
+.prep-categorie-card__desc {
+  font-size: 0.78rem;
+  color: var(--color-muted, #7A7A9A);
+  display: block;
+  margin-top: 2px;
+}
+
+/* ── En-tête catégorie dans le sélecteur de recettes ── */
+.prep-selecteur__cat-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+
+.prep-selecteur__cat-emoji { font-size: 1.2rem; }
+
+.prep-selecteur__cat-label {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--color-text, #1A1A2E);
+  flex: 1;
+}
+
+.prep-selecteur__cat-back {
+  font-size: 0.78rem;
+  color: var(--color-muted, #7A7A9A);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 8px;
+}
+
+.prep-selecteur__cat-back:hover {
+  background: rgba(0,0,0,0.05);
+}
+
 /* ── Sélecteur ── */
 .prep-selecteur { margin-bottom: 20px; }
 
@@ -198,6 +278,11 @@
 .prep-selecteur__actions {
   display: flex;
   gap: 8px;
+  position: sticky;
+  bottom: 0;
+  background: var(--color-bg, #FAF8F5);
+  padding: 10px 0 max(10px, env(safe-area-inset-bottom));
+  z-index: 2;
 }
 
 /* ── Boutons ── */

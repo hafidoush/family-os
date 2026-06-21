@@ -71,6 +71,11 @@
   gap: 8px;
   justify-content: flex-end;
   margin-top: 4px;
+  position: sticky;
+  bottom: 0;
+  background: var(--color-bg, #FAF8F5);
+  padding: 10px 0 max(10px, env(safe-area-inset-bottom));
+  z-index: 2;
 }
 
 .enfants-form__btn-cancel {

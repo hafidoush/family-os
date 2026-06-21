@@ -1,6 +1,7 @@
 /**
  * FAMILY OS — PreparationHebdo
- * F8 : Préparation hebdomadaire maison (goûters, desserts, petit-déjeuners)
+ * F8 : Préparation hebdomadaire maison
+ * - Sélection de la catégorie (Goûters & Petits-déj', Desserts, Repas)
  * - Sélection des recettes à préparer
  * - Calcul automatique temps total + ingrédients
  * - Suivi conservation
@@ -13,7 +14,24 @@ import { newEntity, withUpdate } from '../../../../core/db/helpers'
 import type { Recette, SessionPreparation } from '../../../../shared/types'
 import './PreparationHebdo.css'
 
-// ─── Types de préparation ─────────────────────────────────────────────────────
+// ─── Catégories batch ─────────────────────────────────────────────────────────
+
+type BatchCategorie = 'gouters_petitdej' | 'desserts' | 'repas'
+
+const BATCH_CATEGORIES: { key: BatchCategorie; label: string; emoji: string; description: string }[] = [
+  { key: 'gouters_petitdej', label: "Goûters & Petits-déj'", emoji: '🥐', description: 'Goûters, snacks et petits-déjeuners maison' },
+  { key: 'desserts',          label: 'Desserts',               emoji: '🍮', description: 'Gâteaux, tartes, crèmes et douceurs' },
+  { key: 'repas',             label: 'Repas',                  emoji: '🍲', description: 'Plats principaux pour la semaine' },
+]
+
+function typesForCategorie(cat: BatchCategorie): Array<string | undefined> {
+  if (cat === 'gouters_petitdej') return ['gouter', 'petit_dejeuner', 'snack']
+  if (cat === 'desserts') return ['dessert']
+  // Repas : plat explicite + recettes sans type (vraisemblablement des plats)
+  return ['plat', undefined, null as unknown as undefined]
+}
+
+// ─── Types de préparation (pour l'affichage des icônes dans la grille) ────────
 
 const TYPES_PREP = [
   { key: 'gouter',         label: 'Goûters',          emoji: '🧁' },
@@ -89,28 +107,77 @@ function SessionEnCours({ session, onTerminer }: {
   )
 }
 
+// ─── Sélecteur de catégorie batch ────────────────────────────────────────────
+
+function SelecteurCategorie({ onChoisir, onAnnuler }: {
+  onChoisir: (cat: BatchCategorie) => void
+  onAnnuler: () => void
+}) {
+  return (
+    <div className="prep-selecteur">
+      <p className="prep-categorie__intro">Que souhaites-tu préparer ?</p>
+      <div className="prep-categorie-grid">
+        {BATCH_CATEGORIES.map(cat => (
+          <button
+            key={cat.key}
+            className="prep-categorie-card"
+            onClick={() => onChoisir(cat.key)}
+          >
+            <span className="prep-categorie-card__emoji">{cat.emoji}</span>
+            <span className="prep-categorie-card__label">{cat.label}</span>
+            <span className="prep-categorie-card__desc">{cat.description}</span>
+          </button>
+        ))}
+      </div>
+      <div className="prep-selecteur__actions" style={{ marginTop: 12 }}>
+        <button className="prep-btn prep-btn--cancel" onClick={onAnnuler}>Annuler</button>
+      </div>
+    </div>
+  )
+}
+
 // ─── Sélecteur de recettes ────────────────────────────────────────────────────
 
-function SelecteurRecettes({ onConfirmer, onAnnuler }: {
+function SelecteurRecettes({ categorie, onConfirmer, onAnnuler }: {
+  categorie: BatchCategorie
   onConfirmer: (ids: string[]) => void
   onAnnuler: () => void
 }) {
-  const [filtreType, setFiltreType] = useState<string | 'toutes'>('toutes')
   const [selectionnes, setSelectionnes] = useState<string[]>([])
+
+  const typesAutorises = typesForCategorie(categorie)
+  const catInfo = BATCH_CATEGORIES.find(c => c.key === categorie)!
 
   const recettes = useLiveQuery(
     () => db.recettes
-      .filter(r => !r.archive && !r.deletedAt && r.typePreparation != null)
+      .filter(r => {
+        if (r.archive || r.deletedAt) return false
+        if (categorie === 'repas') {
+          // Repas : typePreparation = 'plat' ou non défini
+          return r.typePreparation === 'plat' || r.typePreparation == null
+        }
+        return typesAutorises.includes(r.typePreparation as string | undefined)
+      })
       .toArray()
       .then(list => list.sort((a, b) => a.nom.localeCompare(b.nom))),
-    []
+    [categorie]
   )
+
+  // Sous-filtres selon la catégorie
+  const sousFiltresDisponibles = useMemo(() => {
+    if (categorie === 'gouters_petitdej') {
+      return TYPES_PREP.filter(t => ['gouter', 'petit_dejeuner', 'snack'].includes(t.key))
+    }
+    return []
+  }, [categorie])
+
+  const [filtreSous, setFiltreSous] = useState<string | 'toutes'>('toutes')
 
   const filtrees = useMemo(() =>
     (recettes ?? []).filter(r =>
-      filtreType === 'toutes' || r.typePreparation === filtreType
+      filtreSous === 'toutes' || r.typePreparation === filtreSous
     ),
-    [recettes, filtreType]
+    [recettes, filtreSous]
   )
 
   const toggle = (id: string) => {
@@ -125,25 +192,35 @@ function SelecteurRecettes({ onConfirmer, onAnnuler }: {
 
   return (
     <div className="prep-selecteur">
-      <div className="prep-selecteur__filtres">
-        <button
-          className={`prep-filtre${filtreType === 'toutes' ? ' prep-filtre--active' : ''}`}
-          onClick={() => setFiltreType('toutes')}
-        >Toutes</button>
-        {TYPES_PREP.map(t => (
-          <button
-            key={t.key}
-            className={`prep-filtre${filtreType === t.key ? ' prep-filtre--active' : ''}`}
-            onClick={() => setFiltreType(t.key)}
-          >
-            {t.emoji}
-          </button>
-        ))}
+      <div className="prep-selecteur__cat-header">
+        <span className="prep-selecteur__cat-emoji">{catInfo.emoji}</span>
+        <span className="prep-selecteur__cat-label">{catInfo.label}</span>
+        <button className="prep-selecteur__cat-back" onClick={onAnnuler}>← Changer</button>
       </div>
 
+      {sousFiltresDisponibles.length > 0 && (
+        <div className="prep-selecteur__filtres">
+          <button
+            className={`prep-filtre${filtreSous === 'toutes' ? ' prep-filtre--active' : ''}`}
+            onClick={() => setFiltreSous('toutes')}
+          >Tous</button>
+          {sousFiltresDisponibles.map(t => (
+            <button
+              key={t.key}
+              className={`prep-filtre${filtreSous === t.key ? ' prep-filtre--active' : ''}`}
+              onClick={() => setFiltreSous(t.key)}
+            >
+              {t.emoji} {t.label}
+            </button>
+          ))}
+        </div>
+      )}
+
       {recettes !== undefined && filtrees.length === 0 && (
-        <p className="prep-empty">Aucune recette avec type de préparation défini.<br />
-          <span className="prep-empty__sub">Modifie tes recettes pour ajouter "goûter", "dessert"…</span>
+        <p className="prep-empty">
+          {categorie === 'repas'
+            ? 'Aucun plat trouvé. Ajoute des recettes avec le type "Plat principal".'
+            : 'Aucune recette dans cette catégorie. Modifie tes recettes pour leur assigner un type.'}
         </p>
       )}
 
@@ -156,7 +233,7 @@ function SelecteurRecettes({ onConfirmer, onAnnuler }: {
               className={`prep-recette-card${selectionnes.includes(r.id) ? ' prep-recette-card--selected' : ''}`}
               onClick={() => toggle(r.id)}
             >
-              <span className="prep-recette-card__emoji">{typeInfo?.emoji ?? '🍽'}</span>
+              <span className="prep-recette-card__emoji">{typeInfo?.emoji ?? (categorie === 'repas' ? '🍽' : '🧁')}</span>
               <span className="prep-recette-card__nom">{r.nom}</span>
               {r.dureeConservation && (
                 <span className="prep-recette-card__conservation">
@@ -196,8 +273,11 @@ function SelecteurRecettes({ onConfirmer, onAnnuler }: {
 
 // ─── Composant principal ──────────────────────────────────────────────────────
 
+type EtapePlanification = 'idle' | 'categorie' | 'recettes'
+
 export function PreparationHebdo() {
-  const [showSelecteur, setShowSelecteur] = useState(false)
+  const [etape, setEtape] = useState<EtapePlanification>('idle')
+  const [categorieChoisie, setCategorieChoisie] = useState<BatchCategorie | null>(null)
 
   const sessions = useLiveQuery(
     () => db.sessionsPreparation
@@ -213,9 +293,15 @@ export function PreparationHebdo() {
     s => s.statut === 'planifiee' || s.statut === 'en_cours'
   )
 
+  const handleChoisirCategorie = (cat: BatchCategorie) => {
+    setCategorieChoisie(cat)
+    setEtape('recettes')
+  }
+
   const handlePlanifier = async (recetteIds: string[]) => {
     if (recetteIds.length === 0) return
-    setShowSelecteur(false)
+    setEtape('idle')
+    setCategorieChoisie(null)
     const dateSession = new Date().toISOString().split('T')[0]
     await db.sessionsPreparation.add(newEntity<SessionPreparation>({
       dateSession,
@@ -224,8 +310,12 @@ export function PreparationHebdo() {
     }))
   }
 
+  const handleAnnuler = () => {
+    setEtape('idle')
+    setCategorieChoisie(null)
+  }
+
   const handleTerminer = async (session: SessionPreparation) => {
-    // Mettre à jour dernierePreparation sur chaque recette
     for (const recetteId of session.recetteIds) {
       await db.recettes.update(recetteId, withUpdate<Recette>({
         dernierePreparation: session.dateSession,
@@ -236,46 +326,58 @@ export function PreparationHebdo() {
     }))
   }
 
+  const catInfo = categorieChoisie ? BATCH_CATEGORIES.find(c => c.key === categorieChoisie) : null
+
   return (
     <div className="prep-module">
       <div className="prep-header">
         <div>
-          <h2 className="prep-title">SweetBatch</h2>
-          <p className="prep-subtitle">Goûters, desserts, snacks maison</p>
+          <h2 className="prep-title">Batch cooking</h2>
+          <p className="prep-subtitle">
+            {catInfo ? `${catInfo.emoji} ${catInfo.label}` : 'Goûters, desserts, repas maison'}
+          </p>
         </div>
-        {!sessionEnCours && (
-          <button className="prep-btn-new" onClick={() => setShowSelecteur(true)}>
+        {etape === 'idle' && !sessionEnCours && (
+          <button className="prep-btn-new" onClick={() => setEtape('categorie')}>
             + Planifier
           </button>
         )}
       </div>
 
-      {showSelecteur && (
-        <SelecteurRecettes
-          onConfirmer={handlePlanifier}
-          onAnnuler={() => setShowSelecteur(false)}
+      {etape === 'categorie' && (
+        <SelecteurCategorie
+          onChoisir={handleChoisirCategorie}
+          onAnnuler={handleAnnuler}
         />
       )}
 
-      {!showSelecteur && sessionEnCours && (
+      {etape === 'recettes' && categorieChoisie && (
+        <SelecteurRecettes
+          categorie={categorieChoisie}
+          onConfirmer={handlePlanifier}
+          onAnnuler={() => setEtape('categorie')}
+        />
+      )}
+
+      {etape === 'idle' && sessionEnCours && (
         <SessionEnCours
           session={sessionEnCours}
           onTerminer={() => handleTerminer(sessionEnCours)}
         />
       )}
 
-      {!showSelecteur && !sessionEnCours && (
+      {etape === 'idle' && !sessionEnCours && (
         <div className="prep-empty-state">
-          <span className="prep-empty-state__icon">🧁</span>
+          <span className="prep-empty-state__icon">🍳</span>
           <p>Planifie ta prochaine session de préparation</p>
           <p className="prep-empty-state__sub">
-            Sélectionne les recettes à préparer, l'app calcule le temps total et les ingrédients nécessaires
+            Goûters, desserts ou repas — choisis ce que tu veux préparer, l'app calcule le temps et les ingrédients
           </p>
         </div>
       )}
 
       {/* Historique sessions */}
-      {(sessions ?? []).filter(s => s.statut === 'terminee').length > 0 && !showSelecteur && (
+      {(sessions ?? []).filter(s => s.statut === 'terminee').length > 0 && etape === 'idle' && (
         <div className="prep-historique">
           <h3 className="prep-historique__title">Sessions récentes</h3>
           {(sessions ?? []).filter(s => s.statut === 'terminee').slice(0, 3).map(s => (
