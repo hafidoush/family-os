@@ -353,3 +353,98 @@
   padding: 2px 8px;
   border-radius: 20px;
 }
+
+/* ─── Bottom sheet formulaire (ActiviteForm / SortieForm) ─────────────────── */
+
+.enfants-form-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.35);
+  z-index: 900;
+  display: flex;
+  align-items: flex-end;
+  backdrop-filter: blur(4px);
+}
+
+.enfants-form-sheet {
+  background: var(--color-bg, #FAF8F5);
+  border-radius: 20px 20px 0 0;
+  width: 100%;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+.enfants-form-sheet__handle {
+  width: 36px;
+  height: 4px;
+  background: rgba(0, 0, 0, 0.12);
+  border-radius: 2px;
+  margin: 12px auto 4px;
+  flex-shrink: 0;
+}
+
+.enfants-form-sheet__title {
+  font-size: 17px;
+  font-weight: 700;
+  color: var(--color-text);
+  text-align: center;
+  margin: 0 0 12px;
+  padding: 0 20px;
+  flex-shrink: 0;
+}
+
+.enfants-form-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 0 20px;
+}
+
+.enfants-form__hint {
+  font-size: 11px;
+  font-weight: 400;
+  color: var(--color-muted);
+  margin-left: 4px;
+}
+
+.enfants-form__btn-group {
+  display: flex;
+  gap: 8px;
+}
+
+.enfants-form__btn-choice {
+  flex: 1;
+  padding: 9px 4px;
+  border-radius: 10px;
+  border: 1.5px solid var(--color-border);
+  background: white;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.enfants-form__btn-choice--active {
+  background: hsl(262, 55%, 94%);
+  border-color: hsl(262, 43%, 65%);
+  color: hsl(262, 43%, 40%);
+  font-weight: 600;
+}
+
+.enfants-form__btn-delete {
+  padding: 11px 16px;
+  border-radius: 12px;
+  border: 1.5px solid hsl(4, 70%, 80%);
+  background: hsl(4, 70%, 97%);
+  color: hsl(4, 60%, 50%);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.enfants-form__btn-delete:hover {
+  background: hsl(4, 70%, 92%);
+}

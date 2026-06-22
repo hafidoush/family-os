@@ -10,10 +10,11 @@ import type {
   Pensee, Routine, RoutineItem, CroissanceMesure, SessionPreparation,
   ProgrammePedagogique, ActiviteProgramme, ProgrammeAnnuel,
   ImportRecetteIA, ContactPartage, ListePartagee, EvenementDetail,
+  SortiePersonnelle,
 } from '@shared/types'
 
 // ─── Version du schéma — incrémenter à chaque migration ──────────────────────
-export const SCHEMA_VERSION = 11
+export const SCHEMA_VERSION = 12
 
 // ─── Définition de la base ────────────────────────────────────────────────────
 class FamilyOSDatabase extends Dexie {
@@ -74,6 +75,9 @@ class FamilyOSDatabase extends Dexie {
 
   // Réceptions
   evenementsDetails!: Table<EvenementDetail, string>
+
+  // Sorties personnalisées
+  sortiesPersonnelles!: Table<SortiePersonnelle, string>
 
   // Entités de référence
   tags!: Table<Tag, string>
@@ -565,6 +569,11 @@ class FamilyOSDatabase extends Dexie {
     // ─── Version 10 — table evenementsDetails (module Réceptions) ────────
     this.version(10).stores({
       evenementsDetails: 'id, evenementId, archive, updatedAt',
+    })
+
+    // ─── Version 12 — sorties personnalisées ──────────────────────────────
+    this.version(12).stores({
+      sortiesPersonnelles: 'id, categorie, archive, updatedAt',
     })
 
     // ─── Version 11 — migration avatars Blob → base64 string ────────────────

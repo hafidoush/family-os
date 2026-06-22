@@ -262,6 +262,22 @@ export interface Activite extends AuditWithDevice {
   archive: boolean
 }
 
+export interface SortiePersonnelle extends AuditWithDevice {
+  id: string
+  nom: string
+  description: string
+  ageMin: number
+  ageMax: number
+  dureeEstimee: number
+  tarif?: string
+  adresse: string
+  informationsPratiques: string
+  objectifs?: string
+  categorie: string
+  emoji: string
+  archive: boolean
+}
+
 export type StatutPlanification = 'planifiee' | 'realisee' | 'annulee'
 
 export interface PlanificationActivite extends AuditWithDevice {

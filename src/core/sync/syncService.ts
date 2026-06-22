@@ -60,6 +60,7 @@ const TABLE_MAP: Record<string, string> = {
   tags:                     'tags',
   categoriesProduits:       'categories_produits',
   evenementsDetails:        'evenements_details',
+  sortiesPersonnelles:      'sorties_personnelles',
 }
 
 const DEXIE_TABLES = Object.keys(TABLE_MAP)

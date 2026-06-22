@@ -6,6 +6,7 @@ import { newEntity } from '../../../core/db/helpers';
 import { emit } from '../../../core/automation/engine';
 import type { Activite, PlanificationActivite } from '../../../shared/types';
 import SortiesModule from '../../sorties';
+import { ActiviteForm } from './ActiviteForm';
 
 const CATEGORIES_ORDER = [
   'Sensoriel',
@@ -264,6 +265,8 @@ export function CatalogueActivites() {
   const { activites, isLoading } = useActivitesCatalogue();
   const [filterCat, setFilterCat] = useState('');
   const [planningActivite, setPlanningActivite] = useState<Activite | null>(null);
+  const [showActiviteForm, setShowActiviteForm] = useState(false);
+  const [editActivite, setEditActivite] = useState<Activite | undefined>();
 
   const catsPresentes = CATEGORIES_ORDER.filter((cat) =>
     activites.some((a) => a.categorie === cat)
@@ -352,6 +355,24 @@ export function CatalogueActivites() {
         <AddToPlanningModal
           activite={planningActivite}
           onClose={() => setPlanningActivite(null)}
+        />
+      )}
+
+      {/* FAB créer activité */}
+      {sousOnglet === 'activites' && (
+        <button
+          className="catalogue-fab"
+          onClick={() => { setEditActivite(undefined); setShowActiviteForm(true); }}
+          aria-label="Nouvelle activité"
+        >
+          +
+        </button>
+      )}
+
+      {showActiviteForm && (
+        <ActiviteForm
+          editItem={editActivite}
+          onClose={() => { setShowActiviteForm(false); setEditActivite(undefined); }}
         />
       )}
     </div>

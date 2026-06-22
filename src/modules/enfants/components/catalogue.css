@@ -289,3 +289,33 @@
   color: #A78BFA;
   margin: -8px 0 0;
 }
+
+/* ── FAB nouvelle activité / nouvelle sortie ─────────────────────────────── */
+
+.catalogue-fab,
+.sorties-fab {
+  position: fixed;
+  bottom: max(88px, calc(72px + env(safe-area-inset-bottom)));
+  right: 20px;
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  border: none;
+  background: hsl(262, 43%, 60%);
+  color: white;
+  font-size: 1.6rem;
+  line-height: 1;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 550;
+  box-shadow: 0 4px 16px rgba(111, 126, 214, 0.4);
+  transition: transform 0.15s, box-shadow 0.15s;
+}
+
+.catalogue-fab:hover,
+.sorties-fab:hover { transform: scale(1.08); }
+
+.catalogue-fab:active,
+.sorties-fab:active { transform: scale(0.96); }

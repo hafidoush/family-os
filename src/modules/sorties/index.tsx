@@ -1,10 +1,12 @@
 import { useState } from 'react';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { db } from '../../core/db/database';
-import { newEntity } from '../../core/db/helpers';
+import { newEntity, softDeleteFields } from '../../core/db/helpers';
+import { ConfirmModal } from '../../shared/components/ui/ConfirmModal';
 import { SORTIES, CATEGORIES_SORTIES, type Sortie } from './sortiesData';
-import type { Evenement } from '../../shared/types';
+import type { Evenement, SortiePersonnelle } from '../../shared/types';
 import './sorties.css';
+import '../enfants/components/catalogue.css';
 
 // ── Planning Modal ────────────────────────────────────────────────────────────
 
@@ -98,7 +100,7 @@ function PlanifierModal({ sortie, onClose }: PlanifierModalProps) {
 
 // ── Sortie Card ───────────────────────────────────────────────────────────────
 
-function SortieCard({ sortie, onPlanifier }: { sortie: Sortie; onPlanifier: (s: Sortie) => void }) {
+function SortieCard({ sortie, onPlanifier, onEdit }: { sortie: Sortie; onPlanifier: (s: Sortie) => void; onEdit?: (s: Sortie) => void }) {
   const [expanded, setExpanded] = useState(false);
 
   return (
@@ -167,16 +169,194 @@ function SortieCard({ sortie, onPlanifier }: { sortie: Sortie; onPlanifier: (s: 
             </div>
           )}
 
-          <button
-            className="sortie-card__btn-planifier"
-            onClick={e => { e.stopPropagation(); onPlanifier(sortie); }}
-          >
-            Planifier cette sortie
-          </button>
+          <div style={{ display: 'flex', gap: 8 }}>
+            {onEdit && (
+              <button
+                className="sortie-card__btn-planifier"
+                style={{ background: 'rgba(167,139,250,0.12)', color: '#7C5CBF' }}
+                onClick={e => { e.stopPropagation(); onEdit(sortie); }}
+              >
+                Modifier
+              </button>
+            )}
+            <button
+              className="sortie-card__btn-planifier"
+              onClick={e => { e.stopPropagation(); onPlanifier(sortie); }}
+            >
+              Planifier cette sortie
+            </button>
+          </div>
         </div>
       )}
     </div>
   );
+}
+
+// ── Formulaire nouvelle sortie ────────────────────────────────────────────────
+
+interface SortieFormProps {
+  editItem?: SortiePersonnelle
+  onClose: () => void
+}
+
+function SortieForm({ editItem, onClose }: SortieFormProps) {
+  const [nom,                  setNom]                  = useState(editItem?.nom ?? '')
+  const [description,          setDescription]          = useState(editItem?.description ?? '')
+  const [emoji,                setEmoji]                = useState(editItem?.emoji ?? '🗺')
+  const [categorie,            setCategorie]            = useState(editItem?.categorie ?? '')
+  const [ageMin,               setAgeMin]               = useState(editItem?.ageMin?.toString() ?? '0')
+  const [ageMax,               setAgeMax]               = useState(editItem?.ageMax?.toString() ?? '144')
+  const [duree,                setDuree]                = useState(editItem?.dureeEstimee?.toString() ?? '')
+  const [tarif,                setTarif]                = useState(editItem?.tarif ?? '')
+  const [adresse,              setAdresse]              = useState(editItem?.adresse ?? '')
+  const [infosPratiques,       setInfosPratiques]       = useState(editItem?.informationsPratiques ?? '')
+  const [objectifs,            setObjectifs]            = useState(editItem?.objectifs ?? '')
+  const [saving,               setSaving]               = useState(false)
+  const [confirmDelete,        setConfirmDelete]        = useState(false)
+
+  async function handleSave() {
+    if (!nom.trim() || !adresse.trim() || !categorie) return
+    setSaving(true)
+    try {
+      const data: Partial<SortiePersonnelle> = {
+        nom:                  nom.trim(),
+        description:          description.trim(),
+        emoji:                emoji || '🗺',
+        categorie,
+        ageMin:               parseInt(ageMin) || 0,
+        ageMax:               parseInt(ageMax) || 144,
+        dureeEstimee:         duree ? parseInt(duree) : 60,
+        tarif:                tarif.trim() || undefined,
+        adresse:              adresse.trim(),
+        informationsPratiques: infosPratiques.trim(),
+        objectifs:            objectifs.trim() || undefined,
+        archive:              false,
+      }
+      if (editItem) {
+        await db.sortiesPersonnelles.update(editItem.id, { ...data, updatedAt: new Date() })
+      } else {
+        await db.sortiesPersonnelles.add(newEntity<SortiePersonnelle>(data as Omit<SortiePersonnelle, 'id' | 'createdAt' | 'updatedAt' | 'deviceId'>))
+      }
+      onClose()
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  return (
+    <>
+      <div className="enfants-form-backdrop" onClick={onClose}>
+        <div className="enfants-form-sheet" onClick={e => e.stopPropagation()}>
+          <div className="enfants-form-sheet__handle" />
+          <p className="enfants-form-sheet__title">
+            {editItem ? 'Modifier la sortie' : 'Nouvelle sortie'}
+          </p>
+
+          <div className="enfants-form-body">
+            {/* Emoji + Nom */}
+            <div className="enfants-form__row">
+              <div className="enfants-form__field" style={{ flex: '0 0 70px' }}>
+                <label className="enfants-form__label">Emoji</label>
+                <input className="enfants-form__input" value={emoji} onChange={e => setEmoji(e.target.value)} maxLength={2} style={{ textAlign: 'center', fontSize: '1.4rem' }} />
+              </div>
+              <div className="enfants-form__field">
+                <label className="enfants-form__label">Nom *</label>
+                <input className="enfants-form__input" value={nom} onChange={e => setNom(e.target.value)} placeholder="Ex : Parc de la Tête d'Or" autoFocus />
+              </div>
+            </div>
+
+            {/* Catégorie */}
+            <div className="enfants-form__field">
+              <label className="enfants-form__label">Catégorie *</label>
+              <select className="enfants-form__input" value={categorie} onChange={e => setCategorie(e.target.value)}>
+                <option value="">Choisir…</option>
+                {CATEGORIES_SORTIES.map(c => <option key={c} value={c}>{c}</option>)}
+              </select>
+            </div>
+
+            {/* Description */}
+            <div className="enfants-form__field">
+              <label className="enfants-form__label">Description</label>
+              <textarea className="enfants-form__textarea" rows={2} value={description} onChange={e => setDescription(e.target.value)} placeholder="Description de la sortie…" />
+            </div>
+
+            {/* Adresse */}
+            <div className="enfants-form__field">
+              <label className="enfants-form__label">Adresse *</label>
+              <input className="enfants-form__input" value={adresse} onChange={e => setAdresse(e.target.value)} placeholder="Rue, ville…" />
+            </div>
+
+            {/* Âge */}
+            <div className="enfants-form__row">
+              <div className="enfants-form__field">
+                <label className="enfants-form__label">Âge min (mois)</label>
+                <input className="enfants-form__input" type="number" min="0" value={ageMin} onChange={e => setAgeMin(e.target.value)} />
+              </div>
+              <div className="enfants-form__field">
+                <label className="enfants-form__label">Âge max (mois)</label>
+                <input className="enfants-form__input" type="number" min="0" value={ageMax} onChange={e => setAgeMax(e.target.value)} />
+              </div>
+            </div>
+
+            {/* Durée + Tarif */}
+            <div className="enfants-form__row">
+              <div className="enfants-form__field">
+                <label className="enfants-form__label">Durée (min)</label>
+                <input className="enfants-form__input" type="number" min="1" value={duree} onChange={e => setDuree(e.target.value)} placeholder="60" />
+              </div>
+              <div className="enfants-form__field">
+                <label className="enfants-form__label">Tarif</label>
+                <input className="enfants-form__input" value={tarif} onChange={e => setTarif(e.target.value)} placeholder="Gratuit" />
+              </div>
+            </div>
+
+            {/* Informations pratiques */}
+            <div className="enfants-form__field">
+              <label className="enfants-form__label">Informations pratiques</label>
+              <textarea className="enfants-form__textarea" rows={2} value={infosPratiques} onChange={e => setInfosPratiques(e.target.value)} placeholder="Parking, transports, horaires…" />
+            </div>
+
+            {/* Objectifs */}
+            <div className="enfants-form__field">
+              <label className="enfants-form__label">Objectifs</label>
+              <textarea className="enfants-form__textarea" rows={2} value={objectifs} onChange={e => setObjectifs(e.target.value)} placeholder="Découverte de la nature, motricité…" />
+            </div>
+          </div>
+
+          <div className="enfants-form__actions">
+            {editItem && (
+              <button className="enfants-form__btn-delete" onClick={() => setConfirmDelete(true)}>Supprimer</button>
+            )}
+            <button className="enfants-form__btn-cancel" onClick={onClose}>Annuler</button>
+            <button
+              className="enfants-form__btn-save"
+              onClick={handleSave}
+              disabled={!nom.trim() || !adresse.trim() || !categorie || saving}
+            >
+              {saving ? '…' : editItem ? 'Enregistrer' : 'Créer'}
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <ConfirmModal
+        open={confirmDelete}
+        title="Supprimer cette sortie ?"
+        message="Elle sera retirée de votre catalogue."
+        confirmLabel="Supprimer"
+        cancelLabel="Annuler"
+        danger
+        onConfirm={async () => {
+          setConfirmDelete(false)
+          if (editItem) {
+            await db.sortiesPersonnelles.update(editItem.id, softDeleteFields())
+            onClose()
+          }
+        }}
+        onCancel={() => setConfirmDelete(false)}
+      />
+    </>
+  )
 }
 
 // ── Tab Bibliothèque ──────────────────────────────────────────────────────────
@@ -184,10 +364,24 @@ function SortieCard({ sortie, onPlanifier }: { sortie: Sortie; onPlanifier: (s: 
 function BibliothequeTab() {
   const [filterCat, setFilterCat] = useState('');
   const [planifierSortie, setPlanifierSortie] = useState<Sortie | null>(null);
+  const [showSortieForm, setShowSortieForm] = useState(false);
+  const [editSortie, setEditSortie] = useState<SortiePersonnelle | undefined>();
+
+  const sortiesPersonnelles = useLiveQuery(
+    () => db.sortiesPersonnelles.filter(s => !s.archive && !s.deletedAt).toArray(),
+    []
+  ) ?? [];
+
+  // Fusion sorties statiques + personnelles pour l'affichage
+  type SortieDisplay = Sortie | (SortiePersonnelle & { _custom: true });
+  const toutesLesSorties: SortieDisplay[] = [
+    ...SORTIES,
+    ...sortiesPersonnelles.map(s => ({ ...s, _custom: true as const })),
+  ];
 
   const displayed = filterCat
-    ? SORTIES.filter(s => s.categorie === filterCat)
-    : SORTIES;
+    ? toutesLesSorties.filter(s => s.categorie === filterCat)
+    : toutesLesSorties;
 
   return (
     <>
@@ -217,13 +411,33 @@ function BibliothequeTab() {
           </div>
         ) : (
           displayed.map(sortie => (
-            <SortieCard key={sortie.id} sortie={sortie} onPlanifier={setPlanifierSortie} />
+            <SortieCard
+              key={sortie.id}
+              sortie={sortie}
+              onPlanifier={setPlanifierSortie}
+              onEdit={'_custom' in sortie ? (s) => { setEditSortie(s as SortiePersonnelle); setShowSortieForm(true) } : undefined}
+            />
           ))
         )}
       </div>
 
       {planifierSortie && (
         <PlanifierModal sortie={planifierSortie} onClose={() => setPlanifierSortie(null)} />
+      )}
+
+      <button
+        className="sorties-fab"
+        onClick={() => { setEditSortie(undefined); setShowSortieForm(true); }}
+        aria-label="Nouvelle sortie"
+      >
+        +
+      </button>
+
+      {showSortieForm && (
+        <SortieForm
+          editItem={editSortie}
+          onClose={() => { setShowSortieForm(false); setEditSortie(undefined); }}
+        />
       )}
     </>
   );
