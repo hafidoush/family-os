@@ -65,8 +65,8 @@ async function _seedDatabase(): Promise<void> {
   // Garantit que les catégories de recettes existent toujours
   await seedCategoriesRecettes()
 
-  // Répare les recettes avec une catégorie orpheline (ID inexistant)
-  await repairRecettesOrphelines()
+  // Répare la corruption de sync (tout déplacé vers Plat principal) + force-push sur l'ordi
+  await repairRecipeCategoriesSync()
 
   // Purge one-shot des recettes pré-enregistrées (deviceId === 'seed')
   await purgeSeededRecettes()
@@ -530,6 +530,32 @@ async function supprimerCategoriePetitDejeuner(): Promise<void> {
     }
   }
   await db.categoriesRecettes.delete(cat.id)
+}
+
+async function repairRecipeCategoriesSync(): Promise<void> {
+  const KEY = 'REPAIR_RECIPE_CATS_V1'
+  const done = await db.parametresSync.get(KEY)
+  if (done) return
+
+  const now = new Date()
+  await db.parametresSync.put({ id: KEY, cle: KEY, valeur: 'true', derniereModification: now, createdAt: now, updatedAt: now })
+
+  const recettes = await db.recettes.filter(r => !r.archive).toArray()
+  if (recettes.length === 0) return
+
+  // Détecte l'état corrompu : >75% des recettes dans Plat principal
+  const nbPlatPrincipal = recettes.filter(r => r.categorie === 'cat-recette-plat-principal').length
+  const corrupted = recettes.length >= 3 && (nbPlatPrincipal / recettes.length) > 0.75
+
+  if (corrupted) {
+    // Ce device a des données corrompues — vide les recettes locales pour un pull propre
+    console.log('[FamilyOS] Catégories recettes corrompues — réimport depuis Supabase au prochain sync')
+    await db.recettes.clear()
+  } else {
+    // Ce device a les bonnes données — force-push vers Supabase avec timestamp frais
+    console.log('[FamilyOS] Force-push des recettes correctes vers Supabase')
+    await Promise.all(recettes.map(r => db.recettes.update(r.id, { updatedAt: now })))
+  }
 }
 
 async function seedCategoriesActivites(): Promise<void> {
