@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { db } from '../../../core/db/database';
 import { newEntity, softDeleteFields } from '../../../core/db/helpers';
+import { ConfirmModal } from '../../../shared/components/ui/ConfirmModal';
 import type { SelfCareItem } from '../../../shared/types';
 
 function isFaitAujourdhui(item: SelfCareItem): boolean {
@@ -46,6 +47,7 @@ function SelfCareForm({ editItem, onClose }: FormProps) {
   const [instructions, setInstructions] = useState(editItem?.instructions ?? '');
   const [dashboard, setDashboard] = useState(editItem?.remonteDashboard ?? false);
   const [saving, setSaving] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState(false);
 
   async function handleSave() {
     if (!nom.trim()) return;
@@ -75,7 +77,13 @@ function SelfCareForm({ editItem, onClose }: FormProps) {
     onClose();
   }
 
+  async function handleDeleteConfirmed() {
+    setConfirmDelete(false);
+    await handleDelete();
+  }
+
   return (
+    <>
     <div className="myself-modal-backdrop" onClick={onClose}>
       <div className="myself-modal" onClick={e => e.stopPropagation()}>
         <div className="myself-modal__handle" />
@@ -140,7 +148,7 @@ function SelfCareForm({ editItem, onClose }: FormProps) {
 
           <div className="myself-form__actions">
             {editItem && (
-              <button className="myself-form__btn-delete" onClick={handleDelete}>Supprimer</button>
+              <button className="myself-form__btn-delete" onClick={() => setConfirmDelete(true)}>Supprimer</button>
             )}
             <button className="myself-form__btn-cancel" onClick={onClose}>Annuler</button>
             <button
@@ -154,6 +162,18 @@ function SelfCareForm({ editItem, onClose }: FormProps) {
         </div>
       </div>
     </div>
+
+    <ConfirmModal
+      open={confirmDelete}
+      title="Supprimer cette routine ?"
+      message="Cette action est irréversible."
+      confirmLabel="Supprimer"
+      cancelLabel="Annuler"
+      danger
+      onConfirm={handleDeleteConfirmed}
+      onCancel={() => setConfirmDelete(false)}
+    />
+    </>
   );
 }
 

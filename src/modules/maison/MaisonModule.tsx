@@ -6,6 +6,8 @@
  * et connecte les hooks, services et composants.
  */
 
+import { useState } from 'react';
+import { ConfirmModal } from '../../shared/components/ui/ConfirmModal';
 import { useMaisonStore } from './stores/maisonStore';
 import {
   usePieces, usePieceById, useTachesMaison, useProjets, useMaisonOverview,
@@ -20,6 +22,7 @@ import './MaisonModule.css';
 
 export default function MaisonModule() {
   const store = useMaisonStore();
+  const [confirmTacheId, setConfirmTacheId] = useState<string | null>(null);
   const overview = useMaisonOverview();
   const pieces = usePieces();
   const projets = useProjets();
@@ -48,8 +51,15 @@ export default function MaisonModule() {
   const handleRouvrirTache = async (id: string) => {
     await TacheService.rouvrir(id);
   };
-  const handleDeleteTache = async (id: string) => {
-    await TacheService.deleteTache(id);
+  const handleDeleteTache = (id: string) => {
+    setConfirmTacheId(id);
+  };
+
+  const confirmDeleteTache = async () => {
+    if (confirmTacheId) {
+      await TacheService.deleteTache(confirmTacheId);
+      setConfirmTacheId(null);
+    }
   };
 
   // ── Vue : Détail d'une pièce ────────────────────────────────────────────────
@@ -86,6 +96,16 @@ export default function MaisonModule() {
           onClose={store.closeDrawerTache}
           editId={store.drawerTacheEditId}
           piecePrefill={store.drawerTachePiecePrefill}
+        />
+        <ConfirmModal
+          open={confirmTacheId !== null}
+          title="Supprimer cette tâche ?"
+          message="Cette action est irréversible."
+          confirmLabel="Supprimer"
+          cancelLabel="Annuler"
+          danger
+          onConfirm={confirmDeleteTache}
+          onCancel={() => setConfirmTacheId(null)}
         />
       </div>
     );
@@ -129,6 +149,16 @@ export default function MaisonModule() {
           onClose={store.closeDrawerTache}
           editId={store.drawerTacheEditId}
           projetPrefill={store.drawerTacheProjetPrefill}
+        />
+        <ConfirmModal
+          open={confirmTacheId !== null}
+          title="Supprimer cette tâche ?"
+          message="Cette action est irréversible."
+          confirmLabel="Supprimer"
+          cancelLabel="Annuler"
+          danger
+          onConfirm={confirmDeleteTache}
+          onCancel={() => setConfirmTacheId(null)}
         />
       </div>
     );
@@ -287,6 +317,16 @@ export default function MaisonModule() {
           ? (projets ?? []).find(p => p.projet.id === store.drawerProjetEditId)?.projet ?? null
           : null
         }
+      />
+      <ConfirmModal
+        open={confirmTacheId !== null}
+        title="Supprimer cette tâche ?"
+        message="Cette action est irréversible."
+        confirmLabel="Supprimer"
+        cancelLabel="Annuler"
+        danger
+        onConfirm={confirmDeleteTache}
+        onCancel={() => setConfirmTacheId(null)}
       />
     </div>
   );

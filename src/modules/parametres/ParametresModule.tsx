@@ -332,7 +332,7 @@ function SectionDonnees() {
         'pieces', 'projetsMaison', 'souvenirs', 'reunionsFamille', 'selfCareItems',
         'sportSessions', 'tags', 'categoriesProduits', 'categoriesRecettes',
         'categoriesActivites',
-        'pensees', 'routines', 'routineItems', 'croissanceMesures', 'sessionsPreparation',
+        'pensees', 'routines', 'routineItems', 'sessionsPreparation',
         'programmesPedagogiques', 'activitesProgramme', 'programmesAnnuels',
         'importsRecettesIA', 'contactsPartage', 'listesPartagees',
       ] as const;
@@ -420,7 +420,7 @@ function SectionDonnees() {
       'pieces', 'projetsMaison', 'souvenirs', 'reunionsFamille', 'selfCareItems',
       'sportSessions', 'tags', 'categoriesProduits', 'categoriesRecettes',
       'categoriesActivites',
-      'pensees', 'routines', 'routineItems', 'croissanceMesures', 'sessionsPreparation',
+      'pensees', 'routines', 'routineItems', 'sessionsPreparation',
     ] as const;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     await Promise.all(tables.map((t) => (db as any)[t].clear()));

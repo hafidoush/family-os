@@ -118,8 +118,8 @@ function resumeCatalogue(activites: Activite[]): string {
 
 function resumeCompetences(competences: Competence[]): string {
   return competences
-    .map(c => `${c.id}:${c.nom}(${c.domaine})`)
-    .join(', ')
+    .map(c => `${c.id} | ${c.nom} | ${c.domaine}`)
+    .join('\n')
 }
 
 // ─── Prompt génération programme ─────────────────────────────────────────────
@@ -194,8 +194,12 @@ ${resumeCatalogue(catalogueGeneral.slice(0, 20))}
 
 RÈGLE CATALOGUE : Pour utiliser une activité du catalogue (source: "catalogue"), son objectifPedagogique doit contenir un lien explicite au thème "${params.theme}". Sinon, créer une nouvelle activité (source: "generee_ia") spécifiquement thématique.
 
-COMPÉTENCES DISPONIBLES :
+COMPÉTENCES DISPONIBLES (format : ID | Nom | Domaine) :
 ${resumeCompetences(competences)}
+
+⚠️ RÈGLE ABSOLUE SUR LES COMPÉTENCES :
+Les champs "competencesCiblees" et "competencesTravaillees" ne peuvent contenir QUE des IDs copiés exactement depuis la liste ci-dessus.
+N'invente aucun ID. Si aucune compétence ne correspond, utilise un tableau vide [].
 
 CONTRAINTES TECHNIQUES :
 - Durée par activité : ${dureeMax} (adapté à l'âge)
@@ -208,7 +212,7 @@ FORMAT JSON (répondre UNIQUEMENT avec ce JSON, sans markdown, sans texte avant/
   "titre": "Titre précis incluant le thème",
   "description": "Description en 2 phrases mentionnant le thème et la progression",
   "objectifsPedagogiques": ["Objectif thématique 1", "Objectif thématique 2", "Objectif thématique 3"],
-  "competencesCiblees": ["id_competence_1", "id_competence_2"],
+  "competencesCiblees": ["<ID_EXACT_depuis_la_liste_COMPÉTENCES_DISPONIBLES>"],
   "semaines": [
     {
       "numero": 1,
@@ -222,7 +226,7 @@ FORMAT JSON (répondre UNIQUEMENT avec ce JSON, sans markdown, sans texte avant/
           "description": "Ce qu'on fait ET pourquoi c'est lié au thème.",
           "objectifPedagogique": "À la fin, l'enfant sera capable de [verbe] sur [aspect du thème]",
           "phase": "decouverte",
-          "competencesTravaillees": ["id_competence"],
+          "competencesTravaillees": ["<ID_EXACT_depuis_la_liste_COMPÉTENCES_DISPONIBLES>"],
           "materielNecessaire": [{"nom": "silhouette du corps à imprimer", "quantite": "1", "aAcheter": false}],
           "materielOptionnel": [],
           "tempsPreparation": 10,
@@ -369,6 +373,10 @@ async function persisterProgramme(
     const activitesValidees = (semaineIA.activites ?? []).map((a, i) => {
       const activite = validerActiviteIA(a, i)
       // Filtrer les compétences : ne garder que les IDs qui existent réellement en base
+      const invalides = activite.competencesTravaillees.filter(id => !competenceIdsValides.has(id))
+      if (invalides.length > 0) {
+        console.warn(`[IA] Semaine ${semaineIA.numero}, activité "${activite.titre}" : ${invalides.length} compétence(s) inventée(s) par l'IA ignorée(s)`)
+      }
       activite.competencesTravaillees = activite.competencesTravaillees.filter(
         id => competenceIdsValides.has(id)
       )

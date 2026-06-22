@@ -9,6 +9,7 @@ import { useLiveQuery } from 'dexie-react-hooks'
 import { db } from '../../core/db/database'
 import { newEntity, withUpdate, softDeleteFields } from '../../core/db/helpers'
 import { IconCalendar } from '@shared/components/ui/Icon/Icon'
+import { ConfirmModal } from '../../shared/components/ui/ConfirmModal'
 
 import type { Pensee, CategoriePensee, StatutPensee, Tache, CoursesItem, Evenement } from '../../shared/types'
 import './pensees.css'
@@ -269,6 +270,7 @@ function PenseeCard({ pensee, onTraiter, onSupprimer, onTransformer }: {
 export default function Pensees() {
   const [showSaisie, setShowSaisie] = useState(false)
   const [filtreStatut, setFiltreStatut] = useState<StatutPensee | 'toutes'>('active')
+  const [confirmPensee, setConfirmPensee] = useState<Pensee | null>(null)
 
   const pensees = useLiveQuery(
     () => db.pensees
@@ -381,7 +383,7 @@ export default function Pensees() {
                 key={p.id}
                 pensee={p}
                 onTraiter={() => traiter(p)}
-                onSupprimer={() => supprimer(p)}
+                onSupprimer={() => setConfirmPensee(p)}
                 onTransformer={(vers) => transformer(p, vers)}
               />
             ))}
@@ -398,6 +400,17 @@ export default function Pensees() {
       {showSaisie && (
         <SaisieForm onClose={() => setShowSaisie(false)} />
       )}
+
+      <ConfirmModal
+        open={confirmPensee !== null}
+        title="Supprimer cette pensée ?"
+        message="Cette action est irréversible."
+        confirmLabel="Supprimer"
+        cancelLabel="Annuler"
+        danger
+        onConfirm={async () => { if (confirmPensee) { await supprimer(confirmPensee); setConfirmPensee(null) } }}
+        onCancel={() => setConfirmPensee(null)}
+      />
     </div>
   )
 }
