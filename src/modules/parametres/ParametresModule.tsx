@@ -796,6 +796,9 @@ function SectionSync() {
   const { state, lastPullAt, pendingCount, lastError, isOnline } = useSyncStatus()
   const [syncing, setSyncing] = useState(false)
   const [done, setDone] = useState(false)
+  const [pushingRecettes, setPushingRecettes] = useState(false)
+  const [pullingRecettes, setPullingRecettes] = useState(false)
+  const [repairMsg, setRepairMsg] = useState('')
 
   async function forceSync() {
     if (syncing) return
@@ -808,6 +811,34 @@ function SectionSync() {
       setTimeout(() => setDone(false), 3000)
     } finally {
       setSyncing(false)
+    }
+  }
+
+  async function pushRecettes() {
+    if (pushingRecettes) return
+    setPushingRecettes(true)
+    setRepairMsg('')
+    try {
+      const now = new Date()
+      const recettes = await db.recettes.filter(r => !r.archive).toArray()
+      await Promise.all(recettes.map(r => db.recettes.update(r.id, { updatedAt: now })))
+      setRepairMsg(`${recettes.length} recette(s) poussées vers le cloud.`)
+    } finally {
+      setPushingRecettes(false)
+    }
+  }
+
+  async function pullRecettes() {
+    if (pullingRecettes) return
+    setPullingRecettes(true)
+    setRepairMsg('')
+    try {
+      await db.recettes.clear()
+      await pullAll()
+      const count = await db.recettes.count()
+      setRepairMsg(`${count} recette(s) réimportées depuis le cloud.`)
+    } finally {
+      setPullingRecettes(false)
     }
   }
 
@@ -884,6 +915,35 @@ function SectionSync() {
           Synchronisation impossible hors ligne. Les données seront envoyées au retour de la connexion.
         </p>
       )}
+
+      {/* Réparation recettes */}
+      <div style={{ marginTop: 24, padding: '14px 16px', background: 'rgba(245,158,11,0.07)', borderRadius: 12, border: '1px solid rgba(245,158,11,0.2)' }}>
+        <p style={{ fontSize: 12, fontWeight: 700, color: '#92400e', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 8 }}>
+          Réparer les catégories de recettes
+        </p>
+        <p style={{ fontSize: 13, color: '#78350f', marginBottom: 12, lineHeight: 1.5 }}>
+          Si les recettes sont mal classées entre appareils : pousser depuis l'appareil correct, puis réimporter sur l'autre.
+        </p>
+        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+          <button
+            className="param-btn"
+            onClick={pushRecettes}
+            disabled={pushingRecettes || !isOnline}
+            style={{ fontSize: 13 }}
+          >
+            {pushingRecettes ? '…' : '↑ Pousser mes recettes vers le cloud'}
+          </button>
+          <button
+            className="param-btn"
+            onClick={pullRecettes}
+            disabled={pullingRecettes || !isOnline}
+            style={{ fontSize: 13 }}
+          >
+            {pullingRecettes ? '…' : '↓ Réimporter depuis le cloud'}
+          </button>
+        </div>
+        {repairMsg && <p style={{ fontSize: 13, color: '#22c55e', marginTop: 8, fontWeight: 500 }}>{repairMsg}</p>}
+      </div>
 
       {/* Explication */}
       <div className="sync-info-box">
