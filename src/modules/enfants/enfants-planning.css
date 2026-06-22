@@ -218,22 +218,187 @@
   min-width: 0;
 }
 
-/* Bouton + Ajouter */
-.planning-slot__add {
-  font-size: 12.5px;
+/* Boutons aléatoire / choisir */
+.planning-slot__add-row {
+  display: flex;
+  gap: 6px;
+  margin-top: 2px;
+}
+.planning-slot__add-random,
+.planning-slot__add-manual {
+  flex: 1;
+  font-size: 12px;
   font-weight: 500;
+  border-radius: 8px;
+  padding: 5px 8px;
+  cursor: pointer;
+  transition: color 0.15s, background 0.15s, border-color 0.15s;
+  white-space: nowrap;
+}
+.planning-slot__add-random {
   color: hsl(262, 30%, 70%);
   background: none;
   border: 1.5px dashed hsl(262, 30%, 82%);
-  border-radius: 8px;
-  padding: 5px 12px;
-  cursor: pointer;
-  transition: color 0.15s, border-color 0.15s;
-  white-space: nowrap;
 }
-.planning-slot__add:hover {
+.planning-slot__add-random:hover {
   color: hsl(262, 43%, 49%);
   border-color: hsl(262, 43%, 65%);
+}
+.planning-slot__add-manual {
+  color: hsl(262, 43%, 49%);
+  background: hsl(262, 60%, 96%);
+  border: 1.5px solid hsl(262, 40%, 82%);
+}
+.planning-slot__add-manual:hover {
+  background: hsl(262, 50%, 91%);
+}
+
+/* Bouton annuler réalisation */
+.planning-slot__btn-undo {
+  font-size: 13px;
+  width: 22px;
+  height: 22px;
+  border-radius: 6px;
+  border: none;
+  background: hsl(40, 80%, 92%);
+  color: hsl(40, 60%, 40%);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.planning-slot__btn-undo:hover { background: hsl(40, 70%, 84%); }
+
+/* Bouton déplacer */
+.planning-slot__btn-move {
+  font-size: 13px;
+  width: 22px;
+  height: 22px;
+  border-radius: 6px;
+  border: none;
+  background: hsl(220, 60%, 93%);
+  color: hsl(220, 50%, 50%);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.planning-slot__btn-move:hover { background: hsl(220, 50%, 86%); }
+
+/* Picker déplacement */
+.planning-move-picker {
+  background: hsl(220, 60%, 96%);
+  border-radius: 10px;
+  padding: 8px 10px;
+  margin-top: 4px;
+}
+.planning-move-picker__label {
+  font-size: 11px;
+  font-weight: 600;
+  color: hsl(220, 40%, 55%);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 6px;
+  display: block;
+}
+.planning-move-picker__jours {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+.planning-move-jour {
+  flex: 1;
+  min-width: 30px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1px;
+  padding: 5px 4px;
+  border-radius: 8px;
+  border: 1.5px solid hsl(220, 40%, 78%);
+  background: white;
+  font-size: 11px;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.planning-move-jour:hover:not(:disabled) { background: hsl(220, 60%, 88%); }
+.planning-move-jour--current { opacity: 0.35; cursor: not-allowed; }
+.planning-move-jour:disabled { opacity: 0.35; cursor: not-allowed; }
+
+/* Picker manuel (choisir une activité) */
+.planning-manual-picker {
+  background: hsl(262, 40%, 97%);
+  border-radius: 10px;
+  padding: 10px;
+  margin-top: 6px;
+  border: 1px solid hsl(262, 30%, 88%);
+}
+.planning-manual-picker__title {
+  font-size: 12px;
+  font-weight: 700;
+  color: hsl(262, 40%, 45%);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin: 0 0 8px;
+}
+.planning-manual-picker__back {
+  font-size: 12px;
+  font-weight: 500;
+  color: hsl(262, 43%, 55%);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  margin-bottom: 6px;
+  display: block;
+}
+.planning-manual-picker__cats {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.planning-manual-cat {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 10px;
+  border-radius: 8px;
+  border: 1.5px solid hsl(262, 30%, 86%);
+  background: white;
+  font-size: 13px;
+  font-weight: 500;
+  color: hsl(262, 30%, 35%);
+  cursor: pointer;
+  text-align: left;
+  transition: background 0.15s;
+}
+.planning-manual-cat:hover { background: hsl(262, 50%, 93%); }
+.planning-manual-picker__acts {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  max-height: 200px;
+  overflow-y: auto;
+}
+.planning-manual-act {
+  padding: 7px 10px;
+  border-radius: 8px;
+  border: 1.5px solid hsl(262, 30%, 86%);
+  background: white;
+  font-size: 13px;
+  font-weight: 500;
+  color: hsl(262, 30%, 35%);
+  cursor: pointer;
+  text-align: left;
+  transition: background 0.15s;
+}
+.planning-manual-act:hover { background: hsl(262, 50%, 93%); }
+.planning-manual-picker__empty {
+  font-size: 12px;
+  color: hsl(262, 20%, 65%);
+  margin: 4px 0 0;
 }
 
 /* ── Footer actions ──────────────────────────────────── */

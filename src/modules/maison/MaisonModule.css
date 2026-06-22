@@ -404,6 +404,11 @@
   gap: 10px;
   justify-content: flex-end;
   padding-top: 8px;
+  position: sticky;
+  bottom: 0;
+  background: var(--color-bg, #FAF8F5);
+  padding-bottom: max(10px, env(safe-area-inset-bottom));
+  z-index: 2;
 }
 
 /* ── Tâches ────────────────────────────────────────────────────────────────── */
@@ -637,7 +642,17 @@
   color: var(--color-text, #1a1a2e);
 }
 
-.tache-form__actions { display: flex; gap: 10px; justify-content: flex-end; padding-top: 8px; }
+.tache-form__actions {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+  padding-top: 8px;
+  position: sticky;
+  bottom: 0;
+  background: var(--color-bg, #FAF8F5);
+  padding-bottom: max(10px, env(safe-area-inset-bottom));
+  z-index: 2;
+}
 
 /* ── Vue tâches globale ────────────────────────────────────────────────────── */
 
@@ -996,4 +1011,14 @@
 }
 .projet-form__row { display: flex; gap: 10px; }
 .projet-form__row .projet-form__field { flex: 1; }
-.projet-form__actions { display: flex; gap: 10px; justify-content: flex-end; padding-top: 8px; }
+.projet-form__actions {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+  padding-top: 8px;
+  position: sticky;
+  bottom: 0;
+  background: var(--color-bg, #FAF8F5);
+  padding-bottom: max(10px, env(safe-area-inset-bottom));
+  z-index: 2;
+}

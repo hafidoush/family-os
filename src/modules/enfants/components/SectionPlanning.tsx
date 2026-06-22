@@ -141,10 +141,13 @@ function suggerer(
 // ─── Composant ────────────────────────────────────────────────────────────────
 
 export function SectionPlanning() {
-  const [weekBase, setWeekBase] = useState(new Date())
-  const [drafts,   setDrafts]   = useState<Draft[]>([])
-  const [saving,   setSaving]   = useState(false)
-  const [savedMsg, setSavedMsg] = useState<string | null>(null)
+  const [weekBase,       setWeekBase]       = useState(new Date())
+  const [drafts,         setDrafts]         = useState<Draft[]>([])
+  const [saving,         setSaving]         = useState(false)
+  const [savedMsg,       setSavedMsg]       = useState<string | null>(null)
+  const [movingPlanifId, setMovingPlanifId] = useState<string | null>(null)
+  const [manualDraftDay, setManualDraftDay] = useState<string | null>(null)
+  const [manualCatId,    setManualCatId]    = useState<string | null>(null)
 
   const lundi       = getLundi(weekBase)
   const jours       = Array.from({ length: 7 }, (_, i) => addDays(lundi, i))
@@ -375,11 +378,34 @@ export function SectionPlanning() {
     if (nouveaux.length > 0) setDrafts(prev => [...prev, ...nouveaux])
   }, [jours, lundi, activites, categories, recentes, planifSemaine, drafts, activitesPlacer, activitesProgrammeSemaine])
 
-  // ── Marquer comme réalisée ────────────────────────────────────────────────
+  // ── Marquer comme réalisée / annuler ─────────────────────────────────────
 
   const toggleStatut = useCallback(async (planif: PlanificationActivite) => {
-    if (planif.statut === 'realisee') return
-    await db.planificationsActivites.update(planif.id, { statut: 'realisee', updatedAt: new Date() })
+    const newStatut = planif.statut === 'realisee' ? 'planifiee' : 'realisee'
+    await db.planificationsActivites.update(planif.id, { statut: newStatut, updatedAt: new Date() })
+  }, [])
+
+  // ── Déplacer une planification vers un autre jour ─────────────────────────
+
+  const deplacerPlanif = useCallback(async (planifId: string, newIso: string) => {
+    await db.planificationsActivites.update(planifId, { datePrevue: newIso, updatedAt: new Date() })
+    setMovingPlanifId(null)
+  }, [])
+
+  // ── Ajouter manuellement une activité (depuis le catalogue) ───────────────
+
+  const ajouterManuel = useCallback((activiteId: string) => {
+    if (!manualDraftDay) return
+    const a = activiteById.get(activiteId)
+    if (!a) return
+    setDrafts(prev => [...prev, { draftId: newDraftId(), iso: manualDraftDay, activite: a, editing: false }])
+    setManualDraftDay(null)
+    setManualCatId(null)
+  }, [manualDraftDay, activiteById])
+
+  const openManual = useCallback((iso: string) => {
+    setManualDraftDay(prev => prev === iso ? null : iso)
+    setManualCatId(null)
   }, [])
 
   // ── Supprimer une planification enregistrée ───────────────────────────────
@@ -471,20 +497,46 @@ export function SectionPlanning() {
 
                 {/* Activités enregistrées */}
                 {planifs.map(p => {
-                  const act  = activiteById.get(p.activite)
-                  const cat  = act ? catById.get(act.categorie) : undefined
-                  const done = p.statut === 'realisee'
+                  const act     = activiteById.get(p.activite)
+                  const cat     = act ? catById.get(act.categorie) : undefined
+                  const done    = p.statut === 'realisee'
+                  const moving  = movingPlanifId === p.id
                   return (
-                    <div key={p.id} className={`planning-slot__activite${done ? ' planning-slot__activite--done' : ''}`}>
-                      <span className="planning-slot__cat-icone">{cat?.icone ?? '🎯'}</span>
-                      <span className="planning-slot__nom">{act?.nom ?? '—'}</span>
-                      {done
-                        ? <span className="planning-slot__done-badge">✓</span>
-                        : <>
+                    <div key={p.id}>
+                      <div className={`planning-slot__activite${done ? ' planning-slot__activite--done' : ''}`}>
+                        <span className="planning-slot__cat-icone">{cat?.icone ?? '🎯'}</span>
+                        <span className="planning-slot__nom">{act?.nom ?? '—'}</span>
+                        {done ? (
+                          <button className="planning-slot__btn-undo" onClick={() => toggleStatut(p)} title="Annuler">↩</button>
+                        ) : (
+                          <>
+                            <button className="planning-slot__btn-move"  onClick={() => setMovingPlanifId(moving ? null : p.id)} title="Déplacer">⇄</button>
                             <button className="planning-slot__btn-check" onClick={() => toggleStatut(p)} title="Faite">✓</button>
                             <button className="planning-slot__btn-del"   onClick={() => supprimerPlanif(p.id)} title="Retirer">×</button>
                           </>
-                      }
+                        )}
+                      </div>
+                      {moving && (
+                        <div className="planning-move-picker">
+                          <span className="planning-move-picker__label">Déplacer vers :</span>
+                          <div className="planning-move-picker__jours">
+                            {jours.map((j, idx) => {
+                              const jIso = toISO(j)
+                              return (
+                                <button
+                                  key={jIso}
+                                  className={`planning-move-jour${jIso === iso ? ' planning-move-jour--current' : ''}`}
+                                  onClick={() => deplacerPlanif(p.id, jIso)}
+                                  disabled={jIso === iso}
+                                >
+                                  <span>{NOMS_JOURS[idx]}</span>
+                                  <span>{j.getDate()}</span>
+                                </button>
+                              )
+                            })}
+                          </div>
+                        </div>
+                      )}
                     </div>
                   )
                 })}
@@ -534,14 +586,45 @@ export function SectionPlanning() {
                   </div>
                 ))}
 
-                {/* Bouton + toujours présent */}
-                <button
-                  className="planning-slot__add"
-                  onClick={() => ajouterDraft(iso)}
-                  title="Ajouter une activité"
-                >
-                  + Ajouter
-                </button>
+                {/* Boutons ajout */}
+                <div className="planning-slot__add-row">
+                  <button className="planning-slot__add-random" onClick={() => ajouterDraft(iso)} title="Suggestion aléatoire">↻ Aléatoire</button>
+                  <button className="planning-slot__add-manual" onClick={() => openManual(iso)} title="Choisir une activité">+ Choisir</button>
+                </div>
+
+                {/* Picker manuel : étape 1 catégorie, étape 2 activités */}
+                {manualDraftDay === iso && (
+                  <div className="planning-manual-picker">
+                    {!manualCatId ? (
+                      <>
+                        <p className="planning-manual-picker__title">Catégorie</p>
+                        <div className="planning-manual-picker__cats">
+                          {categories.map(c => (
+                            <button key={c.id} className="planning-manual-cat" onClick={() => setManualCatId(c.id)}>
+                              <span>{c.icone}</span>
+                              <span>{c.nom}</span>
+                            </button>
+                          ))}
+                        </div>
+                      </>
+                    ) : (
+                      <>
+                        <button className="planning-manual-picker__back" onClick={() => setManualCatId(null)}>← Retour</button>
+                        <p className="planning-manual-picker__title">{categories.find(c => c.id === manualCatId)?.nom}</p>
+                        <div className="planning-manual-picker__acts">
+                          {activites.filter(a => a.categorie === manualCatId).map(a => (
+                            <button key={a.id} className="planning-manual-act" onClick={() => ajouterManuel(a.id)}>
+                              {a.nom}
+                            </button>
+                          ))}
+                          {activites.filter(a => a.categorie === manualCatId).length === 0 && (
+                            <p className="planning-manual-picker__empty">Aucune activité dans cette catégorie</p>
+                          )}
+                        </div>
+                      </>
+                    )}
+                  </div>
+                )}
               </div>
             </div>
           )

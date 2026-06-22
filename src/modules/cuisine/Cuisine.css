@@ -158,10 +158,9 @@
   transform: scale(0.96);
 }
 
-/* Sur iPad/desktop, le FAB est moins bas (pas de bottom nav) */
 @media (min-width: 768px) {
   .cuisine-module__fab {
-    bottom: 24px;
+    bottom: max(96px, calc(80px + env(safe-area-inset-bottom)));
     right: 28px;
     width: 56px;
     height: 56px;
