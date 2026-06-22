@@ -65,9 +65,6 @@ async function _seedDatabase(): Promise<void> {
   // Garantit que les catégories de recettes existent toujours
   await seedCategoriesRecettes()
 
-  // Répare la corruption de sync (tout déplacé vers Plat principal) + force-push sur l'ordi
-  await repairRecipeCategoriesSync()
-
   // Purge one-shot des recettes pré-enregistrées (deviceId === 'seed')
   await purgeSeededRecettes()
 
