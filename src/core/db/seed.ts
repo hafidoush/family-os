@@ -45,6 +45,10 @@ async function _seedDatabase(): Promise<void> {
   await migrerCategorieVegetarienVersAccompagnement()
   // Renommage "Accompagnement" → "Légumes & Accompagnement"
   await migrerCategorieAccompagnementVersLegumes()
+  // Standardise les IDs de catégories recettes (fix sync cross-appareils)
+  await migrerCategoriesRecettesVersIDsStables()
+  // Supprime la catégorie "Petit-déjeuner" (recettes déplacées vers Goûter)
+  await supprimerCategoriePetitDejeuner()
 
   if (membresCount === 0) {
     console.log('[FamilyOS] Premier lancement — initialisation de la base...')
@@ -448,16 +452,84 @@ async function seedCategoriesRecettes(): Promise<void> {
   if (existing > 0) return
 
   const categories: CategorieRecette[] = [
-    { id: uuid(), nom: 'Plat principal', icone: '🍽️', ordre: 1, ...withAudit({}) },
-    { id: uuid(), nom: 'Entrée', icone: '🥗', ordre: 2, ...withAudit({}) },
-    { id: uuid(), nom: 'Dessert', icone: '🍰', ordre: 3, ...withAudit({}) },
-    { id: uuid(), nom: 'Petit-déjeuner', icone: '☕', ordre: 4, ...withAudit({}) },
-    { id: uuid(), nom: 'Goûter', icone: '🧁', ordre: 5, ...withAudit({}) },
-    { id: uuid(), nom: 'Soupe', icone: '🍲', ordre: 6, ...withAudit({}) },
-    { id: uuid(), nom: 'Sauce', icone: '🫕', ordre: 7, ...withAudit({}) },
-    { id: uuid(), nom: 'Légumes & Accompagnement', icone: '🥦', ordre: 8, ...withAudit({}) },
+    { id: 'cat-recette-plat-principal',         nom: 'Plat principal',           icone: '🍽️', ordre: 1, ...withAudit({}) },
+    { id: 'cat-recette-entree',                 nom: 'Entrée',                   icone: '🥗', ordre: 2, ...withAudit({}) },
+    { id: 'cat-recette-dessert',                nom: 'Dessert',                  icone: '🍰', ordre: 3, ...withAudit({}) },
+    { id: 'cat-recette-gouter',                 nom: 'Goûter',                   icone: '🧁', ordre: 4, ...withAudit({}) },
+    { id: 'cat-recette-soupe',                  nom: 'Soupe',                    icone: '🍲', ordre: 5, ...withAudit({}) },
+    { id: 'cat-recette-sauce',                  nom: 'Sauce',                    icone: '🫕', ordre: 6, ...withAudit({}) },
+    { id: 'cat-recette-legumes-accompagnement', nom: 'Légumes & Accompagnement', icone: '🥦', ordre: 7, ...withAudit({}) },
+    { id: 'cat-recette-boissons',               nom: 'Boissons',                 icone: '🥤', ordre: 8, ...withAudit({}) },
   ]
   await db.categoriesRecettes.bulkAdd(categories)
+}
+
+// IDs stables pour toutes les catégories recettes par défaut
+const STABLE_CATS_RECETTES: Record<string, { id: string; icone: string; ordre: number }> = {
+  'Plat principal':          { id: 'cat-recette-plat-principal',         icone: '🍽️', ordre: 1 },
+  'Entrée':                  { id: 'cat-recette-entree',                 icone: '🥗', ordre: 2 },
+  'Dessert':                 { id: 'cat-recette-dessert',                icone: '🍰', ordre: 3 },
+  'Goûter':                  { id: 'cat-recette-gouter',                 icone: '🧁', ordre: 4 },
+  'Soupe':                   { id: 'cat-recette-soupe',                  icone: '🍲', ordre: 5 },
+  'Sauce':                   { id: 'cat-recette-sauce',                  icone: '🫕', ordre: 6 },
+  'Légumes & Accompagnement':{ id: 'cat-recette-legumes-accompagnement', icone: '🥦', ordre: 7 },
+  'Boissons':                { id: 'cat-recette-boissons',               icone: '🥤', ordre: 8 },
+}
+
+async function migrerCategoriesRecettesVersIDsStables(): Promise<void> {
+  const now = new Date()
+  const allCats = await db.categoriesRecettes.toArray()
+  if (allCats.length === 0) return
+
+  for (const [nom, { id: stableId, icone, ordre }] of Object.entries(STABLE_CATS_RECETTES)) {
+    const matching = allCats.filter(c => c.nom === nom)
+    if (matching.length === 0) continue
+
+    const nonStable = matching.filter(c => c.id !== stableId)
+    if (nonStable.length === 0) continue
+
+    const alreadyStable = matching.find(c => c.id === stableId)
+    if (!alreadyStable) {
+      const source = matching[0]
+      try {
+        await db.categoriesRecettes.add({ ...source, id: stableId, icone, ordre, updatedAt: now })
+      } catch { /* déjà présent */ }
+    }
+
+    for (const old of nonStable) {
+      const affected = await db.recettes.where('categorie').equals(old.id).toArray()
+      if (affected.length > 0) {
+        await Promise.all(
+          affected.map(r => db.recettes.update(r.id, { categorie: stableId, updatedAt: now }))
+        )
+      }
+      await db.categoriesRecettes.delete(old.id)
+    }
+  }
+
+  // Garantit que Boissons existe sur les appareils anciens
+  const boissons = await db.categoriesRecettes.get('cat-recette-boissons')
+  if (!boissons) {
+    await db.categoriesRecettes.add({
+      id: 'cat-recette-boissons', nom: 'Boissons', icone: '🥤', ordre: 8, ...withAudit({}),
+    })
+  }
+}
+
+async function supprimerCategoriePetitDejeuner(): Promise<void> {
+  const cat = await db.categoriesRecettes.filter(c => c.nom === 'Petit-déjeuner').first()
+  if (!cat) return
+  const now = new Date()
+  const gouter = await db.categoriesRecettes.get('cat-recette-gouter')
+    ?? await db.categoriesRecettes.filter(c => c.nom === 'Goûter').first()
+    ?? await db.categoriesRecettes.filter(c => c.nom === 'Plat principal').first()
+  if (gouter) {
+    const recettes = await db.recettes.where('categorie').equals(cat.id).toArray()
+    if (recettes.length > 0) {
+      await Promise.all(recettes.map(r => db.recettes.update(r.id, { categorie: gouter.id, updatedAt: now })))
+    }
+  }
+  await db.categoriesRecettes.delete(cat.id)
 }
 
 async function seedCategoriesActivites(): Promise<void> {
