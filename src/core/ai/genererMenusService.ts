@@ -37,45 +37,78 @@ interface RepasIA {
 
 type PlanSemaineIA = Record<JourMenu, RepasIA>
 
+// ─── Types internes ───────────────────────────────────────────────────────────
+
+interface RecetteAvecCategorie {
+  nom: string
+  categorie: string // nom de la catégorie
+}
+
 // ─── Prompt ───────────────────────────────────────────────────────────────────
 
-function buildPromptMenus(recettesExistantes: string[], nbPersonnes: number): string {
-  if (recettesExistantes.length === 0) {
+// Catégories qui ne peuvent pas constituer un repas complet seules
+const CATEGORIES_ACCOMPAGNEMENT = new Set([
+  'Sauce',
+  'Légumes & Accompagnement',
+  'Entrée',
+  'Soupe',
+])
+
+// Catégories considérées comme plat principal
+const CATEGORIES_PLAT_PRINCIPAL = new Set([
+  'Plat principal',
+])
+
+function buildPromptMenus(recettes: RecetteAvecCategorie[], nbPersonnes: number): string {
+  if (recettes.length === 0) {
     throw new Error('Aucune recette disponible. Ajoutez des recettes avant de générer un menu.')
   }
 
   const saison = getSaison()
   const dateAujourdhui = new Date().toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })
-  const listeRecettes = recettesExistantes.slice(0, 80).map(r => `- ${r}`).join('\n')
+
+  const plats = recettes.filter(r => CATEGORIES_PLAT_PRINCIPAL.has(r.categorie))
+  const accompagnements = recettes.filter(r => CATEGORIES_ACCOMPAGNEMENT.has(r.categorie))
+  const autres = recettes.filter(r =>
+    !CATEGORIES_PLAT_PRINCIPAL.has(r.categorie) && !CATEGORIES_ACCOMPAGNEMENT.has(r.categorie)
+  )
+
+  const formatListe = (liste: RecetteAvecCategorie[]) =>
+    liste.slice(0, 60).map(r => `- ${r.nom} [${r.categorie}]`).join('\n')
+
+  const listePlats = formatListe(plats.length > 0 ? plats : [...plats, ...autres])
+  const listeAccomp = accompagnements.length > 0 ? `\nAccompagnements & compléments disponibles :\n${formatListe(accompagnements)}` : ''
 
   return `Tu es un assistant culinaire pour une famille française. Génère un plan de repas pour une semaine complète (déjeuner + dîner) pour ${nbPersonnes} personne${nbPersonnes > 1 ? 's' : ''}.
 
 Date du jour : ${dateAujourdhui}
 Saison actuelle : ${saison.nom} — ${saison.description}
 
-RÈGLE ABSOLUE : tu dois choisir EXCLUSIVEMENT parmi les recettes listées ci-dessous.
-Ne crée AUCUNE nouvelle recette. N'invente aucun plat. Si une case ne peut pas être remplie avec une recette de la liste, utilise une recette existante plutôt qu'en inventer une.
+RÈGLES ABSOLUES :
+1. Chaque repas doit être un PLAT PRINCIPAL complet. Utilise en priorité les recettes de la section "Plats principaux".
+2. Si tu sélectionnes un plat qui semble incomplet seul (ex : poisson grillé nature, sardines, etc.), associe-lui un accompagnement de la liste "Accompagnements" pour former un repas complet. Dans ce cas, indique les deux noms séparés par " + " (ex: "Sardines à la charmoula + Frites maison").
+3. NE jamais sélectionner une Sauce, un Accompagnement, une Entrée ou une Soupe comme repas principal unique.
+4. N'invente AUCUNE recette. Utilise EXCLUSIVEMENT les noms exacts ci-dessous.
 
-Recettes disponibles :
-${listeRecettes}
+Plats principaux disponibles :
+${listePlats}
+${listeAccomp}
 
 Contraintes de saisonnalité (PRIORITÉ HAUTE) :
 - Nous sommes en ${saison.nom}. Privilégie en priorité les recettes adaptées à cette saison : ${saison.description}.
-- Utilise ton jugement pour identifier quelles recettes de la liste sont légères/estivales vs. consistantes/hivernales.
-- En été : évite les gratins, plats longuement mijotés, raclettes, fondues et plats très riches. Préfère salades composées, grillades, plats froids ou rapides.
-- En hiver : privilégie les plats chauds, soupes, mijotés, réconfortants.
-- Si peu de recettes correspondent à la saison, tu peux utiliser des recettes neutres (pâtes simples, riz, omelettes…).
+- En été : évite gratins, mijotés lourds, raclettes, fondues. Préfère grillades, salades composées, plats froids.
+- En hiver : privilégie plats chauds, soupes-repas complètes, mijotés, gratins.
 
 Autres contraintes :
 - Repas variés (pas deux fois la même recette dans la même semaine si possible)
 - Le week-end : privilégie les recettes plus festives ou familiales si disponibles
-- Utilise le nom exact de la recette tel qu'il apparaît dans la liste ci-dessus
+- Utilise le nom exact tel qu'il apparaît dans la liste (avec " + " si accompagnement associé)
 
 Retourne UNIQUEMENT un objet JSON valide sans markdown, sans backticks, sans commentaires.
 
 Format attendu :
 {
-  "lundi":    { "dejeuner": "nom exact de la recette", "diner": "nom exact de la recette" },
+  "lundi":    { "dejeuner": "nom exact du plat", "diner": "nom exact du plat" },
   "mardi":    { "dejeuner": "...", "diner": "..." },
   "mercredi": { "dejeuner": "...", "diner": "..." },
   "jeudi":    { "dejeuner": "...", "diner": "..." },
@@ -101,20 +134,29 @@ function normaliser(s: string): string {
   return s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').trim()
 }
 
-async function trouverRecetteId(nomPlat: string): Promise<string | undefined> {
+// Résout un nom de plat (potentiellement "plat + accompagnement") vers un ou deux recetteIds
+async function trouverRecetteIds(nomPlat: string): Promise<string[]> {
   const recettes = await db.recettes.filter(r => !r.archive && !r.deletedAt).toArray()
-  const cible = normaliser(nomPlat)
 
-  // Correspondance exacte
-  const exacte = recettes.find(r => normaliser(r.nom) === cible)
-  if (exacte) return exacte.id
+  const resoudreUn = (nom: string): string | undefined => {
+    const cible = normaliser(nom)
+    const exacte = recettes.find(r => normaliser(r.nom) === cible)
+    if (exacte) return exacte.id
+    const partielle = recettes.find(r => {
+      const n = normaliser(r.nom)
+      return cible.includes(n) || n.includes(cible)
+    })
+    return partielle?.id
+  }
 
-  // Correspondance partielle (le nom du plat contient le nom de la recette ou vice-versa)
-  const partielle = recettes.find(r => {
-    const n = normaliser(r.nom)
-    return cible.includes(n) || n.includes(cible)
-  })
-  return partielle?.id
+  // L'IA peut retourner "Plat A + Accompagnement B"
+  const parties = nomPlat.split('+').map(s => s.trim()).filter(Boolean)
+  const ids: string[] = []
+  for (const partie of parties) {
+    const id = resoudreUn(partie)
+    if (id) ids.push(id)
+  }
+  return ids
 }
 
 // ─── Fonction principale ──────────────────────────────────────────────────────
@@ -130,12 +172,18 @@ export async function genererMenusIA(
   nbPersonnes = 4,
   assignerJours = true,
 ): Promise<ResultatGeneration> {
-  // 1. Charger les recettes existantes pour le prompt (exclure supprimées ET archivées)
+  // 1. Charger les recettes avec leurs catégories
   const recettes = await db.recettes.filter(r => !r.archive && !r.deletedAt).toArray()
-  const nomsRecettes = recettes.map(r => r.nom)
+  const categories = await db.categoriesRecettes.toArray()
+  const catById = new Map(categories.map(c => [c.id, c.nom]))
+
+  const recettesAvecCat: RecetteAvecCategorie[] = recettes.map(r => ({
+    nom: r.nom,
+    categorie: catById.get(r.categorie) ?? 'Plat principal',
+  }))
 
   // 2. Appel OpenAI
-  const plan = await appelOpenAIMenus(buildPromptMenus(nomsRecettes, nbPersonnes))
+  const plan = await appelOpenAIMenus(buildPromptMenus(recettesAvecCat, nbPersonnes))
 
   // 3. Supprimer les slots existants du menu
   const slotsExistants = await db.menuSlots.filter(s => s.menu === menuId && !s.archive).toArray()
@@ -158,26 +206,26 @@ export async function genererMenusIA(
       const nomPlat = jourPlan[key]
       if (!nomPlat) continue
 
-      const recetteId = await trouverRecetteId(nomPlat)
+      // L'IA peut retourner "Plat + Accompagnement" — on crée un slot par recette trouvée
+      const recetteIds = await trouverRecetteIds(nomPlat)
 
-      // Si l'IA a respecté la consigne, recetteId est toujours défini.
-      // En cas d'invention malgré tout, on ignore le slot plutôt que de
-      // créer un repas sans recette réelle.
-      if (!recetteId) {
-        console.warn(`[MenuIA] Recette introuvable ignorée : "${nomPlat}"`)
+      if (recetteIds.length === 0) {
+        console.warn(`[MenuIA] Recette(s) introuvable(s) ignorée(s) : "${nomPlat}"`)
         continue
       }
 
-      recettesMatchées++
-      await db.menuSlots.add(newEntity<MenuSlot>({
-        menu:    menuId,
-        jour:    assignerJours ? jour : undefined,
-        repas:   type,
-        recette: recetteId,
-        statut:  'prevue',
-        archive: false,
-      }))
-      slotsCreés++
+      for (const recetteId of recetteIds) {
+        recettesMatchées++
+        await db.menuSlots.add(newEntity<MenuSlot>({
+          menu:    menuId,
+          jour:    assignerJours ? jour : undefined,
+          repas:   type,
+          recette: recetteId,
+          statut:  'prevue',
+          archive: false,
+        }))
+        slotsCreés++
+      }
     }
   }
 

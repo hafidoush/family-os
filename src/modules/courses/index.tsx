@@ -27,20 +27,32 @@ export default function CoursesPage() {
 
   return (
     <div style={{ minHeight: '100%', display: 'flex', flexDirection: 'column' }}>
-      <nav style={{ display: 'flex', gap: 4, padding: '12px 16px 0', borderBottom: '1px solid rgba(201,184,232,0.2)' }}>
+      <nav style={{
+        display: 'flex',
+        gap: 0,
+        background: '#F7F6F4',
+        borderRadius: 999,
+        margin: '12px 16px 0',
+        padding: 4,
+        flexShrink: 0,
+      }}>
         {TABS.map(tab => (
           <button
             key={tab.key}
             onClick={() => setActiveTab(tab.key)}
             style={{
-              padding: '8px 16px',
-              borderRadius: '10px 10px 0 0',
+              flex: 1,
+              padding: '9px 8px',
+              borderRadius: 999,
               border: 'none',
-              background: activeTab === tab.key ? 'rgba(201,184,232,0.25)' : 'transparent',
-              color: activeTab === tab.key ? '#7C5CBF' : '#9B8DB5',
-              fontWeight: activeTab === tab.key ? 600 : 400,
+              background: activeTab === tab.key ? '#D2ADEB' : 'transparent',
+              color: activeTab === tab.key ? 'white' : '#A9A6B8',
+              fontWeight: activeTab === tab.key ? 600 : 500,
               fontSize: 14,
               cursor: 'pointer',
+              fontFamily: 'inherit',
+              transition: 'all 0.18s ease',
+              whiteSpace: 'nowrap',
             }}
           >
             {tab.label}
@@ -48,7 +60,7 @@ export default function CoursesPage() {
         ))}
       </nav>
 
-      <div style={{ flex: 1, padding: '16px' }}>
+      <div style={{ flex: 1, padding: '16px', minHeight: 0, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
         {activeTab === 'liste'    && <CoursesModule />}
         {activeTab === 'produits' && <CatalogueProduits />}
       </div>
