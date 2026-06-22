@@ -1,5 +1,7 @@
 import { useState, useCallback } from 'react'
 import { useRecettes, useCategoriesRecettes } from '../../hooks/useRecettes'
+import { softDeleteFields } from '../../../../core/db/helpers'
+import { ConfirmModal } from '../../../../shared/components/ui/ConfirmModal'
 
 const TAGS_RECETTES = [
   { id: 'française',   label: 'Française' },
@@ -82,6 +84,9 @@ export function RecettesList({ onSelectRecette, onCreateRecette }: Props) {
   const [batchMode, setBatchMode] = useState(false)
   const [batchSelected, setBatchSelected] = useState<Set<string>>(new Set())
   const [batchDone, setBatchDone] = useState(false)
+  const [showMoveSheet, setShowMoveSheet] = useState(false)
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
+  const [bulkMsg, setBulkMsg] = useState('')
 
   const [importOuvert, setImportOuvert] = useState(false)
 
@@ -125,13 +130,42 @@ export function RecettesList({ onSelectRecette, onCreateRecette }: Props) {
     setBatchSelected(new Set())
   }
 
+  const handleBulkMove = useCallback(async (newCategorieId: string) => {
+    const now = new Date()
+    await Promise.all(
+      [...batchSelected].map(id => db.recettes.update(id, { categorie: newCategorieId, updatedAt: now }))
+    )
+    const n = batchSelected.size
+    exitBatchMode()
+    setShowMoveSheet(false)
+    setBulkMsg(`${n} recette${n > 1 ? 's' : ''} déplacée${n > 1 ? 's' : ''}`)
+    setTimeout(() => setBulkMsg(''), 3000)
+  }, [batchSelected])
+
+  const handleBulkDelete = useCallback(async () => {
+    const now = new Date()
+    await Promise.all(
+      [...batchSelected].map(id => db.recettes.update(id, { ...softDeleteFields(), updatedAt: now }))
+    )
+    const n = batchSelected.size
+    exitBatchMode()
+    setShowDeleteConfirm(false)
+    setBulkMsg(`${n} recette${n > 1 ? 's' : ''} supprimée${n > 1 ? 's' : ''}`)
+    setTimeout(() => setBulkMsg(''), 3000)
+  }, [batchSelected])
+
   return (
     <div className="recettes-list">
 
-      {/* Bannière confirmation batch */}
+      {/* Bannières confirmation */}
       {batchDone && (
         <div className="recettes-list__batch-confirm">
           ✅ Session batch cooking planifiée dans l'onglet Hebdo
+        </div>
+      )}
+      {bulkMsg && (
+        <div className="recettes-list__batch-confirm">
+          ✅ {bulkMsg}
         </div>
       )}
 
@@ -184,24 +218,37 @@ export function RecettesList({ onSelectRecette, onCreateRecette }: Props) {
         </button>
       </div>
 
-      {/* Bandeau mode batch */}
+      {/* Bandeau mode sélection */}
       {batchMode && (
         <div className="recettes-list__batch-bar">
-          <span>
+          <span className="recettes-list__batch-label">
             {batchSelected.size === 0
-              ? 'Sélectionne les recettes à préparer en batch'
-              : `${batchSelected.size} recette${batchSelected.size > 1 ? 's' : ''} sélectionnée${batchSelected.size > 1 ? 's' : ''}`}
+              ? 'Sélectionne des recettes'
+              : `${batchSelected.size} sélectionnée${batchSelected.size > 1 ? 's' : ''}`}
           </span>
-          <div style={{ display: 'flex', gap: 8 }}>
-            <button className="recettes-list__batch-cancel" onClick={exitBatchMode}>
-              Annuler
-            </button>
+          <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', justifyContent: 'flex-end' }}>
+            <button className="recettes-list__batch-cancel" onClick={exitBatchMode}>Annuler</button>
             <button
               className="recettes-list__batch-confirm-btn"
               onClick={handlePlanifierBatch}
               disabled={batchSelected.size === 0}
+              title="Planifier en batch cooking"
             >
-              Planifier ({batchSelected.size})
+              🍳 Batch
+            </button>
+            <button
+              className="recettes-list__batch-move-btn"
+              onClick={() => setShowMoveSheet(true)}
+              disabled={batchSelected.size === 0}
+            >
+              📁 Déplacer
+            </button>
+            <button
+              className="recettes-list__batch-delete-btn"
+              onClick={() => setShowDeleteConfirm(true)}
+              disabled={batchSelected.size === 0}
+            >
+              🗑
             </button>
           </div>
         </div>
@@ -292,6 +339,44 @@ export function RecettesList({ onSelectRecette, onCreateRecette }: Props) {
           onSuccess={id => { setImportOuvert(false); onSelectRecette(id) }}
         />
       )}
+
+      {/* Sheet déplacer vers catégorie */}
+      {showMoveSheet && (
+        <div className="recettes-list__sheet-backdrop" onClick={() => setShowMoveSheet(false)}>
+          <div className="recettes-list__sheet" onClick={e => e.stopPropagation()}>
+            <div className="recettes-list__sheet-handle" />
+            <p className="recettes-list__sheet-title">
+              Déplacer {batchSelected.size} recette{batchSelected.size > 1 ? 's' : ''} vers…
+            </p>
+            <div className="recettes-list__sheet-cats">
+              {categories?.map(cat => (
+                <button
+                  key={cat.id}
+                  className="recettes-list__sheet-cat"
+                  onClick={() => handleBulkMove(cat.id)}
+                >
+                  {cat.icone && <span>{cat.icone}</span>}
+                  <span>{cat.nom}</span>
+                </button>
+              ))}
+            </div>
+            <button className="recettes-list__batch-cancel" style={{ width: '100%', marginTop: 8 }} onClick={() => setShowMoveSheet(false)}>
+              Annuler
+            </button>
+          </div>
+        </div>
+      )}
+
+      <ConfirmModal
+        open={showDeleteConfirm}
+        title={`Supprimer ${batchSelected.size} recette${batchSelected.size > 1 ? 's' : ''} ?`}
+        message="Cette action est irréversible."
+        confirmLabel="Supprimer"
+        cancelLabel="Annuler"
+        danger
+        onConfirm={handleBulkDelete}
+        onCancel={() => setShowDeleteConfirm(false)}
+      />
     </div>
   )
 }

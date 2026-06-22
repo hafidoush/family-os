@@ -272,6 +272,118 @@
   cursor: default;
 }
 
+.recettes-list__batch-label {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: #5B21B6;
+  white-space: nowrap;
+}
+
+.recettes-list__batch-move-btn {
+  padding: 6px 12px;
+  border-radius: 8px;
+  border: none;
+  background: #F59E0B;
+  color: white;
+  font-size: 0.82rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.recettes-list__batch-move-btn:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.recettes-list__batch-delete-btn {
+  padding: 6px 10px;
+  border-radius: 8px;
+  border: none;
+  background: #EF4444;
+  color: white;
+  font-size: 0.9rem;
+  cursor: pointer;
+}
+
+.recettes-list__batch-delete-btn:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+/* ── Sheet déplacer vers catégorie ── */
+.recettes-list__sheet-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.4);
+  z-index: 800;
+  display: flex;
+  align-items: flex-end;
+}
+
+.recettes-list__sheet {
+  width: 100%;
+  background: var(--color-bg, #FAF8F5);
+  border-radius: 20px 20px 0 0;
+  padding: 0 16px max(20px, env(safe-area-inset-bottom));
+  display: flex;
+  flex-direction: column;
+  max-height: 70vh;
+  animation: slideUp 0.22s ease;
+}
+
+@keyframes slideUp {
+  from { transform: translateY(100%); }
+  to   { transform: translateY(0); }
+}
+
+.recettes-list__sheet-handle {
+  width: 36px;
+  height: 4px;
+  background: rgba(0,0,0,0.12);
+  border-radius: 2px;
+  margin: 12px auto 4px;
+  flex-shrink: 0;
+}
+
+.recettes-list__sheet-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--color-text);
+  text-align: center;
+  margin: 0 0 14px;
+  flex-shrink: 0;
+}
+
+.recettes-list__sheet-cats {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  overflow-y: auto;
+  margin-bottom: 8px;
+}
+
+.recettes-list__sheet-cat {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 14px 16px;
+  border-radius: 12px;
+  border: 1.5px solid var(--color-border, #E5E7EB);
+  background: white;
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--color-text);
+  cursor: pointer;
+  text-align: left;
+  transition: background 0.15s;
+}
+
+.recettes-list__sheet-cat:active {
+  background: hsl(262, 55%, 96%);
+  border-color: hsl(262, 43%, 70%);
+}
+
 .recettes-list__batch-confirm {
   padding: 10px 16px;
   border-radius: 12px;
