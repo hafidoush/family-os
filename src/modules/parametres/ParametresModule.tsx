@@ -744,7 +744,7 @@ function SectionIA() {
   const [savedOpenAI, setSavedOpenAI]    = useState(false);
 
   const saveGemini = () => { setGeminiKey(geminiKey); setSavedGemini(true); setTimeout(() => setSavedGemini(false), 2500); };
-  const saveOpenAI = () => { setOpenAIKey(openaiKey); setSavedOpenAI(true); setTimeout(() => setSavedOpenAI(false), 2500); };
+  const saveOpenAI = () => { setOpenAIKey(openaiKey).then(() => { setSavedOpenAI(true); setTimeout(() => setSavedOpenAI(false), 2500); }); };
 
   return (
     <div className="param-section">

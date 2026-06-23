@@ -3,6 +3,7 @@ import { useAuth } from '../auth/AuthContext'
 import { pullAll, installDexieHooks, startRealtime, stopRealtime, pushRecord, drainQueue } from './syncService'
 import { db } from '../db/database'
 import { v4 as uuid } from 'uuid'
+import { loadOpenAIKeyFromCloud } from '../ai/openaiService'
 
 // ── Push de TOUTES les données locales vers Supabase ─────────────────────────
 // Appelé à chaque démarrage pour garantir que rien ne reste bloqué en local.
@@ -136,6 +137,7 @@ export function useSyncOnMount() {
     if (!session) return
 
     installDexieHooks()
+    loadOpenAIKeyFromCloud()
 
     // Démarrage : push TOUT le local vers Supabase d'abord, puis pull
     // Garantit que rien n'est jamais perdu même si le cache a été vidé entre deux sessions

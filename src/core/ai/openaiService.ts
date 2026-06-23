@@ -2,9 +2,12 @@
  * FAMILY OS — OpenAI Service
  * Génération des menus via GPT-4o-mini.
  *
- * Stockage de la clé : localStorage 'family_os_openai_key'
- * Ne jamais écrire la clé en dur dans le code.
+ * Stockage de la clé : métadonnées du compte Supabase (user_metadata.openai_key)
+ * + localStorage comme cache local pour les appels synchrones.
+ * La clé survive aux vidages de cache et est disponible sur tous les appareils.
  */
+
+import { supabase } from '../supabase/client'
 
 const OPENAI_KEY_STORAGE = 'family_os_openai_key'
 
@@ -14,8 +17,19 @@ export function getOpenAIKey(): string {
   return localStorage.getItem(OPENAI_KEY_STORAGE)?.trim() ?? ''
 }
 
-export function setOpenAIKey(key: string): void {
-  localStorage.setItem(OPENAI_KEY_STORAGE, key.trim())
+export async function setOpenAIKey(key: string): Promise<void> {
+  const trimmed = key.trim()
+  localStorage.setItem(OPENAI_KEY_STORAGE, trimmed)
+  // Sauvegarde aussi dans le compte Supabase — survit aux vidages de cache
+  await supabase.auth.updateUser({ data: { openai_key: trimmed } })
+}
+
+export async function loadOpenAIKeyFromCloud(): Promise<void> {
+  // Si déjà en local, pas besoin de requête
+  if (getOpenAIKey()) return
+  const { data: { user } } = await supabase.auth.getUser()
+  const cloudKey = user?.user_metadata?.openai_key as string | undefined
+  if (cloudKey) localStorage.setItem(OPENAI_KEY_STORAGE, cloudKey)
 }
 
 export function hasOpenAIKey(): boolean {
