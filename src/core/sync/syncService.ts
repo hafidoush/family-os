@@ -16,6 +16,10 @@ import { db } from '../db/database'
 import type { RealtimeChannel } from '@supabase/supabase-js'
 import { addToQueue, removeFromQueue, getQueue, setLastPullAt, setLastError, clearLastError } from './syncQueue'
 
+// Guard : empêche les hooks Dexie de re-pousser vers Supabase pendant un pullAll
+// (sinon bulkDelete déclenche softDeleteRecord qui écrase le champ data avec { id })
+let isPulling = false
+
 // Champs Blob non sérialisables en JSON — exclus du push, préservés au pull
 // avatar est désormais stocké en base64 (string) et se synchronise normalement
 const BLOB_FIELDS: Record<string, string[]> = {}
@@ -127,6 +131,8 @@ export async function pullAll() {
   const { data: { session } } = await supabase.auth.getSession()
   if (!session) return
 
+  isPulling = true
+  try {
   for (const dexieTable of DEXIE_TABLES) {
     const supaTable = TABLE_MAP[dexieTable]
 
@@ -204,6 +210,9 @@ export async function pullAll() {
 
   await setLastPullAt()
   await clearLastError()
+  } finally {
+    isPulling = false
+  }
 }
 
 // ── Hooks Dexie : intercepte toutes les écritures ────────────────────────────
@@ -227,7 +236,9 @@ export function installDexieHooks() {
     })
 
     // Soft delete : on ne supprime jamais physiquement côté Supabase
+    // Guard isPulling : évite d'écraser les données Supabase pendant un pullAll
     table.hook('deleting', (key: string) => {
+      if (isPulling) return
       softDeleteRecord(dexieTable, key as string)
     })
   }
