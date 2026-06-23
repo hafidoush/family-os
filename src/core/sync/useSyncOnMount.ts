@@ -11,7 +11,10 @@ async function pushAllLocalData() {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const push = async (dexieTable: string, records: any[]) => {
     if (!records.length) return
-    await Promise.all(records.map((r: Record<string, unknown>) => pushRecord(dexieTable, r)))
+    // Batch by 10 to avoid flooding Supabase with hundreds of parallel requests
+    for (let i = 0; i < records.length; i += 10) {
+      await Promise.all(records.slice(i, i + 10).map((r: Record<string, unknown>) => pushRecord(dexieTable, r)))
+    }
     console.log(`[sync] pushAll ${dexieTable}: ${records.length} enregistrement(s)`)
   }
   const f = (r: { deletedAt?: unknown }) => !r.deletedAt

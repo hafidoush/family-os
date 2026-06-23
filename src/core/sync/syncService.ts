@@ -284,13 +284,16 @@ function buildRealtimeChannel() {
       realtimeRetryDelay = 5000 // reset backoff après succès
     } else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT' || status === 'CLOSED') {
       console.warn(`[sync] realtime ${status} — reconnexion dans ${realtimeRetryDelay / 1000}s`)
-      supabase.removeChannel(channel)
       realtimeChannel = null
       if (realtimeRetryTimeout) clearTimeout(realtimeRetryTimeout)
-      realtimeRetryTimeout = setTimeout(() => {
-        realtimeRetryDelay = Math.min(realtimeRetryDelay * 2, 60_000)
-        startRealtime()
-      }, realtimeRetryDelay)
+      // Defer removeChannel to exit the current subscribe callback stack first (prevents infinite recursion)
+      setTimeout(() => {
+        supabase.removeChannel(channel)
+        realtimeRetryTimeout = setTimeout(() => {
+          realtimeRetryDelay = Math.min(realtimeRetryDelay * 2, 60_000)
+          startRealtime()
+        }, realtimeRetryDelay)
+      }, 0)
     }
   })
 
