@@ -38,7 +38,7 @@ export function RepasJour() {
 
   const recettes = useLiveQuery(
     () => db.recettes.filter(r => !r.archive && !r.deletedAt).toArray()
-      .then(list => list.sort((a, b) => a.nom.localeCompare(b.nom))),
+      .then(list => list.sort((a, b) => (a.nom ?? "").localeCompare(b.nom ?? ""))),
     []
   )
 

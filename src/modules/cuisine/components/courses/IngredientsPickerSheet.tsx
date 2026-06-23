@@ -103,7 +103,7 @@ export function IngredientsPickerSheet({ menuId, onClose }: Props) {
         }
       }
 
-      const liste = [...parProduit.values()].sort((a, b) => a.nom.localeCompare(b.nom, 'fr'))
+      const liste = [...parProduit.values()].sort((a, b) => (a.nom ?? '').localeCompare(b.nom ?? '', 'fr'))
       setIngredients(liste)
 
       // Pré-cocher uniquement ceux qui ne sont pas encore dans la liste

@@ -35,7 +35,7 @@ export function useRecettes(filters: RecettesFilters = {}) {
       )
     }
 
-    recettes.sort((a, b) => a.nom.localeCompare(b.nom, 'fr'))
+    recettes.sort((a, b) => (a.nom ?? '').localeCompare(b.nom ?? '', 'fr'))
 
     return recettes
   }, [filters.categorieId, filters.favoriSeulement, filters.kidsFavoriteSeulement, filters.recherche, filters.tags])

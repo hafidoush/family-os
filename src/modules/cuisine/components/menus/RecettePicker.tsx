@@ -28,7 +28,7 @@ export function RecettePicker({ onSelect, onClose }: RecettePickerProps) {
           return r.nom.toLowerCase().includes(debouncedQuery.toLowerCase());
         })
         .toArray()
-        .then((list) => list.sort((a, b) => a.nom.localeCompare(b.nom))),
+        .then((list) => list.sort((a, b) => (a.nom ?? "").localeCompare(b.nom ?? ""))),
     [debouncedQuery]
   );
 

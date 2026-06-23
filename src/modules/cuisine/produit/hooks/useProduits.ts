@@ -24,7 +24,7 @@ export function useProduits(categorieId?: string) {
   );
 
   const sorted = (produits ?? []).sort((a, b) =>
-    a.nom.localeCompare(b.nom, 'fr', { sensitivity: 'base' })
+    (a.nom ?? "").localeCompare(b.nom ?? "", 'fr', { sensitivity: 'base' })
   );
 
   // Déduplication par nom — évite les doublons si le seed a tourné plusieurs fois

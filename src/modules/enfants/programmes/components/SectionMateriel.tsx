@@ -102,7 +102,7 @@ export function SectionMateriel({ programme }: SectionMaterielProps) {
     return Array.from(map.values()).sort((a, b) => {
       // Nécessaire avant optionnel, puis alpha
       if (a.optionnel !== b.optionnel) return a.optionnel ? 1 : -1
-      return a.nom.localeCompare(b.nom, 'fr')
+      return (a.nom ?? "").localeCompare(b.nom ?? "", 'fr')
     })
   }, [activites, statuts])
 

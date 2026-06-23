@@ -143,7 +143,7 @@ function SelecteurRecettes({ categorie, onConfirmer, onAnnuler }: {
         return typesAutorises.includes(r.typePreparation as string | undefined)
       })
       .toArray()
-      .then(list => list.sort((a, b) => a.nom.localeCompare(b.nom))),
+      .then(list => list.sort((a, b) => (a.nom ?? "").localeCompare(b.nom ?? ""))),
     [categorie]
   )
 

@@ -76,7 +76,7 @@ export const ProduitService = {
     return all.sort((a, b) => {
       const freq = (b.frequenceAchat ?? 0) - (a.frequenceAchat ?? 0);
       if (freq !== 0) return freq;
-      return a.nom.localeCompare(b.nom, 'fr');
+      return (a.nom ?? "").localeCompare(b.nom ?? "", 'fr');
     });
   },
 
