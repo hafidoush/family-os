@@ -842,29 +842,51 @@ function SectionSync() {
         .eq('user_id', session.user.id)
         .not('deleted_at', 'is', null)
 
-      if (!count || count === 0) {
-        setRepairMsg('Aucune recette supprimée trouvée dans le cloud.')
+      const { count: countIng } = await supabase
+        .from('recettes_ingredients')
+        .select('id', { count: 'exact', head: true })
+        .eq('user_id', session.user.id)
+        .not('deleted_at', 'is', null)
+
+      const totalRecettes = count ?? 0
+      const totalIng = countIng ?? 0
+
+      if (totalRecettes === 0 && totalIng === 0) {
+        setRepairMsg('Aucune donnée supprimée trouvée dans le cloud.')
         return
       }
 
       const confirmed = window.confirm(
-        `${count} recette(s) marquée(s) comme supprimées dans le cloud. Veux-tu les restaurer toutes ?`
+        `${totalRecettes} recette(s) et ${totalIng} ingrédient(s) marqués comme supprimés dans le cloud. Veux-tu tout restaurer ?`
       )
       if (!confirmed) { setRepairMsg(''); return }
 
-      // 2. Remettre deleted_at à null dans Supabase
-      const { error } = await supabase
-        .from('recettes')
-        .update({ deleted_at: null })
-        .eq('user_id', session.user.id)
-        .not('deleted_at', 'is', null)
+      // 2. Restaurer recettes
+      if (totalRecettes > 0) {
+        const { error } = await supabase
+          .from('recettes')
+          .update({ deleted_at: null })
+          .eq('user_id', session.user.id)
+          .not('deleted_at', 'is', null)
+        if (error) { setRepairMsg(`Erreur recettes : ${error.message}`); return }
+      }
 
-      if (error) { setRepairMsg(`Erreur : ${error.message}`); return }
+      // 3. Restaurer ingrédients
+      if (totalIng > 0) {
+        const { error } = await supabase
+          .from('recettes_ingredients')
+          .update({ deleted_at: null })
+          .eq('user_id', session.user.id)
+          .not('deleted_at', 'is', null)
+        if (error) { setRepairMsg(`Erreur ingrédients : ${error.message}`); return }
+      }
 
-      // 3. Tirer toutes les recettes restaurées en local
+      // 4. Tirer tout en local
+      setRepairMsg('Données restaurées dans le cloud — téléchargement en local…')
       await pullAll()
       const localCount = await db.recettes.count()
-      setRepairMsg(`✓ ${localCount} recette(s) restaurées avec succès.`)
+      const localIng = await db.recettesIngredients.count()
+      setRepairMsg(`✓ ${localCount} recette(s) et ${localIng} ingrédient(s) restaurés.`)
     } catch (e: unknown) {
       setRepairMsg(`Erreur inattendue : ${e instanceof Error ? e.message : String(e)}`)
     }
