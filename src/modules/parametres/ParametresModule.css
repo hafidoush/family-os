@@ -406,6 +406,11 @@
 }
 .param-btn--primary:hover:not(:disabled) { opacity: .9; }
 .param-btn--saved { background: hsl(142,45%,45%); }
+.param-btn--warning {
+  background: linear-gradient(135deg, hsl(38,90%,55%), hsl(25,85%,52%));
+  color: white;
+}
+.param-btn--warning:hover:not(:disabled) { opacity: .9; }
 .param-btn--secondary {
   background: hsla(262,40%,92%,.70);
   color: var(--primary);

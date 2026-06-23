@@ -10,6 +10,7 @@ import { db, SCHEMA_VERSION } from '../../core/db/database';
 import { newEntity, withUpdate, softDeleteFields } from '../../core/db/helpers';
 import { useSyncStatus } from '../../core/sync/useSyncStatus';
 import { drainQueue, pullAll } from '../../core/sync/syncService';
+import { supabase } from '../../core/supabase/client';
 import { getGeminiKey, setGeminiKey } from '../../core/ai/geminiService';
 import { getOpenAIKey, setOpenAIKey } from '../../core/ai/openaiService';
 import { ConfirmModal } from '../../shared/components/ui/ConfirmModal';
@@ -828,8 +829,71 @@ function SectionSync() {
     }
   }
 
+  async function restaurerRecettes() {
+    const { data: { session } } = await supabase.auth.getSession()
+    if (!session) { setRepairMsg('Non connecté.'); return }
+
+    setRepairMsg('Restauration en cours…')
+    try {
+      // 1. Compter les recettes supprimées dans Supabase
+      const { count } = await supabase
+        .from('recettes')
+        .select('id', { count: 'exact', head: true })
+        .eq('user_id', session.user.id)
+        .not('deleted_at', 'is', null)
+
+      if (!count || count === 0) {
+        setRepairMsg('Aucune recette supprimée trouvée dans le cloud.')
+        return
+      }
+
+      const confirmed = window.confirm(
+        `${count} recette(s) marquée(s) comme supprimées dans le cloud. Veux-tu les restaurer toutes ?`
+      )
+      if (!confirmed) { setRepairMsg(''); return }
+
+      // 2. Remettre deleted_at à null dans Supabase
+      const { error } = await supabase
+        .from('recettes')
+        .update({ deleted_at: null })
+        .eq('user_id', session.user.id)
+        .not('deleted_at', 'is', null)
+
+      if (error) { setRepairMsg(`Erreur : ${error.message}`); return }
+
+      // 3. Tirer toutes les recettes restaurées en local
+      await pullAll()
+      const localCount = await db.recettes.count()
+      setRepairMsg(`✓ ${localCount} recette(s) restaurées avec succès.`)
+    } catch (e: unknown) {
+      setRepairMsg(`Erreur inattendue : ${e instanceof Error ? e.message : String(e)}`)
+    }
+  }
+
   async function pullRecettes() {
     if (pullingRecettes) return
+
+    // Vérifier d'abord que Supabase a bien des recettes avant d'effacer le local
+    const { data: { session } } = await supabase.auth.getSession()
+    if (!session) { setRepairMsg('Non connecté.'); return }
+
+    const { data: cloudRecettes } = await supabase
+      .from('recettes')
+      .select('id')
+      .eq('user_id', session.user.id)
+      .is('deleted_at', null)
+      .limit(1)
+
+    if (!cloudRecettes || cloudRecettes.length === 0) {
+      setRepairMsg('⚠️ Le cloud ne contient aucune recette. Réimportation annulée pour protéger tes données locales. Utilise "Pousser vers le cloud" d\'abord.')
+      return
+    }
+
+    const confirmed = window.confirm(
+      `Le cloud contient des recettes. Cette action va remplacer tes recettes locales par celles du cloud. Continuer ?`
+    )
+    if (!confirmed) return
+
     setPullingRecettes(true)
     setRepairMsg('')
     try {
@@ -916,34 +980,21 @@ function SectionSync() {
         </p>
       )}
 
-      {/* Réparation recettes */}
-      <div style={{ marginTop: 24, padding: '14px 16px', background: 'rgba(245,158,11,0.07)', borderRadius: 12, border: '1px solid rgba(245,158,11,0.2)' }}>
-        <p style={{ fontSize: 12, fontWeight: 700, color: '#92400e', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 8 }}>
-          Réparer les catégories de recettes
+
+      {/* Restauration recettes supprimées par erreur */}
+      <button
+        className="param-btn param-btn--warning"
+        onClick={restaurerRecettes}
+        style={{ marginTop: 12 }}
+      >
+        Restaurer mes recettes depuis le cloud
+      </button>
+
+      {repairMsg && (
+        <p className="param-hint" style={{ marginTop: 8, color: repairMsg.startsWith('✓') ? '#22c55e' : repairMsg.startsWith('⚠') || repairMsg.startsWith('Erreur') ? '#ef4444' : undefined }}>
+          {repairMsg}
         </p>
-        <p style={{ fontSize: 13, color: '#78350f', marginBottom: 12, lineHeight: 1.5 }}>
-          Si les recettes sont mal classées entre appareils : pousser depuis l'appareil correct, puis réimporter sur l'autre.
-        </p>
-        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-          <button
-            className="param-btn"
-            onClick={pushRecettes}
-            disabled={pushingRecettes || !isOnline}
-            style={{ fontSize: 13 }}
-          >
-            {pushingRecettes ? '…' : '↑ Pousser mes recettes vers le cloud'}
-          </button>
-          <button
-            className="param-btn"
-            onClick={pullRecettes}
-            disabled={pullingRecettes || !isOnline}
-            style={{ fontSize: 13 }}
-          >
-            {pullingRecettes ? '…' : '↓ Réimporter depuis le cloud'}
-          </button>
-        </div>
-        {repairMsg && <p style={{ fontSize: 13, color: '#22c55e', marginTop: 8, fontWeight: 500 }}>{repairMsg}</p>}
-      </div>
+      )}
 
       {/* Explication */}
       <div className="sync-info-box">

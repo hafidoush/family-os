@@ -4,6 +4,42 @@ import { pullAll, installDexieHooks, startRealtime, stopRealtime, pushRecord, dr
 import { db } from '../db/database'
 import { v4 as uuid } from 'uuid'
 
+// ── Push de TOUTES les données locales vers Supabase ─────────────────────────
+// Appelé à chaque démarrage pour garantir que rien ne reste bloqué en local.
+// Idempotent : upsert côté Supabase, pas de doublon possible.
+async function pushAllLocalData() {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const push = async (dexieTable: string, records: any[]) => {
+    if (!records.length) return
+    await Promise.all(records.map((r: Record<string, unknown>) => pushRecord(dexieTable, r)))
+    console.log(`[sync] pushAll ${dexieTable}: ${records.length} enregistrement(s)`)
+  }
+  const f = (r: { deletedAt?: unknown }) => !r.deletedAt
+
+  try { await push('recettes',            await db.recettes.filter(f).toArray()) } catch(e) { console.warn('[sync] pushAll recettes', e) }
+  try { await push('recettesIngredients', await db.recettesIngredients.filter(f).toArray()) } catch(e) { console.warn('[sync] pushAll recettesIngredients', e) }
+  try { await push('menus',               await db.menus.filter(f).toArray()) } catch(e) { console.warn('[sync] pushAll menus', e) }
+  try { await push('menuSlots',           await db.menuSlots.filter(f).toArray()) } catch(e) { console.warn('[sync] pushAll menuSlots', e) }
+  try { await push('membres',             await db.membres.filter(f).toArray()) } catch(e) { console.warn('[sync] pushAll membres', e) }
+  try { await push('enfants',             await db.enfants.filter(f).toArray()) } catch(e) { console.warn('[sync] pushAll enfants', e) }
+  try { await push('taches',              await db.taches.filter(f).toArray()) } catch(e) { console.warn('[sync] pushAll taches', e) }
+  try { await push('evenements',          await db.evenements.filter(f).toArray()) } catch(e) { console.warn('[sync] pushAll evenements', e) }
+  try { await push('pieces',              await db.pieces.filter(f).toArray()) } catch(e) { console.warn('[sync] pushAll pieces', e) }
+  try { await push('produits',            await db.produits.filter(f).toArray()) } catch(e) { console.warn('[sync] pushAll produits', e) }
+  try { await push('coursesItems',        await db.coursesItems.filter(f).toArray()) } catch(e) { console.warn('[sync] pushAll coursesItems', e) }
+  try { await push('activites',           await db.activites.filter(f).toArray()) } catch(e) { console.warn('[sync] pushAll activites', e) }
+  try { await push('competences',         await db.competences.filter(f).toArray()) } catch(e) { console.warn('[sync] pushAll competences', e) }
+  try { await push('competencesSuivi',    await db.competencesSuivi.filter(f).toArray()) } catch(e) { console.warn('[sync] pushAll competencesSuivi', e) }
+  try { await push('routines',            await db.routines.filter(f).toArray()) } catch(e) { console.warn('[sync] pushAll routines', e) }
+  try { await push('routineItems',        await db.routineItems.filter(f).toArray()) } catch(e) { console.warn('[sync] pushAll routineItems', e) }
+  try { await push('projetsMaison',       await db.projetsMaison.filter(f).toArray()) } catch(e) { console.warn('[sync] pushAll projetsMaison', e) }
+  try { await push('notes',               await db.notes.filter(f).toArray()) } catch(e) { console.warn('[sync] pushAll notes', e) }
+  try { await push('humeurs',             await db.humeurs.filter(f).toArray()) } catch(e) { console.warn('[sync] pushAll humeurs', e) }
+  try { await push('pensees',             await db.pensees.filter(f).toArray()) } catch(e) { console.warn('[sync] pushAll pensees', e) }
+  try { await push('programmesAnnuels',   await db.programmesAnnuels.filter(f).toArray()) } catch(e) { console.warn('[sync] pushAll programmesAnnuels', e) }
+  try { await push('activitesProgramme',  await db.activitesProgramme.filter(f).toArray()) } catch(e) { console.warn('[sync] pushAll activitesProgramme', e) }
+}
+
 // Push one-shot de toutes les activités seedées vers Supabase
 // Garantit que les IDs stables sont connus de Supabase avant le pull
 async function pushInitialActivites() {
@@ -98,8 +134,10 @@ export function useSyncOnMount() {
 
     installDexieHooks()
 
-    // Démarrage : rejouer les pushes en attente puis faire un pull complet
-    pushInitialActivites()
+    // Démarrage : push TOUT le local vers Supabase d'abord, puis pull
+    // Garantit que rien n'est jamais perdu même si le cache a été vidé entre deux sessions
+    pushAllLocalData()
+      .then(() => pushInitialActivites())
       .then(() => pushInitialRecettesIngredients())
       .then(() => pushInitialProduits())
       .then(() => pushInitialProgrammesAnnuels())

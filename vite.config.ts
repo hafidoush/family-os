@@ -1,4 +1,4 @@
-import { defineConfig } from 'vite'
+import { defineConfig } from 'vitest/config'
 import react from '@vitejs/plugin-react'
 import { VitePWA } from 'vite-plugin-pwa'
 import { resolve } from 'path'
@@ -77,6 +77,11 @@ export default defineConfig({
       '@router': resolve(__dirname, './src/router'),
       '@styles': resolve(__dirname, './src/styles'),
     },
+  },
+
+  test: {
+    environment: 'happy-dom',
+    globals: true,
   },
 
   build: {

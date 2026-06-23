@@ -453,10 +453,7 @@ async function migrerCategorieAccompagnementVersLegumes(): Promise<void> {
 }
 
 async function seedCategoriesRecettes(): Promise<void> {
-  const existing = await db.categoriesRecettes.count()
-  if (existing > 0) return
-
-  const categories: CategorieRecette[] = [
+  const requises: CategorieRecette[] = [
     { id: 'cat-recette-petit-dejeuner',         nom: 'Petits déjeuners',         icone: '🥐', ordre: 0, ...withAudit({}) },
     { id: 'cat-recette-plat-principal',         nom: 'Plats principaux',         icone: '🍽️', ordre: 1, ...withAudit({}) },
     { id: 'cat-recette-entree',                 nom: 'Entrées & Salades',        icone: '🥗', ordre: 2, ...withAudit({}) },
@@ -467,7 +464,14 @@ async function seedCategoriesRecettes(): Promise<void> {
     { id: 'cat-recette-legumes-accompagnement', nom: 'Accompagnements',          icone: '🥦', ordre: 7, ...withAudit({}) },
     { id: 'cat-recette-boissons',               nom: 'Boissons',                 icone: '🥤', ordre: 8, ...withAudit({}) },
   ]
-  await db.categoriesRecettes.bulkAdd(categories)
+
+  // Ajoute uniquement les catégories manquantes par ID — ne touche pas aux existantes
+  for (const cat of requises) {
+    const existe = await db.categoriesRecettes.get(cat.id)
+    if (!existe) {
+      await db.categoriesRecettes.add(cat)
+    }
+  }
 }
 
 // IDs stables pour toutes les catégories recettes par défaut

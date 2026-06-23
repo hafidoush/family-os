@@ -92,6 +92,28 @@ function IngredientNomInput({ value, produitId, tousLesProduits, onChange }: Ing
   )
 }
 
+// ─── Tags ─────────────────────────────────────────────────────────────────────
+
+const TAGS_GROUPES = [
+  { groupe: 'Cuisine', tags: [
+    { id: 'française', label: 'Française' }, { id: 'italienne', label: 'Italienne' },
+    { id: 'marocaine', label: 'Marocaine' }, { id: 'asiatique', label: 'Asiatique' },
+    { id: 'indienne', label: 'Indienne' },   { id: 'mexicaine', label: 'Mexicaine' },
+    { id: 'fast-food', label: 'Fast-food' }, { id: 'autre', label: 'Autre' },
+  ]},
+  { groupe: 'Goût', tags: [
+    { id: 'salé', label: 'Salé' }, { id: 'sucré', label: 'Sucré' },
+    { id: 'réconfortant', label: 'Réconfortant' }, { id: 'frais & léger', label: 'Frais & léger' },
+  ]},
+  { groupe: 'Rapidité', tags: [
+    { id: 'rapide', label: 'Rapide' }, { id: 'batch cooking', label: 'Batch cooking' },
+  ]},
+  { groupe: 'Occasion', tags: [
+    { id: 'apéro', label: 'Apéro' }, { id: 'barbecue', label: 'Barbecue' },
+    { id: 'fête', label: 'Fête' },   { id: 'ramadan', label: 'Ramadan' },
+  ]},
+]
+
 // ─── Types internes ───────────────────────────────────────────────────────────
 
 type ModeImport = 'url' | 'texte' | 'image'
@@ -152,6 +174,7 @@ export function ImportRecetteSheet({ onClose, onSuccess }: Props) {
   const [etapes, setEtapes]           = useState<string[]>([])
   const [ingredients, setIngredients] = useState<IngredientEditable[]>([])
   const [notes, setNotes]             = useState('')
+  const [tags, setTags]               = useState<string[]>([])
   const [photoB64, setPhotoB64]       = useState<string | null>(null)
   const photoRef = useRef<HTMLInputElement>(null)
   const [saving, setSaving]           = useState(false)
@@ -244,6 +267,7 @@ export function ImportRecetteSheet({ onClose, onSuccess }: Props) {
         tempsCuisson:     tempsCuisson ? parseInt(tempsCuisson) : undefined,
         portions:         portions ? parseInt(portions) : undefined,
         etapes:           etapes.filter(e => e.trim()),
+        tags:             tags.length > 0 ? tags : undefined,
         notes:            notes.trim() || undefined,
         ingredients:      ingredients.filter(i => i.nomLibre.trim()),
         imageData:        photoB64 ?? undefined,
@@ -583,6 +607,36 @@ export function ImportRecetteSheet({ onClose, onSuccess }: Props) {
           >
             + Ajouter une étape
           </button>
+        </div>
+
+        {/* Tags */}
+        <div className="import-section">
+          <p className="import-section__title">Tags</p>
+          {TAGS_GROUPES.map(({ groupe, tags: groupeTags }) => (
+            <div key={groupe} style={{ marginBottom: 10 }}>
+              <p style={{ fontSize: 11, fontWeight: 600, color: 'var(--color-text-secondary)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 6 }}>{groupe}</p>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                {groupeTags.map(tag => (
+                  <button
+                    key={tag.id}
+                    onClick={() => setTags(prev => prev.includes(tag.id) ? prev.filter(t => t !== tag.id) : [...prev, tag.id])}
+                    style={{
+                      padding: '5px 12px',
+                      borderRadius: 20,
+                      border: tags.includes(tag.id) ? '1.5px solid #6F7ED6' : '1px solid var(--color-border-tertiary)',
+                      background: tags.includes(tag.id) ? 'rgba(111,126,214,0.12)' : 'var(--color-background-primary)',
+                      color: tags.includes(tag.id) ? '#6F7ED6' : 'var(--color-text-secondary)',
+                      fontSize: 13,
+                      fontWeight: tags.includes(tag.id) ? 600 : 400,
+                      cursor: 'pointer',
+                    }}
+                  >
+                    {tag.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+          ))}
         </div>
 
         {/* Astuces & variantes */}
