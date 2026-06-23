@@ -113,15 +113,12 @@ export async function softDeleteRecord(dexieTable: string, id: string) {
   if (!session) return
 
   const now = new Date().toISOString()
+  // Update only — never overwrite the data field on delete (data would be lost)
   const { error } = await supabase
     .from(supaTable)
-    .upsert({
-      id,
-      user_id: session.user.id,
-      data: { id },
-      updated_at: now,
-      deleted_at: now,
-    }, { onConflict: 'id' })
+    .update({ deleted_at: now, updated_at: now })
+    .eq('id', id)
+    .eq('user_id', session.user.id)
 
   if (error) console.warn(`[sync] delete ${dexieTable}:`, error.message)
 }
