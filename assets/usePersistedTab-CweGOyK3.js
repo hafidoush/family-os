@@ -1,0 +1,1 @@
+import{r as a}from"./vendor-react-fwmUM2PW.js";function b(s,e){const[r,o]=a.useState(()=>{try{return sessionStorage.getItem(`tab:${s}`)??e}catch{return e}});return[r,t=>{try{sessionStorage.setItem(`tab:${s}`,t)}catch{}o(t)}]}export{b as u};
