@@ -228,6 +228,34 @@
 .menu-detail__btn-ia:disabled { opacity: 0.5; cursor: default; }
 
 /* ── Message génération ── */
+.menu-detail__intention {
+  padding: 0 16px 12px;
+}
+
+.menu-detail__intention-input {
+  width: 100%;
+  box-sizing: border-box;
+  background: rgba(255,255,255,0.5);
+  border: 1.5px solid rgba(210,173,235,0.25);
+  border-radius: 12px;
+  padding: 10px 14px;
+  font-family: var(--font-body);
+  font-size: 13px;
+  color: var(--color-text-primary, #3D3A52);
+  resize: none;
+  outline: none;
+  transition: border-color 0.15s ease;
+  line-height: 1.5;
+}
+
+.menu-detail__intention-input::placeholder {
+  color: #B5AECB;
+}
+
+.menu-detail__intention-input:focus {
+  border-color: rgba(154,92,163,0.45);
+}
+
 .menu-detail__gen-message {
   margin: 0;
   padding: 10px 14px;

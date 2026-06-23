@@ -61,7 +61,7 @@ const CATEGORIES_PLAT_PRINCIPAL = new Set([
 
 // ─── Prompt ───────────────────────────────────────────────────────────────────
 
-function buildPromptMenus(recettes: RecetteAvecCategorie[], nbPersonnes: number): string {
+function buildPromptMenus(recettes: RecetteAvecCategorie[], nbPersonnes: number, intentionUtilisateur?: string): string {
   if (recettes.length === 0) {
     throw new Error('Aucune recette disponible. Ajoutez des recettes avant de générer un menu.')
   }
@@ -101,7 +101,11 @@ PLATS PRINCIPAUX DISPONIBLES :
 ${listePlats}
 ${listeAccomp}
 
-CONTRAINTES DE SAISONNALITÉ (PRIORITÉ HAUTE) :
+${intentionUtilisateur ? `INTENTION DE L'UTILISATEUR (PRIORITÉ MAXIMALE) :
+"${intentionUtilisateur}"
+Respecte cette intention en priorité absolue. Si elle contredit la saisonnalité, l'intention prime.
+
+` : ''}CONTRAINTES DE SAISONNALITÉ (${intentionUtilisateur ? 'si compatible avec l\'intention ci-dessus' : 'PRIORITÉ HAUTE'}) :
 - Nous sommes en ${saison.nom}. Privilégie en priorité les recettes adaptées à cette saison : ${saison.description}.
 - En été : évite gratins, mijotés lourds, raclettes, fondues. Préfère grillades, salades composées, plats froids.
 - En hiver : privilégie plats chauds, soupes-repas complètes, mijotés, gratins.
@@ -170,6 +174,7 @@ export async function genererMenusIA(
   menuId: string,
   nbPersonnes = 4,
   assignerJours = true,
+  intentionUtilisateur?: string,
 ): Promise<ResultatGeneration> {
   // 1. Charger les recettes avec leurs catégories
   const recettes   = await db.recettes.filter(r => !r.archive && !r.deletedAt).toArray()
@@ -185,7 +190,7 @@ export async function genererMenusIA(
   const idsValides = new Set(recettes.map(r => r.id))
 
   // 2. Appel OpenAI
-  const plan = await appelOpenAIMenus(buildPromptMenus(recettesAvecCat, nbPersonnes))
+  const plan = await appelOpenAIMenus(buildPromptMenus(recettesAvecCat, nbPersonnes, intentionUtilisateur))
 
   // 3. Valider que tous les IDs retournés existent réellement
   const { idsInconnus } = validerIdsIA(plan, idsValides)

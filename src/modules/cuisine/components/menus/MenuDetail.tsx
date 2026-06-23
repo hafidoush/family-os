@@ -46,6 +46,7 @@ export function MenuDetail({ menuId, onBack }: MenuDetailProps) {
   const [isGenerating, setIsGenerating] = useState(false);
   const [genMessage, setGenMessage] = useState<string | null>(null);
   const [assignerJours, setAssignerJours] = useState(true);
+  const [intentionMenuSemaine, setIntentionMenuSemaine] = useState('');
 
   if (data === undefined) {
     return (
@@ -95,7 +96,7 @@ export function MenuDetail({ menuId, onBack }: MenuDetailProps) {
     setIsGenerating(true);
     setGenMessage(null);
     try {
-      const result = await genererMenusIA(menuId, 4, assignerJours);
+      const result = await genererMenusIA(menuId, 4, assignerJours, intentionMenuSemaine.trim() || undefined);
       setGenMessage(`✦ ${result.message}`);
       setTimeout(() => setGenMessage(null), 5000);
     } catch (err: unknown) {
@@ -155,6 +156,18 @@ export function MenuDetail({ menuId, onBack }: MenuDetailProps) {
             <IconCart size={14} style={{ marginRight: 4, verticalAlign: 'middle' }} /> Ingrédients
           </button>
         </div>
+      </div>
+
+      {/* Intention semaine */}
+      <div className="menu-detail__intention">
+        <textarea
+          className="menu-detail__intention-input"
+          value={intentionMenuSemaine}
+          onChange={(e) => setIntentionMenuSemaine(e.target.value)}
+          placeholder="Décris ce que tu veux pour cette semaine… ex : plats équilibrés et légers, ou un mélange maghrébin et indien épicé"
+          rows={2}
+          maxLength={300}
+        />
       </div>
 
       {/* Message confirmation génération IA */}
