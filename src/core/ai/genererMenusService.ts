@@ -47,15 +47,19 @@ type PlanSemaineIA = Record<JourMenu, RepasIA>
 // ─── Catégories métier ────────────────────────────────────────────────────────
 
 const CATEGORIES_ACCOMPAGNEMENT = new Set([
+  'Sauces',
   'Sauce',
   'Légumes & Accompagnement',
+  'Accompagnements',
   'Accompagnement',
   'Entrée',
   'Entrées & Salades',
+  'Soupes',
   'Soupe',
 ])
 
 const CATEGORIES_PLAT_PRINCIPAL = new Set([
+  'Plats principaux',
   'Plat principal',
 ])
 

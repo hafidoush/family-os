@@ -53,7 +53,9 @@ async function _seedDatabase(): Promise<void> {
   await migrerEntreeVersEntreesSalades()
   // Renommage "Légumes & Accompagnement" → "Accompagnement"
   await migrerLegumesAccompagnementVersAccompagnement()
-  // Ajout catégorie "Petit déjeuner" si absente
+  // Passage au pluriel de toutes les catégories singulières
+  await migrerCategoriesVersPluriels()
+  // Ajout catégorie "Petits déjeuners" si absente
   await ajouterCategoriePetitDejeuner()
 
   if (membresCount === 0) {
@@ -426,8 +428,8 @@ async function repairRecettesOrphelines(): Promise<void> {
   const orphelines = toutes.filter(r => r.categorie && !validIds.has(r.categorie))
   if (orphelines.length === 0) return
 
-  // Catégorie de secours : "Plat principal" ou la première disponible
-  const fallback = categories.find(c => c.nom === 'Plat principal') ?? categories[0]
+  // Catégorie de secours : "Plats principaux" ou la première disponible
+  const fallback = categories.find(c => c.nom === 'Plats principaux') ?? categories.find(c => c.nom === 'Plat principal') ?? categories[0]
   await Promise.all(
     orphelines.map(r =>
       db.recettes.update(r.id, { categorie: fallback.id, updatedAt: new Date() })
@@ -455,14 +457,14 @@ async function seedCategoriesRecettes(): Promise<void> {
   if (existing > 0) return
 
   const categories: CategorieRecette[] = [
-    { id: 'cat-recette-petit-dejeuner',         nom: 'Petit déjeuner',           icone: '🥐', ordre: 0, ...withAudit({}) },
-    { id: 'cat-recette-plat-principal',         nom: 'Plat principal',           icone: '🍽️', ordre: 1, ...withAudit({}) },
+    { id: 'cat-recette-petit-dejeuner',         nom: 'Petits déjeuners',         icone: '🥐', ordre: 0, ...withAudit({}) },
+    { id: 'cat-recette-plat-principal',         nom: 'Plats principaux',         icone: '🍽️', ordre: 1, ...withAudit({}) },
     { id: 'cat-recette-entree',                 nom: 'Entrées & Salades',        icone: '🥗', ordre: 2, ...withAudit({}) },
-    { id: 'cat-recette-dessert',                nom: 'Dessert',                  icone: '🍰', ordre: 3, ...withAudit({}) },
-    { id: 'cat-recette-gouter',                 nom: 'Goûter',                   icone: '🧁', ordre: 4, ...withAudit({}) },
-    { id: 'cat-recette-soupe',                  nom: 'Soupe',                    icone: '🍲', ordre: 5, ...withAudit({}) },
-    { id: 'cat-recette-sauce',                  nom: 'Sauce',                    icone: '🫕', ordre: 6, ...withAudit({}) },
-    { id: 'cat-recette-legumes-accompagnement', nom: 'Accompagnement',           icone: '🥦', ordre: 7, ...withAudit({}) },
+    { id: 'cat-recette-dessert',                nom: 'Desserts',                 icone: '🍰', ordre: 3, ...withAudit({}) },
+    { id: 'cat-recette-gouter',                 nom: 'Goûters',                  icone: '🧁', ordre: 4, ...withAudit({}) },
+    { id: 'cat-recette-soupe',                  nom: 'Soupes',                   icone: '🍲', ordre: 5, ...withAudit({}) },
+    { id: 'cat-recette-sauce',                  nom: 'Sauces',                   icone: '🫕', ordre: 6, ...withAudit({}) },
+    { id: 'cat-recette-legumes-accompagnement', nom: 'Accompagnements',          icone: '🥦', ordre: 7, ...withAudit({}) },
     { id: 'cat-recette-boissons',               nom: 'Boissons',                 icone: '🥤', ordre: 8, ...withAudit({}) },
   ]
   await db.categoriesRecettes.bulkAdd(categories)
@@ -470,14 +472,21 @@ async function seedCategoriesRecettes(): Promise<void> {
 
 // IDs stables pour toutes les catégories recettes par défaut
 const STABLE_CATS_RECETTES: Record<string, { id: string; icone: string; ordre: number }> = {
+  'Petits déjeuners':        { id: 'cat-recette-petit-dejeuner',         icone: '🥐', ordre: 0 },
   'Petit déjeuner':          { id: 'cat-recette-petit-dejeuner',         icone: '🥐', ordre: 0 },
+  'Plats principaux':        { id: 'cat-recette-plat-principal',         icone: '🍽️', ordre: 1 },
   'Plat principal':          { id: 'cat-recette-plat-principal',         icone: '🍽️', ordre: 1 },
   'Entrées & Salades':       { id: 'cat-recette-entree',                 icone: '🥗', ordre: 2 },
   'Entrée':                  { id: 'cat-recette-entree',                 icone: '🥗', ordre: 2 },
+  'Desserts':                { id: 'cat-recette-dessert',                icone: '🍰', ordre: 3 },
   'Dessert':                 { id: 'cat-recette-dessert',                icone: '🍰', ordre: 3 },
+  'Goûters':                 { id: 'cat-recette-gouter',                 icone: '🧁', ordre: 4 },
   'Goûter':                  { id: 'cat-recette-gouter',                 icone: '🧁', ordre: 4 },
+  'Soupes':                  { id: 'cat-recette-soupe',                  icone: '🍲', ordre: 5 },
   'Soupe':                   { id: 'cat-recette-soupe',                  icone: '🍲', ordre: 5 },
+  'Sauces':                  { id: 'cat-recette-sauce',                  icone: '🫕', ordre: 6 },
   'Sauce':                   { id: 'cat-recette-sauce',                  icone: '🫕', ordre: 6 },
+  'Accompagnements':         { id: 'cat-recette-legumes-accompagnement', icone: '🥦', ordre: 7 },
   'Accompagnement':          { id: 'cat-recette-legumes-accompagnement', icone: '🥦', ordre: 7 },
   'Légumes & Accompagnement':{ id: 'cat-recette-legumes-accompagnement', icone: '🥦', ordre: 7 },
   'Boissons':                { id: 'cat-recette-boissons',               icone: '🥤', ordre: 8 },
@@ -528,7 +537,9 @@ async function supprimerCategoriePetitDejeuner(): Promise<void> {
   if (!cat) return
   const now = new Date()
   const gouter = await db.categoriesRecettes.get('cat-recette-gouter')
+    ?? await db.categoriesRecettes.filter(c => c.nom === 'Goûters').first()
     ?? await db.categoriesRecettes.filter(c => c.nom === 'Goûter').first()
+    ?? await db.categoriesRecettes.filter(c => c.nom === 'Plats principaux').first()
     ?? await db.categoriesRecettes.filter(c => c.nom === 'Plat principal').first()
   if (gouter) {
     const recettes = await db.recettes.where('categorie').equals(cat.id).toArray()
@@ -555,12 +566,31 @@ async function migrerLegumesAccompagnementVersAccompagnement(): Promise<void> {
   }
 }
 
+async function migrerCategoriesVersPluriels(): Promise<void> {
+  const renames: Array<{ ancien: string; nouveau: string }> = [
+    { ancien: 'Plat principal',          nouveau: 'Plats principaux' },
+    { ancien: 'Dessert',                 nouveau: 'Desserts' },
+    { ancien: 'Goûter',                  nouveau: 'Goûters' },
+    { ancien: 'Soupe',                   nouveau: 'Soupes' },
+    { ancien: 'Sauce',                   nouveau: 'Sauces' },
+    { ancien: 'Accompagnement',          nouveau: 'Accompagnements' },
+    { ancien: 'Petit déjeuner',          nouveau: 'Petits déjeuners' },
+  ]
+  const now = new Date()
+  for (const { ancien, nouveau } of renames) {
+    const cat = await db.categoriesRecettes.filter(c => c.nom === ancien).first()
+    if (cat) {
+      await db.categoriesRecettes.update(cat.id, { nom: nouveau, updatedAt: now })
+    }
+  }
+}
+
 async function ajouterCategoriePetitDejeuner(): Promise<void> {
   const existing = await db.categoriesRecettes.get('cat-recette-petit-dejeuner')
   if (existing) return
   await db.categoriesRecettes.add({
     id: 'cat-recette-petit-dejeuner',
-    nom: 'Petit déjeuner',
+    nom: 'Petits déjeuners',
     icone: '🥐',
     ordre: 0,
     ...withAudit({}),
@@ -1945,113 +1975,113 @@ async function seedRecettes(): Promise<void> {
   type Entry = ReturnType<typeof recette>
   const entries: Entry[] = [
     // ── PLATS ─────────────────────────────────────────────────────────────────
-    recette('Orzo aux tomates confites', 'Plat principal', 20, [], false,
+    recette('Orzo aux tomates confites', 'Plats principaux', 20, [], false,
       ['Tomates cerises','Oignons rouges','Orzo','Beurre','Bouillon de légumes','Parmesan râpé','Ricotta','Citron','Basilic',"Huile d'olive",'Vinaigre balsamique','Paprika fumé','Persillade','Thym']),
-    recette('Galettes d\'agneau aux pistaches & sauce yaourt au sumac', 'Plat principal', 20, ['Viande rouge'], false,
+    recette('Galettes d\'agneau aux pistaches & sauce yaourt au sumac', 'Plats principaux', 20, ['Viande rouge'], false,
       ['Agneau haché','Pistaches','Oignons','Ail','Roquette',"Huile d'olive",'Sumac','Yaourt grec','Citron']),
-    recette('Tagliatelles de courgettes, nuggets de poulet & sauce au parmesan', 'Plat principal', 30, [], false,
+    recette('Tagliatelles de courgettes, nuggets de poulet & sauce au parmesan', 'Plats principaux', 30, [], false,
       ['Poulet (Blanc)','Corn-flakes nature','Chapelure panko','Sauce soja sucrée','Paprika fumé','Oeufs','Courgettes',"Huile d'olive",'Sel','Poivre','Bouillon de volaille','Parmesan râpé','Crème liquide']),
-    recette('Tajine de poisson et patates douces', 'Plat principal', 10, [], false,
+    recette('Tajine de poisson et patates douces', 'Plats principaux', 10, [], false,
       ['Filet de colin','Oignons',"Huile d'olive",'Pomme de terre','Patates douces','Tomates concassées','Ail','Coriandre','Poivrons','Bouillon de poisson','Petit pois','Sel','Poivre']),
-    recette('Pommes de terre & tomates rôties, sauce feta-basilic', 'Plat principal', 15, [], false,
+    recette('Pommes de terre & tomates rôties, sauce feta-basilic', 'Plats principaux', 15, [], false,
       ['Pommes grenailles','Beurre','Paprika fumé','Tomates cerises','Vinaigre balsamique','Persillade','Miel',"Huile d'olive",'Parmesan râpé','Micro pousses','Yaourt grec','Feta','Basilic']),
-    recette('Pomme de terre rôtie pesto courgette pistache et burrata', 'Plat principal', 20, [], false, []),
-    recette('Pommes de terre au four, œuf mollet & sauce tonnato', 'Plat principal', 20, [], false,
+    recette('Pomme de terre rôtie pesto courgette pistache et burrata', 'Plats principaux', 20, [], false, []),
+    recette('Pommes de terre au four, œuf mollet & sauce tonnato', 'Plats principaux', 20, [], false,
       ['Pomme de terre',"Huile d'olive",'Fleur de sel','Oeufs','Citron','Persil','Thon en boîte','Câpres','Anchois','Ail']),
-    recette('Pommes de terre rôties, œufs pochés & sauce verte', 'Plat principal', 20, [], false,
+    recette('Pommes de terre rôties, œufs pochés & sauce verte', 'Plats principaux', 20, [], false,
       ['Pommes grenailles',"Huile d'olive",'Thym','Vinaigre blanc','Oeufs','Bloc de Parmesan','Basilic','Echalotes','Bouillon de volaille','Épinards frais','Sel','Beurre','Paprika fumé','Crème liquide']),
-    recette('Potimarron rôti & crousti-crumble', 'Plat principal', 15, [], false,
+    recette('Potimarron rôti & crousti-crumble', 'Plats principaux', 15, [], false,
       ['Potimarron',"Huile d'olive",'Sauce soja salée','Miel','Persillade','Sel','Poivre','Paprika fumé','Coriandre','Basilic','Graines de sésame']),
-    recette('Pommes de terre farcies épinards & gorgonzola', 'Plat principal', 20, [], false,
+    recette('Pommes de terre farcies épinards & gorgonzola', 'Plats principaux', 20, [], false,
       ['Pomme de terre','Beurre','Crème liquide','Gorgonzola','Épinards frais','Sel','Poivre']),
-    recette('Saumon croustillant, carottes rôties & sauce beurre blanc', 'Plat principal', 20, [], false,
+    recette('Saumon croustillant, carottes rôties & sauce beurre blanc', 'Plats principaux', 20, [], false,
       ['Saumon','Moutarde','Carottes',"Huile d'olive",'Beurre','Ail en poudre','Oignon en poudre','Persil','Citron','Sauce soja sucrée','Echalotes',"Sirop d'agave",'Bouillon de légumes','Vinaigre de vin']),
-    recette('Tomates rôties à la burrata & crème de pesto', 'Plat principal', 10, [], false,
+    recette('Tomates rôties à la burrata & crème de pesto', 'Plats principaux', 10, [], false,
       ['Tomates cerises',"Huile d'olive",'Sauce soja salée','Paprika fumé','Persillade',"Sirop d'érable",'Burrata','Beurre','Farine','Parmesan râpé','Basilic','Noix de cajou']),
-    recette('Sardines farcies à la charmoula & sauce aux poivrons', 'Plat principal', 30, [], false,
+    recette('Sardines farcies à la charmoula & sauce aux poivrons', 'Plats principaux', 30, [], false,
       ['Filet de sardine','Coriandre','Persil','Citron confit','Semoule de maïs','Tomates','Poivrons','Piment','Ail']),
-    recette('Yaourt froid & tomates rôties, œuf poché, pommes de terre croustillantes & pain', 'Plat principal', 15, [], false,
+    recette('Yaourt froid & tomates rôties, œuf poché, pommes de terre croustillantes & pain', 'Plats principaux', 15, [], false,
       ['Tomates cerises',"Huile d'olive",'Cumin','Sucre','Ail','Thym','Origan','Citron','Yaourt grec','Sel','Poivre']),
-    recette('Saumon laqué miel-harissa, sauce citron & chapelure de coriandre', 'Plat principal', 15, [], false,
+    recette('Saumon laqué miel-harissa, sauce citron & chapelure de coriandre', 'Plats principaux', 15, [], false,
       ['Pavé de saumon','Miel','Harissa','Citron','Sel','Poivre','Yaourt grec','Coriandre','Ail en poudre','Échalotes en poudre']),
-    recette('Patates douces rôties, sauce feta, ail & citron', 'Plat principal', 40, [], false,
+    recette('Patates douces rôties, sauce feta, ail & citron', 'Plats principaux', 40, [], false,
       ['Chapelure panko','Miel','Ail',"Huile d'olive",'Oignons rouges','Patates douces','Persillade','Feta','Yaourt grec','Citron','Ciboulette']),
-    recette('Brocolis en croûte de parmesan & sauce ricotta–beurre de cacahuètes', 'Plat principal', 10, ['Healthy'], false,
+    recette('Brocolis en croûte de parmesan & sauce ricotta–beurre de cacahuètes', 'Plats principaux', 10, ['Healthy'], false,
       ['Brocoli','Oignons rouges','Chapelure panko','Parmesan râpé',"Huile d'olive",'Miel','Sauce soja salée','Persillade','Ricotta','Vinaigre blanc','Yaourt grec','Beurre de cacahuète']),
-    recette('Poulet juteux, pommes de terre croustillantes & crème de poivron', 'Plat principal', 20, [], false,
+    recette('Poulet juteux, pommes de terre croustillantes & crème de poivron', 'Plats principaux', 20, [], false,
       ['Poulet (Blanc)','Sel','Poivre',"Huile d'olive",'Beurre','Pommes grenailles','Romarin','Ail','Poivron rouge','Crème liquide']),
-    recette('Gratin de butternut & épinards au comté', 'Plat principal', 15, [], false,
+    recette('Gratin de butternut & épinards au comté', 'Plats principaux', 15, [], false,
       ['Courge de Butternut','Oignons rouges','Comté','Ail','Crème fraîche','Épinards frais','Bouillon de volaille','Poivre','Basilic']),
-    recette('Mamita', 'Plat principal', undefined, ['Marocain'], false, []),
-    recette('Couscous', 'Plat principal', undefined, ['Marocain'], false, ['Oignons','Navets']),
-    recette('Bœuf bourguignon', 'Plat principal', 20, ['Plats mijotés'], false,
+    recette('Mamita', 'Plats principaux', undefined, ['Marocain'], false, []),
+    recette('Couscous', 'Plats principaux', undefined, ['Marocain'], false, ['Oignons','Navets']),
+    recette('Bœuf bourguignon', 'Plats principaux', 20, ['Plats mijotés'], false,
       ['Paleron de boeuf','Carottes','Oignons','Ail','Champignons de paris','Bouillon de volaille','Concentré de tomate','Farine','Bouquet garni','Vinaigre balsamique',"Huile d'olive",'Sel','Poivre']),
-    recette('Boeuf aux oignons', 'Plat principal', undefined, ['Asiatique'], false, []),
-    recette('Boeuf Loclac', 'Plat principal', undefined, ['Asiatique'], false,
+    recette('Boeuf aux oignons', 'Plats principaux', undefined, ['Asiatique'], false, []),
+    recette('Boeuf Loclac', 'Plats principaux', undefined, ['Asiatique'], false,
       ['Rumsteak','Ail','Sauce soja salée','Sauce huître','Sucre','Poivre','Maïzena','Huile de tournesol','Riz','Oeufs','Concombre','Coriandre']),
-    recette('Nouilles sautées', 'Plat principal', undefined, ['Asiatique'], false, []),
-    recette('Pad thaï', 'Plat principal', undefined, ['Asiatique'], false, []),
-    recette('Saumon teriyaki', 'Plat principal', undefined, ['Asiatique'], false, []),
-    recette('Bo bun', 'Plat principal', undefined, ['Asiatique'], false, []),
-    recette('Dumpling', 'Plat principal', undefined, ['Asiatique'], false, []),
-    recette('Curry japonais', 'Plat principal', undefined, ['Asiatique'], false, []),
-    recette('Pastilla', 'Plat principal', undefined, ['Marocain'], false, []),
-    recette('Rfissa', 'Plat principal', undefined, ['Marocain'], false, []),
-    recette('Tajine poulet aux olives', 'Plat principal', undefined, ['Marocain'], false, []),
-    recette('Veau aux pruneaux', 'Plat principal', undefined, ['Marocain'], false, []),
-    recette("L'a3dess", 'Plat principal', undefined, ['Marocain'], false, []),
-    recette('Lasagne bolognaise & légumes', 'Plat principal', undefined, ['Lasagnes et gratins'], false, []),
-    recette('Lasagne aubergine bolognaise', 'Plat principal', undefined, ['Lasagnes et gratins'], false, []),
-    recette('Lasagne saumon épinards', 'Plat principal', undefined, ['Lasagnes et gratins'], false, []),
-    recette('Lasagne courgettes ricotta', 'Plat principal', undefined, ['Lasagnes et gratins'], false, []),
-    recette('Hachis parmentier aux légumes', 'Plat principal', undefined, ['Lasagnes et gratins'], false, []),
-    recette('Butter chicken', 'Plat principal', undefined, ['Indien'], false, []),
-    recette('Tikka masala', 'Plat principal', undefined, ['Indien'], false, []),
-    recette('Agneau madras', 'Plat principal', undefined, ['Indien'], false, []),
-    recette('Dhal de lentilles corail', 'Plat principal', undefined, ['Indien'], false, []),
-    recette('Poulet tandoori et riz rouge', 'Plat principal', undefined, ['Indien'], false, []),
-    recette('Poulet curry', 'Plat principal', undefined, ['Indien'], false, []),
-    recette('Blanquette de veau', 'Plat principal', undefined, ['Plats mijotés'], false, []),
-    recette('Boeuf effiloché', 'Plat principal', undefined, ['Plats mijotés'], false, []),
-    recette('Veau en sauce', 'Plat principal', undefined, ['Plats mijotés'], false, []),
-    recette("Souris d'agneau ultra fondante – sauce brune intense", 'Plat principal', undefined, [], false, []),
+    recette('Nouilles sautées', 'Plats principaux', undefined, ['Asiatique'], false, []),
+    recette('Pad thaï', 'Plats principaux', undefined, ['Asiatique'], false, []),
+    recette('Saumon teriyaki', 'Plats principaux', undefined, ['Asiatique'], false, []),
+    recette('Bo bun', 'Plats principaux', undefined, ['Asiatique'], false, []),
+    recette('Dumpling', 'Plats principaux', undefined, ['Asiatique'], false, []),
+    recette('Curry japonais', 'Plats principaux', undefined, ['Asiatique'], false, []),
+    recette('Pastilla', 'Plats principaux', undefined, ['Marocain'], false, []),
+    recette('Rfissa', 'Plats principaux', undefined, ['Marocain'], false, []),
+    recette('Tajine poulet aux olives', 'Plats principaux', undefined, ['Marocain'], false, []),
+    recette('Veau aux pruneaux', 'Plats principaux', undefined, ['Marocain'], false, []),
+    recette("L'a3dess", 'Plats principaux', undefined, ['Marocain'], false, []),
+    recette('Lasagne bolognaise & légumes', 'Plats principaux', undefined, ['Lasagnes et gratins'], false, []),
+    recette('Lasagne aubergine bolognaise', 'Plats principaux', undefined, ['Lasagnes et gratins'], false, []),
+    recette('Lasagne saumon épinards', 'Plats principaux', undefined, ['Lasagnes et gratins'], false, []),
+    recette('Lasagne courgettes ricotta', 'Plats principaux', undefined, ['Lasagnes et gratins'], false, []),
+    recette('Hachis parmentier aux légumes', 'Plats principaux', undefined, ['Lasagnes et gratins'], false, []),
+    recette('Butter chicken', 'Plats principaux', undefined, ['Indien'], false, []),
+    recette('Tikka masala', 'Plats principaux', undefined, ['Indien'], false, []),
+    recette('Agneau madras', 'Plats principaux', undefined, ['Indien'], false, []),
+    recette('Dhal de lentilles corail', 'Plats principaux', undefined, ['Indien'], false, []),
+    recette('Poulet tandoori et riz rouge', 'Plats principaux', undefined, ['Indien'], false, []),
+    recette('Poulet curry', 'Plats principaux', undefined, ['Indien'], false, []),
+    recette('Blanquette de veau', 'Plats principaux', undefined, ['Plats mijotés'], false, []),
+    recette('Boeuf effiloché', 'Plats principaux', undefined, ['Plats mijotés'], false, []),
+    recette('Veau en sauce', 'Plats principaux', undefined, ['Plats mijotés'], false, []),
+    recette("Souris d'agneau ultra fondante – sauce brune intense", 'Plats principaux', undefined, [], false, []),
     // ── PIZZA, TARTES & QUICHES ───────────────────────────────────────────────
-    recette('Tartatouille', 'Plat principal', 20, [], false,
+    recette('Tartatouille', 'Plats principaux', 20, [], false,
       ['Poivron rouge','Courgettes','Tomates','Aubergines','Oignons rouges','Ail',"Huile d'olive",'Pâte feuilletée','Mozzarella','St Moret','Oeufs','Basilic']),
     // ── LÉGUMES & ACCOMPAGNEMENTS ─────────────────────────────────────────────
-    recette('Carottes rôties, tahini & dukkah de noix', 'Plat principal', 20, [], false,
+    recette('Carottes rôties, tahini & dukkah de noix', 'Plats principaux', 20, [], false,
       ['Carottes','Ail',"Huile d'olive",'Cumin','Paprika','Miel','Poivre','Yaourt grec','Tahini','Citron','Coriandre','Dukkah de Noix']),
-    recette('Poireaux rôtis, œufs pochés & sauce verte', 'Plat principal', undefined, [], false, []),
-    recette('Pommes de terre rôties à la harissa & ail confit', 'Plat principal', undefined, [], false, []),
-    recette('Gratin dauphinois', 'Plat principal', undefined, [], false, []),
+    recette('Poireaux rôtis, œufs pochés & sauce verte', 'Plats principaux', undefined, [], false, []),
+    recette('Pommes de terre rôties à la harissa & ail confit', 'Plats principaux', undefined, [], false, []),
+    recette('Gratin dauphinois', 'Plats principaux', undefined, [], false, []),
     // ── SAUCES ────────────────────────────────────────────────────────────────
-    recette('Sauce chaude au gorgonzola', 'Sauce', 5, [], false,
+    recette('Sauce chaude au gorgonzola', 'Sauces', 5, [], false,
       ['Gorgonzola','Mascarpone','Ciboulette','Sel','Poivre']),
-    recette('Crème froide de poivrons à la grecque', 'Sauce', 10, [], false,
+    recette('Crème froide de poivrons à la grecque', 'Sauces', 10, [], false,
       ['Poivron rouge','Oignons rouges','Poivrons','Tomates','Feta','Yaourt grec','Tahini',"Huile d'olive",'Sauce soja sucrée','Sauce soja salée','Miel','Paprika fumé']),
-    recette('Sauce chaude coco – pistache', 'Sauce', 10, [], false,
+    recette('Sauce chaude coco – pistache', 'Sauces', 10, [], false,
       ['Pignons de pin','Pistaches','Bouillon de volaille','Mascarpone','Lait de coco','Paprika fumé','Coriandre','Basilic']),
-    recette('Sauce chaude crémeuse aux champignons', 'Sauce', 20, [], false,
+    recette('Sauce chaude crémeuse aux champignons', 'Sauces', 20, [], false,
       ['Beurre','Bouillon de volaille','Oignons rouges','Echalotes','Ail','Champignons de paris','Crème fraîche','Parmesan râpé','Persil','Noisettes','Sel','Poivre']),
-    recette('Sauce chaude à la tomate', 'Sauce', 10, [], false,
+    recette('Sauce chaude à la tomate', 'Sauces', 10, [], false,
       ['Oignons rouges',"Huile d'olive",'Thym','Sauce soja salée','Paprika fumé','Miel','Vinaigre balsamique','Tomates cerises','Ail','Basilic','Bouillon de légumes']),
-    recette('Sauce froide citron', 'Sauce', 10, [], false,
+    recette('Sauce froide citron', 'Sauces', 10, [], false,
       ['Yaourt grec','Citron','Sauce soja salée',"Huile d'olive",'Miel',"Sirop d'agave"]),
-    recette('Sauce froide fouettée au mascarpone & ciboulette', 'Sauce', 5, [], false,
+    recette('Sauce froide fouettée au mascarpone & ciboulette', 'Sauces', 5, [], false,
       ['Beurre','Bouillon de volaille','Ail','Mascarpone','Crème liquide','Oeufs','Ciboulette','Sel','Poivre','Echalotes']),
-    recette('Sauce froide verte aux herbes fraîches', 'Sauce', 10, [], false,
+    recette('Sauce froide verte aux herbes fraîches', 'Sauces', 10, [], false,
       ['Yaourt grec','Coriandre','Menthe',"Huile d'olive",'Miel','Sauce soja salée','Paprika','Tahini']),
     // ── SALADES ───────────────────────────────────────────────────────────────
-    recette('Salade de carottes au yaourt, cannelle & herbes', 'Entrée', undefined, [], false, []),
-    recette('Beef, hummus & salades', 'Entrée', 10, [], false,
+    recette('Salade de carottes au yaourt, cannelle & herbes', 'Entrées & Salades', undefined, [], false, []),
+    recette('Beef, hummus & salades', 'Entrées & Salades', 10, [], false,
       ['Riz','Boeuf haché','Salades','Avocat','Hummus']),
-    recette('Salade kale & avocat', 'Entrée', 10, [], false,
+    recette('Salade kale & avocat', 'Entrées & Salades', 10, [], false,
       ['Kale','Avocat','Halloumi','Citron','Quinoa','Oeufs']),
     // ── SOUPES ────────────────────────────────────────────────────────────────
-    recette('Soupe de petits pois et Boursin', 'Soupe', 10, [], false,
+    recette('Soupe de petits pois et Boursin', 'Soupes', 10, [], false,
       ['Petit pois','Oignons','Bouillon de légumes','Boursin au poivre','Bacon',"Huile d'olive",'Sel','Poivre']),
     // ── DESSERTS ──────────────────────────────────────────────────────────────
-    recette('Cookies pistache', 'Dessert', undefined, [], false, []),
+    recette('Cookies pistache', 'Desserts', undefined, [], false, []),
   ]
 
   await db.recettes.bulkAdd(entries.map(e => e.r))
