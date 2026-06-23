@@ -49,6 +49,12 @@ async function _seedDatabase(): Promise<void> {
   await migrerCategoriesRecettesVersIDsStables()
   // Supprime la catégorie "Petit-déjeuner" (recettes déplacées vers Goûter)
   await supprimerCategoriePetitDejeuner()
+  // Renommage "Entrée" → "Entrées & Salades"
+  await migrerEntreeVersEntreesSalades()
+  // Renommage "Légumes & Accompagnement" → "Accompagnement"
+  await migrerLegumesAccompagnementVersAccompagnement()
+  // Ajout catégorie "Petit déjeuner" si absente
+  await ajouterCategoriePetitDejeuner()
 
   if (membresCount === 0) {
     console.log('[FamilyOS] Premier lancement — initialisation de la base...')
@@ -449,13 +455,14 @@ async function seedCategoriesRecettes(): Promise<void> {
   if (existing > 0) return
 
   const categories: CategorieRecette[] = [
+    { id: 'cat-recette-petit-dejeuner',         nom: 'Petit déjeuner',           icone: '🥐', ordre: 0, ...withAudit({}) },
     { id: 'cat-recette-plat-principal',         nom: 'Plat principal',           icone: '🍽️', ordre: 1, ...withAudit({}) },
-    { id: 'cat-recette-entree',                 nom: 'Entrée',                   icone: '🥗', ordre: 2, ...withAudit({}) },
+    { id: 'cat-recette-entree',                 nom: 'Entrées & Salades',        icone: '🥗', ordre: 2, ...withAudit({}) },
     { id: 'cat-recette-dessert',                nom: 'Dessert',                  icone: '🍰', ordre: 3, ...withAudit({}) },
     { id: 'cat-recette-gouter',                 nom: 'Goûter',                   icone: '🧁', ordre: 4, ...withAudit({}) },
     { id: 'cat-recette-soupe',                  nom: 'Soupe',                    icone: '🍲', ordre: 5, ...withAudit({}) },
     { id: 'cat-recette-sauce',                  nom: 'Sauce',                    icone: '🫕', ordre: 6, ...withAudit({}) },
-    { id: 'cat-recette-legumes-accompagnement', nom: 'Légumes & Accompagnement', icone: '🥦', ordre: 7, ...withAudit({}) },
+    { id: 'cat-recette-legumes-accompagnement', nom: 'Accompagnement',           icone: '🥦', ordre: 7, ...withAudit({}) },
     { id: 'cat-recette-boissons',               nom: 'Boissons',                 icone: '🥤', ordre: 8, ...withAudit({}) },
   ]
   await db.categoriesRecettes.bulkAdd(categories)
@@ -463,12 +470,15 @@ async function seedCategoriesRecettes(): Promise<void> {
 
 // IDs stables pour toutes les catégories recettes par défaut
 const STABLE_CATS_RECETTES: Record<string, { id: string; icone: string; ordre: number }> = {
+  'Petit déjeuner':          { id: 'cat-recette-petit-dejeuner',         icone: '🥐', ordre: 0 },
   'Plat principal':          { id: 'cat-recette-plat-principal',         icone: '🍽️', ordre: 1 },
+  'Entrées & Salades':       { id: 'cat-recette-entree',                 icone: '🥗', ordre: 2 },
   'Entrée':                  { id: 'cat-recette-entree',                 icone: '🥗', ordre: 2 },
   'Dessert':                 { id: 'cat-recette-dessert',                icone: '🍰', ordre: 3 },
   'Goûter':                  { id: 'cat-recette-gouter',                 icone: '🧁', ordre: 4 },
   'Soupe':                   { id: 'cat-recette-soupe',                  icone: '🍲', ordre: 5 },
   'Sauce':                   { id: 'cat-recette-sauce',                  icone: '🫕', ordre: 6 },
+  'Accompagnement':          { id: 'cat-recette-legumes-accompagnement', icone: '🥦', ordre: 7 },
   'Légumes & Accompagnement':{ id: 'cat-recette-legumes-accompagnement', icone: '🥦', ordre: 7 },
   'Boissons':                { id: 'cat-recette-boissons',               icone: '🥤', ordre: 8 },
 }
@@ -527,6 +537,34 @@ async function supprimerCategoriePetitDejeuner(): Promise<void> {
     }
   }
   await db.categoriesRecettes.delete(cat.id)
+}
+
+async function migrerEntreeVersEntreesSalades(): Promise<void> {
+  const cat = await db.categoriesRecettes.get('cat-recette-entree')
+    ?? await db.categoriesRecettes.filter(c => c.nom === 'Entrée').first()
+  if (cat && cat.nom === 'Entrée') {
+    await db.categoriesRecettes.update(cat.id, { nom: 'Entrées & Salades', updatedAt: new Date() })
+  }
+}
+
+async function migrerLegumesAccompagnementVersAccompagnement(): Promise<void> {
+  const cat = await db.categoriesRecettes.get('cat-recette-legumes-accompagnement')
+    ?? await db.categoriesRecettes.filter(c => c.nom === 'Légumes & Accompagnement').first()
+  if (cat && cat.nom === 'Légumes & Accompagnement') {
+    await db.categoriesRecettes.update(cat.id, { nom: 'Accompagnement', icone: '🥦', updatedAt: new Date() })
+  }
+}
+
+async function ajouterCategoriePetitDejeuner(): Promise<void> {
+  const existing = await db.categoriesRecettes.get('cat-recette-petit-dejeuner')
+  if (existing) return
+  await db.categoriesRecettes.add({
+    id: 'cat-recette-petit-dejeuner',
+    nom: 'Petit déjeuner',
+    icone: '🥐',
+    ordre: 0,
+    ...withAudit({}),
+  })
 }
 
 async function repairRecipeCategoriesSync(): Promise<void> {

@@ -547,11 +547,28 @@
 
 /* ─── Tags chips ─────────────────────────────────────────────────────────────── */
 
+.recette-form__tags-groupe {
+  margin-top: 12px;
+}
+
+.recette-form__tags-groupe:first-child {
+  margin-top: 4px;
+}
+
+.recette-form__tags-groupe-label {
+  display: block;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #B5AECB;
+  margin-bottom: 6px;
+}
+
 .recette-form__tags-grid {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
-  margin-top: 4px;
 }
 
 .recette-form__tag-chip {

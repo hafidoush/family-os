@@ -49,7 +49,9 @@ type PlanSemaineIA = Record<JourMenu, RepasIA>
 const CATEGORIES_ACCOMPAGNEMENT = new Set([
   'Sauce',
   'Légumes & Accompagnement',
+  'Accompagnement',
   'Entrée',
+  'Entrées & Salades',
   'Soupe',
 ])
 

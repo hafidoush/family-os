@@ -10,27 +10,69 @@ import type { Produit } from '../../../../shared/types'
 import { IconCameraAdd, IconClose } from '@shared/components/ui/Icon/Icon'
 import './RecetteForm.css'
 
-const TAGS_RECETTES_FORM = [
-  { id: 'française',     label: 'Française' },
-  { id: 'italienne',     label: 'Italienne' },
-  { id: 'espagnole',     label: 'Espagnole' },
-  { id: 'grecque',       label: 'Grecque' },
-  { id: 'marocaine',     label: 'Marocaine' },
-  { id: 'asiatique',     label: 'Asiatique' },
-  { id: 'indienne',      label: 'Indienne' },
-  { id: 'fast-food',     label: 'Fast-food' },
-  { id: 'mexicaine',     label: 'Mexicaine' },
-  { id: 'autre',         label: 'Autre' },
-  { id: 'réception',     label: 'Réception' },
-  { id: 'batch cooking', label: 'Batch cooking' },
-  { id: 'ramadan',       label: 'Ramadan' },
-  { id: 'enfant',        label: 'Enfant' },
-  { id: 'bébé',          label: 'Bébé' },
-  { id: 'réconfortant',  label: 'Réconfortant' },
-  { id: 'frais & léger', label: 'Frais & léger' },
-  { id: 'apéro',           label: 'Apéro' },
-  { id: 'pizza & tartes',  label: 'Pizza & tartes' },
-] as const
+const TAGS_RECETTES_GROUPES = [
+  {
+    groupe: 'Cuisine',
+    tags: [
+      { id: 'française',    label: 'Française' },
+      { id: 'italienne',    label: 'Italienne' },
+      { id: 'espagnole',    label: 'Espagnole' },
+      { id: 'grecque',      label: 'Grecque' },
+      { id: 'marocaine',    label: 'Marocaine' },
+      { id: 'asiatique',    label: 'Asiatique' },
+      { id: 'indienne',     label: 'Indienne' },
+      { id: 'mexicaine',    label: 'Mexicaine' },
+      { id: 'fast-food',    label: 'Fast-food' },
+      { id: 'autre',        label: 'Autre' },
+    ],
+  },
+  {
+    groupe: 'Goût',
+    tags: [
+      { id: 'salé',          label: 'Salé' },
+      { id: 'sucré',         label: 'Sucré' },
+      { id: 'réconfortant',  label: 'Réconfortant' },
+      { id: 'frais & léger', label: 'Frais & léger' },
+    ],
+  },
+  {
+    groupe: 'Rapidité',
+    tags: [
+      { id: 'rapide',        label: 'Rapide' },
+      { id: 'batch cooking', label: 'Batch cooking' },
+    ],
+  },
+  {
+    groupe: 'Occasion',
+    tags: [
+      { id: 'apéro',          label: 'Apéro' },
+      { id: 'barbecue',       label: 'Barbecue' },
+      { id: 'fête',           label: 'Fête' },
+      { id: 'réception',      label: 'Réception' },
+      { id: 'ramadan',        label: 'Ramadan' },
+      { id: 'pizza & tartes', label: 'Pizza & tartes' },
+    ],
+  },
+  {
+    groupe: 'Saison',
+    tags: [
+      { id: 'printemps', label: 'Printemps' },
+      { id: 'été',       label: 'Été' },
+      { id: 'automne',   label: 'Automne' },
+      { id: 'hiver',     label: 'Hiver' },
+    ],
+  },
+  {
+    groupe: 'Profil',
+    tags: [
+      { id: 'enfant',         label: 'Enfant' },
+      { id: 'bébé',           label: 'Bébé' },
+      { id: 'sans viande',    label: 'Sans viande' },
+      { id: 'économique',     label: 'Économique' },
+      { id: 'hyperprotéiné',  label: 'Hyperprotéiné' },
+    ],
+  },
+]
 
 interface Props {
   recetteId?: string        // undefined = création, string = édition
@@ -482,22 +524,27 @@ export function RecetteForm({ recetteId, onSave, onCancel }: Props) {
 
           <div className="recette-form__field">
             <label className="recette-form__label">Tags</label>
-            <div className="recette-form__tags-grid">
-              {TAGS_RECETTES_FORM.map((tag) => (
-                <button
-                  key={tag.id}
-                  type="button"
-                  className={`recette-form__tag-chip ${tags.includes(tag.id) ? 'recette-form__tag-chip--active' : ''}`}
-                  onClick={() =>
-                    setTags((prev) =>
-                      prev.includes(tag.id) ? prev.filter((t) => t !== tag.id) : [...prev, tag.id]
-                    )
-                  }
-                >
-                  {tag.label}
-                </button>
-              ))}
-            </div>
+            {TAGS_RECETTES_GROUPES.map((groupe) => (
+              <div key={groupe.groupe} className="recette-form__tags-groupe">
+                <span className="recette-form__tags-groupe-label">{groupe.groupe}</span>
+                <div className="recette-form__tags-grid">
+                  {groupe.tags.map((tag) => (
+                    <button
+                      key={tag.id}
+                      type="button"
+                      className={`recette-form__tag-chip ${tags.includes(tag.id) ? 'recette-form__tag-chip--active' : ''}`}
+                      onClick={() =>
+                        setTags((prev) =>
+                          prev.includes(tag.id) ? prev.filter((t) => t !== tag.id) : [...prev, tag.id]
+                        )
+                      }
+                    >
+                      {tag.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            ))}
           </div>
         </section>
 
