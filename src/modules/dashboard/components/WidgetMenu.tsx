@@ -104,10 +104,19 @@ function RecetteImage({ image, nom }: { image?: Blob; nom: string }) {
 function IngredientsSheet({ recetteId, nom, onClose }: { recetteId: string; nom: string; onClose: () => void }) {
   const navigate = useNavigate();
   const ingredients = useLiveQuery(async () => {
-    return db.recettesIngredients
+    const ings = await db.recettesIngredients
       .where('recette')
       .equals(recetteId)
       .toArray();
+    const produitIds = ings.map(i => i.produit).filter(Boolean);
+    const produits = produitIds.length > 0
+      ? await db.produits.where('id').anyOf(produitIds).toArray()
+      : [];
+    const produitsMap = new Map(produits.map(p => [p.id, p]));
+    return ings.map(ing => ({
+      ...ing,
+      nomProduit: produitsMap.get(ing.produit)?.nom ?? '—',
+    }));
   }, [recetteId]);
 
   function handleVoirRecette() {
@@ -134,7 +143,7 @@ function IngredientsSheet({ recetteId, nom, onClose }: { recetteId: string; nom:
             {ingredients.map((ing) => (
               <li key={ing.id} className="wmenu-sheet__item">
                 <span className="wmenu-sheet__item-dot" />
-                <span className="wmenu-sheet__item-nom">{ing.produit}</span>
+                <span className="wmenu-sheet__item-nom">{ing.nomProduit}</span>
                 {(ing.quantite || ing.unite) && (
                   <span className="wmenu-sheet__item-qty">
                     {ing.quantite} {ing.unite}

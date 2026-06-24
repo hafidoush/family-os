@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useRef } from 'react'
 import { useRecettes, useCategoriesRecettes } from '../../hooks/useRecettes'
 import { softDeleteFields } from '../../../../core/db/helpers'
 import { ConfirmModal } from '../../../../shared/components/ui/ConfirmModal'
@@ -38,23 +38,20 @@ interface Props {
   onCreateRecette: () => void
 }
 
-// ─── Helper : ajoute une recette au menu de la semaine courante ───────────────
+// ─── Helper : charge les menus futurs disponibles ────────────────────────────
 
-async function addToMenuSemaine(recetteId: string): Promise<void> {
-  const today = new Date()
-  const diff = today.getDay() === 0 ? -6 : 1 - today.getDay()
-  const lundi = new Date(today)
-  lundi.setDate(today.getDate() + diff)
-  lundi.setHours(0, 0, 0, 0)
-  const dateDebut = lundi.toISOString().split('T')[0]
+async function getMenusFuturs() {
+  const today = new Date().toISOString().split('T')[0]
+  return db.menus
+    .filter(m => !m.archive && !m.deletedAt && m.dateDebut >= today)
+    .toArray()
+    .then(list => list.sort((a, b) => a.dateDebut.localeCompare(b.dateDebut)))
+}
 
-  let menu = await db.menus
-    .filter((m) => m.dateDebut === dateDebut && !m.archive && !m.deletedAt)
-    .first()
-  if (!menu) {
-    menu = await menuService.createMenu({ dateReference: today })
-  }
-  await menuService.addSlot({ menuId: menu.id, recetteId })
+function formatDateMenu(dateDebut: string): string {
+  return new Date(dateDebut + 'T00:00:00').toLocaleDateString('fr-FR', {
+    weekday: 'long', day: 'numeric', month: 'long'
+  })
 }
 
 // ─── Helper : crée une session batch cooking ──────────────────────────────────
@@ -89,6 +86,9 @@ export function RecettesList({ onSelectRecette, onCreateRecette }: Props) {
   const [bulkMsg, setBulkMsg] = useState('')
 
   const [importOuvert, setImportOuvert] = useState(false)
+  const [menuChoixRecetteId, setMenuChoixRecetteId] = useState<string | null>(null)
+  const [menusFuturs, setMenusFuturs] = useState<Awaited<ReturnType<typeof getMenusFuturs>>>([])
+  const pendingMenuRef = useRef<string | null>(null)
 
   const toggleTag = useCallback((tagId: string) => {
     setTagsActifs((prev) =>
@@ -104,7 +104,23 @@ export function RecettesList({ onSelectRecette, onCreateRecette }: Props) {
 
   const handleAddToMenu = useCallback(async (recetteId: string) => {
     try {
-      await addToMenuSemaine(recetteId)
+      const futurs = await getMenusFuturs()
+      if (futurs.length <= 1) {
+        // 0 ou 1 menu : comportement direct
+        const today = new Date()
+        const diff = today.getDay() === 0 ? -6 : 1 - today.getDay()
+        const lundi = new Date(today)
+        lundi.setDate(today.getDate() + diff)
+        lundi.setHours(0, 0, 0, 0)
+        const dateDebut = lundi.toISOString().split('T')[0]
+        let menu = await db.menus.filter(m => m.dateDebut === dateDebut && !m.archive && !m.deletedAt).first()
+        if (!menu) menu = await menuService.createMenu({ dateReference: today })
+        await menuService.addSlot({ menuId: menu.id, recetteId })
+      } else {
+        // Plusieurs menus : afficher le choix
+        setMenusFuturs(futurs)
+        setMenuChoixRecetteId(recetteId)
+      }
     } catch { /* silencieux */ }
   }, [])
 
@@ -363,6 +379,31 @@ export function RecettesList({ onSelectRecette, onCreateRecette }: Props) {
             <button className="recettes-list__batch-cancel" style={{ width: '100%', marginTop: 8 }} onClick={() => setShowMoveSheet(false)}>
               Annuler
             </button>
+          </div>
+        </div>
+      )}
+
+      {/* Modale choix du menu pour planification */}
+      {menuChoixRecetteId && (
+        <div style={{ position: 'fixed', inset: 0, zIndex: 200, display: 'flex', alignItems: 'flex-end' }}>
+          <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,.4)' }} onClick={() => setMenuChoixRecetteId(null)} />
+          <div style={{ position: 'relative', width: '100%', background: 'var(--surface)', borderRadius: '20px 20px 0 0', padding: '24px 20px 32px', zIndex: 1 }}>
+            <div style={{ width: 36, height: 4, background: 'var(--border)', borderRadius: 2, margin: '0 auto 20px' }} />
+            <p style={{ fontWeight: 700, fontSize: 16, marginBottom: 16 }}>Choisir un menu</p>
+            {menusFuturs.map(m => (
+              <button
+                key={m.id}
+                style={{ display: 'block', width: '100%', textAlign: 'left', padding: '14px 16px', marginBottom: 8, background: 'var(--surface-raised)', border: '1px solid var(--border)', borderRadius: 12, fontSize: 15, cursor: 'pointer' }}
+                onClick={async () => {
+                  setMenuChoixRecetteId(null)
+                  try { await menuService.addSlot({ menuId: m.id, recetteId: menuChoixRecetteId }) } catch { /* silencieux */ }
+                }}
+              >
+                Semaine du {formatDateMenu(m.dateDebut)}
+                {m.nom && <span style={{ color: 'var(--text-secondary)', marginLeft: 8 }}>— {m.nom}</span>}
+              </button>
+            ))}
+            <button style={{ display: 'block', width: '100%', textAlign: 'center', padding: 14, marginTop: 8, color: 'var(--text-secondary)', background: 'none', border: 'none', fontSize: 15, cursor: 'pointer' }} onClick={() => setMenuChoixRecetteId(null)}>Annuler</button>
           </div>
         </div>
       )}

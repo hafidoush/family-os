@@ -260,7 +260,7 @@ export function RecetteDetail({ recetteId, onBack, onEdit }: Props) {
                 <li key={ing.id} className={`recette-detail__ingredient ${ing.optionnel ? 'recette-detail__ingredient--optionnel' : ''}`}>
                   <span className="recette-detail__ingredient-dot" />
                   <span className="recette-detail__ingredient-nom">
-                    {produit?.nom ?? '—'}
+                    {produit?.nom ?? <span style={{ color: 'var(--text-secondary)', fontStyle: 'italic' }}>ingrédient non synchronisé</span>}
                     {ing.optionnel && <em> (optionnel)</em>}
                   </span>
                   <span className="recette-detail__ingredient-qte">
