@@ -2277,7 +2277,7 @@ async function seedProduitsCatalog(): Promise<void> {
     }
   }
 
-  await db.produits.bulkAdd(produits)
+  await db.produits.bulkPut(produits)
 }
 
 // ── Fiches pédagogiques complètes ─────────────────────────────────────────────
