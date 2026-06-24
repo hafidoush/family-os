@@ -612,14 +612,17 @@ export function SectionPlanning() {
                         <button className="planning-manual-picker__back" onClick={() => setManualCatId(null)}>← Retour</button>
                         <p className="planning-manual-picker__title">{categories.find(c => c.id === manualCatId)?.nom}</p>
                         <div className="planning-manual-picker__acts">
-                          {activites.filter(a => a.categorie === manualCatId).map(a => (
-                            <button key={a.id} className="planning-manual-act" onClick={() => ajouterManuel(a.id)}>
-                              {a.nom}
-                            </button>
-                          ))}
-                          {activites.filter(a => a.categorie === manualCatId).length === 0 && (
-                            <p className="planning-manual-picker__empty">Aucune activité dans cette catégorie</p>
-                          )}
+                          {(() => {
+                            const catNom = categories.find(c => c.id === manualCatId)?.nom
+                            const actsFiltered = activites.filter(a => a.categorie === manualCatId || a.categorie === catNom)
+                            return actsFiltered.length > 0
+                              ? actsFiltered.map(a => (
+                                  <button key={a.id} className="planning-manual-act" onClick={() => ajouterManuel(a.id)}>
+                                    {a.nom}
+                                  </button>
+                                ))
+                              : <p className="planning-manual-picker__empty">Aucune activité dans cette catégorie</p>
+                          })()}
                         </div>
                       </>
                     )}
