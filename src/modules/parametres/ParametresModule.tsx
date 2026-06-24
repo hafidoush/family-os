@@ -832,6 +832,7 @@ function SectionSync() {
     setSyncing(true)
     setDone(false)
     try {
+      await pushAllLocalData(true)  // force=true : ignore la limite 1h, pousse tout le local
       await drainQueue()
       await pullAll()
       setDone(true)
