@@ -139,8 +139,13 @@ async function deduplicateProduits() {
   const now = new Date()
   for (const groupe of groupes.values()) {
     if (groupe.length <= 1) continue
-    // Garder le plus ancien (createdAt le plus petit), supprimer les autres
-    groupe.sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime())
+    // Priorité aux IDs stables (seed-prod-*) — sinon garder le plus ancien
+    groupe.sort((a, b) => {
+      const aStable = a.id.startsWith('seed-prod-') ? 0 : 1
+      const bStable = b.id.startsWith('seed-prod-') ? 0 : 1
+      if (aStable !== bStable) return aStable - bStable
+      return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+    })
     const keeper = groupe[0]
     const doublons = groupe.slice(1)
     for (const doublon of doublons) {
