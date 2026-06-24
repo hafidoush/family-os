@@ -1,10 +1,11 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { useRecette, useRecetteIngredients, useCategoriesRecettes } from '../../hooks/useRecettes'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { db } from '../../../../core/db/database'
 import { toggleFavori, toggleKidsFavorite, deleteRecette } from '../../services/recetteService'
 import { MenuService as menuService } from '../../services/MenuService'
 import { IconHeart, IconStarMinimalistic, IconPen, IconTrash, IconLadle, IconFlame } from '@shared/components/ui/Icon/Icon'
+import { v4 as uuid } from 'uuid'
 import './RecetteDetail.css'
 
 interface Props {
@@ -29,6 +30,9 @@ export function RecetteDetail({ recetteId, onBack, onEdit }: Props) {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
   const [menuAdding, setMenuAdding] = useState(false)
   const [menuAdded, setMenuAdded] = useState(false)
+  const [repairIngId, setRepairIngId] = useState<string | null>(null)
+  const [repairNom, setRepairNom] = useState('')
+  const repairInputRef = useRef<HTMLInputElement>(null)
 
   const handleAddToMenu = useCallback(async () => {
     if (menuAdding || menuAdded) return
@@ -79,6 +83,28 @@ export function RecetteDetail({ recetteId, onBack, onEdit }: Props) {
     setImageUrl(url)
     return () => URL.revokeObjectURL(url)
   }, [recette?.imageData, recette?.image])
+
+  const handleRepairIngredient = useCallback(async (ingId: string, nom: string) => {
+    const trimmed = nom.trim()
+    if (!trimmed) return
+    const now = new Date()
+    // Cherche un produit existant avec ce nom (normalisé)
+    const normNom = trimmed.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '')
+    let produit = await db.produits.filter(p => !!p.nom && !p.deletedAt &&
+      (p.nom.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '') === normNom)
+    ).first()
+    if (!produit) {
+      const newId = uuid()
+      await db.produits.add({ id: newId, nom: trimmed, nomNormalise: normNom,
+        type: 'consommable', categorie: '', deviceId: 'repair',
+        createdAt: now, updatedAt: now, deletedAt: undefined, archive: false })
+      produit = await db.produits.get(newId)
+    }
+    if (!produit) return
+    await db.recettesIngredients.update(ingId, { produit: produit.id, updatedAt: now })
+    setRepairIngId(null)
+    setRepairNom('')
+  }, [])
 
   const produitsMap = new Map(produits?.map((p) => [p.id, p]))
   const categoriesMap = new Map(categories?.map((c) => [c.id, c]))
@@ -260,8 +286,34 @@ export function RecetteDetail({ recetteId, onBack, onEdit }: Props) {
                 <li key={ing.id} className={`recette-detail__ingredient ${ing.optionnel ? 'recette-detail__ingredient--optionnel' : ''}`}>
                   <span className="recette-detail__ingredient-dot" />
                   <span className="recette-detail__ingredient-nom">
-                    {produit?.nom ?? <span style={{ color: 'var(--text-secondary)', fontStyle: 'italic' }}>ingrédient non synchronisé</span>}
-                    {ing.optionnel && <em> (optionnel)</em>}
+                    {produit?.nom
+                      ? <>{produit.nom}{ing.optionnel && <em> (optionnel)</em>}</>
+                      : repairIngId === ing.id
+                        ? (
+                          <span style={{ display: 'inline-flex', gap: 4, alignItems: 'center' }}>
+                            <input
+                              ref={repairInputRef}
+                              value={repairNom}
+                              onChange={e => setRepairNom(e.target.value)}
+                              onKeyDown={e => { if (e.key === 'Enter') handleRepairIngredient(ing.id, repairNom); if (e.key === 'Escape') { setRepairIngId(null); setRepairNom('') } }}
+                              placeholder="Nom du produit…"
+                              autoFocus
+                              style={{ fontSize: '0.85rem', padding: '2px 6px', borderRadius: 6, border: '1px solid var(--color-lavender)', width: 150 }}
+                            />
+                            <button onClick={() => handleRepairIngredient(ing.id, repairNom)} style={{ fontSize: '0.8rem', padding: '2px 8px', borderRadius: 6, background: 'var(--color-lavender)', color: '#fff', border: 'none', cursor: 'pointer' }}>OK</button>
+                            <button onClick={() => { setRepairIngId(null); setRepairNom('') }} style={{ fontSize: '0.8rem', padding: '2px 6px', borderRadius: 6, background: 'transparent', border: '1px solid var(--color-border)', cursor: 'pointer' }}>✕</button>
+                          </span>
+                        )
+                        : (
+                          <span
+                            style={{ color: 'var(--text-secondary)', fontStyle: 'italic', cursor: 'pointer', textDecoration: 'underline dotted' }}
+                            onClick={() => { setRepairIngId(ing.id); setRepairNom(''); setTimeout(() => repairInputRef.current?.focus(), 50) }}
+                            title="Appuyer pour saisir le nom manquant"
+                          >
+                            ingrédient manquant — appuyer pour réparer
+                          </span>
+                        )
+                    }
                   </span>
                   <span className="recette-detail__ingredient-qte">
                     {qteAffichee}{ing.unite ? ` ${ing.unite}` : ''}
