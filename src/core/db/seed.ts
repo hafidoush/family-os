@@ -88,13 +88,21 @@ async function _seedDatabase(): Promise<void> {
   // Migration IDs stables pour activités (corrige sync entre appareils)
   await migrateActivitesToStableIds()
 
-  // Seed catalogue produits si absent
+  // Seed catalogue produits si absent OU si des produits seedés ont encore des UUIDs aléatoires
+  // Les hooks ne sont pas encore installés ici → bulkDelete ne flood pas Supabase
   const produitsCount = await db.produits.count()
-  if (produitsCount === 0) {
-    await db.categoriesProduits.clear() // Repart sur les bonnes catégories
+  const hasUnstableIds = produitsCount > 0 &&
+    !!(await db.produits.filter(p => (p as { deviceId?: string }).deviceId === 'seed' && !!p.nom && !p.id.startsWith('seed-prod-')).first())
+
+  if (produitsCount === 0 || hasUnstableIds) {
+    if (hasUnstableIds) {
+      const old = await db.produits.filter(p => (p as { deviceId?: string }).deviceId === 'seed').toArray()
+      await db.produits.bulkDelete(old.map(p => p.id))
+    }
+    await db.categoriesProduits.clear()
     await seedCategoriesProduits()
     await seedProduitsCatalog()
-    console.log('[FamilyOS] Catalogue produits initialisé.')
+    console.log('[FamilyOS] Catalogue produits initialisé avec IDs stables.')
   }
 
   // Seed tâches grand ménage par pièce (idempotent via clé parametresSync)
