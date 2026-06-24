@@ -222,6 +222,34 @@ export async function pullAll() {
     await table.bulkPut(records)
   }
 
+  // Filet de sécurité : vérifier que tous les produits référencés par des ingrédients
+  // existent localement — les fetcher depuis Supabase s'ils manquent.
+  // Couvre le cas où le push d'un produit a échoué (NetworkError, throttle, offline).
+  try {
+    const ings = await db.recettesIngredients.filter(i => !i.deletedAt && !!i.produit).toArray()
+    const allIds = [...new Set(ings.map(i => i.produit))]
+    const missing: string[] = []
+    for (const id of allIds) {
+      const exists = await db.produits.get(id)
+      if (!exists) missing.push(id)
+    }
+    if (missing.length > 0) {
+      console.log(`[sync] repair: ${missing.length} produit(s) manquant(s), fetch depuis Supabase`)
+      const { data: rows } = await supabase
+        .from('produits')
+        .select('id, data')
+        .in('id', missing)
+        .eq('user_id', session.user.id)
+      if (rows?.length) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        await db.produits.bulkPut(rows.map((r: { data: Record<string, unknown> }) => r.data as any))
+        console.log(`[sync] repair: ${rows.length} produit(s) récupéré(s)`)
+      }
+    }
+  } catch (e) {
+    console.warn('[sync] repair produits manquants:', e)
+  }
+
   await setLastPullAt()
   await clearLastError()
   } finally {
