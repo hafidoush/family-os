@@ -754,6 +754,6 @@ export async function seedProduits(): Promise<void> {
     }
   }
 
-  await db.produits.bulkAdd(produits);
+  await db.produits.bulkPut(produits);
   console.log(`[FamilyOS] ${produits.length} produits initialisés.`);
 }
