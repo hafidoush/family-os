@@ -1,171 +1,194 @@
-/* ── Widget Au programme aujourd'hui — visionOS style ─────────────────────── */
+/* ─── WidgetProgrammeDuJour ───────────────────────────────────────────────── */
 
-.pdj-section {
-  background: rgba(255, 255, 255, 0.80);
-  backdrop-filter: blur(20px) saturate(160%);
-  -webkit-backdrop-filter: blur(20px) saturate(160%);
-  border: 0.5px solid rgba(200, 195, 220, 0.45);
-  border-radius: 22px;
-  padding: 18px 16px 14px;
-  box-shadow: 0 2px 20px rgba(100, 90, 140, 0.07);
-  overflow: hidden;
+.programme-section {
+  padding: 0;
 }
 
-/* ── Header ── */
-.pdj-header {
+.programme-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
   margin-bottom: 14px;
 }
 
-.pdj-title {
+.programme-header__title {
   font-size: 15px;
   font-weight: 700;
   color: hsl(240, 12%, 14%);
   letter-spacing: -0.02em;
-  margin: 0;
 }
 
-.pdj-voir {
+.programme-header__voir {
   font-size: 12.5px;
   font-weight: 500;
   color: #7c6bb0;
-  background: transparent;
+  background: none;
   border: none;
   cursor: pointer;
   padding: 0;
   opacity: 0.8;
-  letter-spacing: -0.01em;
-  transition: opacity 0.15s ease;
 }
-.pdj-voir:hover { opacity: 1; }
 
-/* ── Liste de rows ── */
-.pdj-list {
+/* ─── Carrousel ─────────────────────────────────────────────────────────────── */
+
+.programme-carousel {
+  display: flex;
+  gap: 12px;
+  overflow-x: scroll;
+  scroll-snap-type: x mandatory;
+  scroll-behavior: smooth;
+  -webkit-overflow-scrolling: touch;
+  padding-bottom: 6px;
+  scrollbar-width: none;
+}
+.programme-carousel::-webkit-scrollbar { display: none; }
+
+/* ─── Carte ──────────────────────────────────────────────────────────────────── */
+
+.programme-card {
+  flex: 0 0 220px;
+  height: 200px;
+  border-radius: 22px;
+  scroll-snap-align: start;
+  position: relative;
+  overflow: hidden;
   display: flex;
   flex-direction: column;
-  gap: 8px;
-}
-
-/* ── Row individuelle ── */
-.pdj-row {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  width: 100%;
-  padding: 11px 12px;
-  background: rgba(250, 249, 255, 0.75);
-  border: 0.5px solid rgba(210, 205, 235, 0.5);
-  border-radius: 14px;
+  justify-content: flex-end;
+  padding: 16px;
+  box-sizing: border-box;
   cursor: pointer;
-  text-align: left;
-  transition: background 0.15s ease, transform 0.1s ease;
-  -webkit-tap-highlight-color: transparent;
+  transition: transform 0.15s ease;
+  transform: translateZ(0);
+  -webkit-transform: translateZ(0);
+  isolation: isolate;
+  border: 0.5px solid rgba(200, 195, 220, 0.3);
 }
-.pdj-row:active { transform: scale(0.985); }
-.pdj-row:hover  { background: rgba(245, 243, 255, 0.9); }
+.programme-card:active { transform: scale(0.97); }
 
-.pdj-row--done {
-  opacity: 0.55;
-}
-.pdj-row--done .pdj-row-name {
-  text-decoration: line-through;
-  color: hsl(240, 6%, 60%);
+/* ─── Fond coloré par carte ── */
+
+.programme-card--enfants {
+  background: linear-gradient(145deg, #ede7f6 0%, #ddd6fe 60%, #c4b5fd 100%);
 }
 
-/* ── Pills catégorie ── */
-.pdj-pill {
-  flex-shrink: 0;
-  font-size: 9.5px;
+.programme-card--planning {
+  background: linear-gradient(145deg, #fef3c7 0%, #fde68a 60%, #fcd34d 100%);
+}
+
+.programme-card--menage {
+  background: linear-gradient(145deg, #d1fae5 0%, #a7f3d0 60%, #6ee7b7 100%);
+}
+
+/* ─── Blob décoratif en haut à droite ────────────────────────────────────────── */
+
+.programme-card__deco {
+  position: absolute;
+  width: 160px;
+  height: 160px;
+  top: -40px;
+  right: -40px;
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.programme-card--enfants .programme-card__deco {
+  background: radial-gradient(circle, rgba(167,139,250,0.45) 0%, transparent 70%);
+}
+
+.programme-card--planning .programme-card__deco {
+  background: radial-gradient(circle, rgba(251,191,36,0.5) 0%, transparent 70%);
+}
+
+.programme-card--menage .programme-card__deco {
+  background: radial-gradient(circle, rgba(52,211,153,0.5) 0%, transparent 70%);
+}
+
+/* ─── Badge ──────────────────────────────────────────────────────────────────── */
+
+.programme-card__badge {
+  position: absolute;
+  top: 14px;
+  left: 14px;
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 12px;
+  border-radius: 999px;
+  font-size: 10px;
   font-weight: 700;
   letter-spacing: 0.06em;
   text-transform: uppercase;
-  padding: 3px 8px;
-  border-radius: 999px;
+  z-index: 3;
 }
 
-.pdj-pill--lavande {
-  background: rgba(237, 231, 246, 0.9);
+.programme-card__badge--lavande {
+  background: rgba(255,255,255,0.5);
   color: #5b21b6;
+  border: 1px solid rgba(167,139,250,0.35);
 }
 
-.pdj-pill--ambre {
-  background: rgba(254, 243, 199, 0.9);
+.programme-card__badge--ambre {
+  background: rgba(255,255,255,0.5);
   color: #92400e;
+  border: 1px solid rgba(251,191,36,0.45);
 }
 
-.pdj-pill--vert {
-  background: rgba(209, 250, 229, 0.9);
+.programme-card__badge--lilas {
+  background: rgba(255,255,255,0.5);
   color: #065f46;
+  border: 1px solid rgba(52,211,153,0.45);
 }
 
-/* ── Corps de la row ── */
-.pdj-row-body {
-  flex: 1;
-  min-width: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
+/* ─── Glass bas ─────────────────────────────────────────────────────────────── */
+
+.programme-card__glass {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to bottom, transparent 35%, rgba(255,255,255,0.25) 70%);
+  z-index: 2;
+  pointer-events: none;
+  border-radius: 0 0 22px 22px;
 }
 
-.pdj-row-name {
-  font-size: 13.5px;
-  font-weight: 500;
-  color: hsl(240, 12%, 14%);
-  white-space: nowrap;
+/* ─── Contenu bas ────────────────────────────────────────────────────────────── */
+
+.programme-card__title {
+  font-size: 20px;
+  font-weight: 600;
+  color: hsl(240, 20%, 18%);
+  line-height: 1.2;
+  letter-spacing: -0.4px;
+  margin: 0 0 10px 0;
+  position: relative;
+  z-index: 3;
+}
+
+.programme-card__progress-bar {
+  position: relative;
+  z-index: 3;
+  width: 100%;
+  height: 3px;
+  background: rgba(0,0,0,0.12);
+  border-radius: 99px;
   overflow: hidden;
-  text-overflow: ellipsis;
-  letter-spacing: -0.01em;
+  margin-bottom: 6px;
 }
 
-.pdj-row-time {
-  font-size: 11px;
-  color: hsl(240, 6%, 55%);
-  font-weight: 400;
-  letter-spacing: -0.005em;
+.programme-card__progress-fill {
+  height: 100%;
+  border-radius: 99px;
+  transition: width 0.4s ease;
 }
 
-/* ── Avatar initiales ── */
-.pdj-avatar {
-  flex-shrink: 0;
-  width: 28px;
-  height: 28px;
-  border-radius: 50%;
-  font-size: 11px;
-  font-weight: 700;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  letter-spacing: 0.01em;
-}
+.programme-card__progress-fill--lavande { background: #7c3aed; }
+.programme-card__progress-fill--ambre   { background: #d97706; }
+.programme-card__progress-fill--lilas   { background: #059669; }
 
-/* ── Checkbox circulaire ── */
-.pdj-check {
-  flex-shrink: 0;
-  width: 22px;
-  height: 22px;
-  border-radius: 50%;
-  border: 1.5px solid rgba(180, 170, 210, 0.5);
-  background: rgba(255, 255, 255, 0.8);
-  color: #5b21b6;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: background 0.15s ease, border-color 0.15s ease;
-}
-
-.pdj-check--done {
-  background: rgba(237, 231, 246, 0.9);
-  border-color: rgba(109, 40, 217, 0.35);
-  color: #6d28d9;
-}
-
-/* ── État vide ── */
-.pdj-empty {
-  font-size: 13px;
-  color: hsl(240, 6%, 58%);
-  text-align: center;
-  padding: 24px 0 8px;
-  letter-spacing: -0.01em;
+.programme-card__progress-label {
+  font-size: 11.5px;
+  font-weight: 500;
+  color: hsl(240, 10%, 35%);
+  position: relative;
+  z-index: 3;
 }
