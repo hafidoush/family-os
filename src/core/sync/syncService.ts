@@ -273,6 +273,10 @@ function buildRealtimeChannel() {
       'postgres_changes',
       { event: '*', schema: 'public', table: supaTable },
       async (payload) => {
+        // Ne jamais appliquer de changements distants pendant un pullAll
+        // (pullAll gère déjà sa propre résolution de conflits avec timestamps)
+        if (isPulling) return
+
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const table = (db as any)[dexieTable]
         if (!table) return
@@ -282,20 +286,32 @@ function buildRealtimeChannel() {
           return
         }
 
-        const row = payload.new as { data: Record<string, unknown>; deleted_at: string | null }
+        const row = payload.new as { data: Record<string, unknown>; deleted_at: string | null; updated_at: string }
         if (!row.data) return
+
+        // Tombstone guard : data = {id} uniquement → ancien bug softDeleteRecord, ignorer
+        if (Object.keys(row.data).length === 1 && 'id' in row.data) return
+
+        // Résolution de conflit : ne jamais écraser une version locale plus récente
+        const local: Record<string, unknown> | undefined = await table.get(row.data.id)
+        if (local) {
+          const localUpdatedAt = local.updatedAt instanceof Date
+            ? (local.updatedAt as Date).toISOString()
+            : String(local.updatedAt ?? '')
+          // Le remote doit être STRICTEMENT plus récent que le local pour s'appliquer
+          const remoteTs = row.deleted_at ?? row.updated_at ?? ''
+          if (remoteTs <= localUpdatedAt) return
+        }
 
         if (row.deleted_at) {
           await table.delete(row.data.id)
         } else {
+          // Préserver les champs Blob locaux non synchronisés
           const blobFields = BLOB_FIELDS[dexieTable]
-          if (blobFields?.length) {
-            const local = await table.get(row.data.id)
-            if (local) {
-              blobFields.forEach(f => {
-                if (local[f] instanceof Blob) row.data[f] = local[f]
-              })
-            }
+          if (blobFields?.length && local) {
+            blobFields.forEach(f => {
+              if ((local as Record<string, unknown>)[f] instanceof Blob) row.data[f] = (local as Record<string, unknown>)[f]
+            })
           }
           await table.put(row.data)
         }

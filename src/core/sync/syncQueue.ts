@@ -95,6 +95,38 @@ export async function getDeadLetterCount(): Promise<number> {
   } catch { return 0 }
 }
 
+export async function getDeadLetterItems(): Promise<QueueItem[]> {
+  try {
+    const row = await db.parametresSync.where('cle').equals(DEAD_LETTER_KEY).first()
+    return row ? (JSON.parse(row.valeur) as QueueItem[]) : []
+  } catch { return [] }
+}
+
+// Remet tous les éléments de la dead letter queue dans la file normale pour réessai
+export async function retryDeadLetter(): Promise<void> {
+  try {
+    const items = await getDeadLetterItems()
+    if (!items.length) return
+    const queue = await readQueue()
+    for (const item of items) {
+      if (!queue.find(q => q.table === item.table && q.id === item.id)) {
+        queue.push({ table: item.table, id: item.id, retries: 0 })
+      }
+    }
+    await writeQueue(queue)
+    // Vider la dead letter queue
+    const now = new Date()
+    const existing = await db.parametresSync.where('cle').equals(DEAD_LETTER_KEY).first()
+    if (existing) {
+      await db.parametresSync.update(existing.id, {
+        valeur: JSON.stringify([]),
+        derniereModification: now,
+        updatedAt: now,
+      })
+    }
+  } catch { /* silencieux */ }
+}
+
 export async function removeFromQueue(table: string, id: string): Promise<void> {
   const queue = await readQueue()
   const filtered = queue.filter(q => !(q.table === table && q.id === id))

@@ -76,16 +76,13 @@ async function _seedDatabase(): Promise<void> {
   // Purge one-shot des recettes pré-enregistrées (deviceId === 'seed')
   await purgeSeededRecettes()
 
-  // Re-seed activités si absentes ou sans objectifPedagogique (ancien format)
-  const needsReseedActivites = activitesCount === 0 || await (async () => {
-    const first = await db.activites.toCollection().first()
-    return !first?.objectifPedagogique
-  })()
-  if (needsReseedActivites) {
-    await db.activites.clear()
+  // Seed activités uniquement si la table est vide — jamais d'effacement automatique
+  // Ancienne logique "needsReseed sur objectifPedagogique" supprimée : trop dangereuse
+  // (une seule entrée sans le champ effaçait toute la table)
+  if (activitesCount === 0) {
     await seedCategoriesActivites()
     await seedActivites()
-    console.log('[FamilyOS] Activités (re)initialisées.')
+    console.log('[FamilyOS] Activités initialisées (premier lancement).')
   }
 
   // Migration IDs stables pour activités (corrige sync entre appareils)
@@ -106,18 +103,13 @@ async function _seedDatabase(): Promise<void> {
   // Seed anniversaires famille (idempotent via clé SEED_KEY)
   await seedAnniversaires()
 
-  // Re-seed compétences si absentes ou si l'ancien seed n'avait pas les bonnes catégories
-  const needsReseedCompetences = competencesCount === 0 || await (async () => {
-    const first = await db.competences.toCollection().first()
-    // Ancienne version avait des compétences génériques sans domaine précis
-    return !first?.domaine || first.domaine === ('cognitif' as string) && competencesCount < 50
-  })()
-  if (needsReseedCompetences) {
-    await db.competences.clear()
+  // Seed compétences uniquement si la table est vide — jamais d'effacement automatique
+  // Ancienne logique "needsReseed sur domaine/count" supprimée : trop dangereuse
+  // (effaçait les compétences ET les suivis de progression de l'enfant)
+  if (competencesCount === 0) {
     await seedCompetences()
-    // Seeder les statuts initiaux de Manel depuis l'évaluation
     await seedSuiviManel()
-    console.log('[FamilyOS] Compétences (re)initialisées.')
+    console.log('[FamilyOS] Compétences initialisées (premier lancement).')
   }
 }
 
@@ -601,31 +593,7 @@ async function ajouterCategoriePetitDejeuner(): Promise<void> {
   })
 }
 
-async function repairRecipeCategoriesSync(): Promise<void> {
-  const KEY = 'REPAIR_RECIPE_CATS_V1'
-  const done = await db.parametresSync.get(KEY)
-  if (done) return
-
-  const now = new Date()
-  await db.parametresSync.put({ id: KEY, cle: KEY, valeur: 'true', derniereModification: now, createdAt: now, updatedAt: now })
-
-  const recettes = await db.recettes.filter(r => !r.archive).toArray()
-  if (recettes.length === 0) return
-
-  // Détecte l'état corrompu : >75% des recettes dans Plat principal
-  const nbPlatPrincipal = recettes.filter(r => r.categorie === 'cat-recette-plat-principal').length
-  const corrupted = recettes.length >= 3 && (nbPlatPrincipal / recettes.length) > 0.75
-
-  if (corrupted) {
-    // Ce device a des données corrompues — vide les recettes locales pour un pull propre
-    console.log('[FamilyOS] Catégories recettes corrompues — réimport depuis Supabase au prochain sync')
-    await db.recettes.clear()
-  } else {
-    // Ce device a les bonnes données — force-push vers Supabase avec timestamp frais
-    console.log('[FamilyOS] Force-push des recettes correctes vers Supabase')
-    await Promise.all(recettes.map(r => db.recettes.update(r.id, { updatedAt: now })))
-  }
-}
+// repairRecipeCategoriesSync supprimée — effaçait toutes les recettes sur heuristique fausse
 
 async function seedCategoriesActivites(): Promise<void> {
   const existing = await db.categoriesActivites.count()

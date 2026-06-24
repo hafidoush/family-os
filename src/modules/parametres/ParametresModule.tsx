@@ -10,6 +10,8 @@ import { db, SCHEMA_VERSION } from '../../core/db/database';
 import { newEntity, withUpdate, softDeleteFields } from '../../core/db/helpers';
 import { useSyncStatus } from '../../core/sync/useSyncStatus';
 import { drainQueue, pullAll } from '../../core/sync/syncService';
+import { retryDeadLetter } from '../../core/sync/syncQueue';
+import { pushAllLocalData } from '../../core/sync/useSyncOnMount';
 import { supabase } from '../../core/supabase/client';
 import { getGeminiKey, setGeminiKey } from '../../core/ai/geminiService';
 import { getOpenAIKey, setOpenAIKey } from '../../core/ai/openaiService';
@@ -392,20 +394,43 @@ function SectionDonnees() {
         return;
       }
       const { data } = snapshot;
-      let count = 0;
 
-      for (const [table, rows] of Object.entries(data)) {
-        if (!Array.isArray(rows)) continue;
+      // Identifier les tables valides avant d'ouvrir la transaction
+      const validTables = Object.entries(data)
+        .filter(([, rows]) => Array.isArray(rows))
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const t = (db as any)[table];
-        if (!t) continue;
-        await t.bulkPut(rows);
-        count += rows.length;
+        .map(([table]) => (db as any)[table])
+        .filter(Boolean);
+
+      if (validTables.length === 0) {
+        setImportMsg('❌ Aucune table reconnue dans ce fichier.');
+        return;
       }
 
-      setImportMsg(`✅ ${count} enregistrements importés avec succès.`);
-    } catch {
-      setImportMsg('❌ Erreur lors de l\'import. Vérifiez le fichier.');
+      let count = 0;
+
+      // Transaction atomique : si une table échoue, tout est annulé (rollback Dexie)
+      await db.transaction('rw', validTables, async () => {
+        for (const [table, rows] of Object.entries(data)) {
+          if (!Array.isArray(rows)) continue;
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          const t = (db as any)[table];
+          if (!t) continue;
+          await t.bulkPut(rows);
+          count += rows.length;
+        }
+      });
+
+      setImportMsg(`Import local terminé (${count} enregistrements). Synchronisation vers le cloud…`);
+
+      // Pousser toutes les données importées vers Supabase
+      // bulkPut bypasse les hooks Dexie — on doit pousser manuellement
+      await pushAllLocalData();
+
+      setImportMsg(`✅ ${count} enregistrements importés et synchronisés vers le cloud.`);
+    } catch (err) {
+      // La transaction Dexie rollback automatiquement en cas d'erreur
+      setImportMsg(`❌ Import annulé — erreur : ${err instanceof Error ? err.message : String(err)}`);
     } finally {
       setImporting(false);
       setPendingFile(null);
@@ -794,9 +819,10 @@ function SectionIA() {
 // ─── Section Synchronisation ──────────────────────────────────────────────────
 
 function SectionSync() {
-  const { state, lastPullAt, pendingCount, lastError, isOnline } = useSyncStatus()
+  const { state, lastPullAt, pendingCount, deadLetterCount, lastError, isOnline } = useSyncStatus()
   const [syncing, setSyncing] = useState(false)
   const [done, setDone] = useState(false)
+  const [retrying, setRetrying] = useState(false)
   const [pushingRecettes, setPushingRecettes] = useState(false)
   const [pullingRecettes, setPullingRecettes] = useState(false)
   const [repairMsg, setRepairMsg] = useState('')
@@ -812,6 +838,17 @@ function SectionSync() {
       setTimeout(() => setDone(false), 3000)
     } finally {
       setSyncing(false)
+    }
+  }
+
+  async function handleRetryDeadLetter() {
+    if (retrying) return
+    setRetrying(true)
+    try {
+      await retryDeadLetter()
+      await drainQueue()
+    } finally {
+      setRetrying(false)
     }
   }
 
@@ -1009,6 +1046,14 @@ function SectionSync() {
             {pendingCount > 0 ? `${pendingCount} élément${pendingCount > 1 ? 's' : ''}` : 'Aucun'}
           </span>
         </div>
+        {deadLetterCount > 0 && (
+          <div className="sync-status-card__row sync-status-card__row--error">
+            <span className="sync-status-card__label">Échecs définitifs</span>
+            <span className="sync-status-card__value sync-status-card__error">
+              {deadLetterCount} élément{deadLetterCount > 1 ? 's' : ''} non synchronisé{deadLetterCount > 1 ? 's' : ''}
+            </span>
+          </div>
+        )}
         {lastError && (
           <div className="sync-status-card__row sync-status-card__row--error">
             <span className="sync-status-card__label">Dernière erreur</span>
@@ -1032,6 +1077,21 @@ function SectionSync() {
         </p>
       )}
 
+      {deadLetterCount > 0 && (
+        <>
+          <button
+            className="param-btn param-btn--danger"
+            onClick={handleRetryDeadLetter}
+            disabled={retrying || !isOnline}
+            style={{ marginTop: 8 }}
+          >
+            {retrying ? 'Nouvelle tentative…' : `⚠ Réessayer les ${deadLetterCount} élément${deadLetterCount > 1 ? 's' : ''} en échec`}
+          </button>
+          <p className="param-hint" style={{ marginTop: 6, color: '#ef4444' }}>
+            Ces données existent localement mais n'ont pas pu être envoyées au cloud après plusieurs tentatives. Appuyez ci-dessus pour réessayer.
+          </p>
+        </>
+      )}
 
       {/* Synchronisation des ingrédients uniquement */}
       <button

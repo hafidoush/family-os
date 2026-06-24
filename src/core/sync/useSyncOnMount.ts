@@ -8,7 +8,7 @@ import { loadOpenAIKeyFromCloud } from '../ai/openaiService'
 // ── Push de TOUTES les données locales vers Supabase ─────────────────────────
 // Appelé à chaque démarrage pour garantir que rien ne reste bloqué en local.
 // Idempotent : upsert côté Supabase, pas de doublon possible.
-async function pushAllLocalData() {
+export async function pushAllLocalData() {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const push = async (dexieTable: string, records: any[]) => {
     if (!records.length) return

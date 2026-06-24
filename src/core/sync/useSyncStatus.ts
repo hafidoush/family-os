@@ -13,6 +13,7 @@ export interface SyncStatus {
   state: SyncState
   lastPullAt: Date | null
   pendingCount: number
+  deadLetterCount: number
   lastError: string | null
   isOnline: boolean
 }
@@ -39,6 +40,10 @@ export function useSyncStatus(): SyncStatus {
   )
   const queueRow = useLiveQuery(
     () => db.parametresSync.where('cle').equals('sync.pendingQueue').first(),
+    []
+  )
+  const deadLetterRow = useLiveQuery(
+    () => db.parametresSync.where('cle').equals('sync.deadLetterQueue').first(),
     []
   )
   const errorRow = useLiveQuery(
@@ -69,6 +74,11 @@ export function useSyncStatus(): SyncStatus {
     pendingCount = queueRow ? (JSON.parse(queueRow.valeur) as unknown[]).length : 0
   } catch { pendingCount = 0 }
 
+  let deadLetterCount = 0
+  try {
+    deadLetterCount = deadLetterRow ? (JSON.parse(deadLetterRow.valeur) as unknown[]).length : 0
+  } catch { deadLetterCount = 0 }
+
   let lastError: string | null = null
   try {
     if (errorRow) {
@@ -78,11 +88,12 @@ export function useSyncStatus(): SyncStatus {
   } catch { lastError = null }
 
   let state: SyncState
-  if (!isOnline)           state = 'offline'
-  else if (isSyncing)      state = 'syncing'
-  else if (pendingCount > 0) state = 'pending'
-  else if (lastError)      state = 'error'
-  else                     state = 'synced'
+  if (!isOnline)                       state = 'offline'
+  else if (isSyncing)                  state = 'syncing'
+  else if (pendingCount > 0)           state = 'pending'
+  else if (deadLetterCount > 0)        state = 'error'
+  else if (lastError)                  state = 'error'
+  else                                 state = 'synced'
 
-  return { state, lastPullAt, pendingCount, lastError, isOnline }
+  return { state, lastPullAt, pendingCount, deadLetterCount, lastError, isOnline }
 }
