@@ -1103,15 +1103,6 @@ function SectionSync() {
         Synchroniser les ingrédients depuis le cloud
       </button>
 
-      {/* Restauration recettes + ingrédients supprimés par erreur */}
-      <button
-        className="param-btn param-btn--secondary"
-        onClick={restaurerRecettes}
-        style={{ marginTop: 8 }}
-      >
-        Restaurer les recettes supprimées (⚠ ancien contenu)
-      </button>
-
       {repairMsg && (
         <p className="param-hint" style={{ marginTop: 8, color: repairMsg.startsWith('✓') ? '#22c55e' : repairMsg.startsWith('⚠') || repairMsg.startsWith('Erreur') ? '#ef4444' : undefined }}>
           {repairMsg}
