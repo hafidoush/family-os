@@ -15,6 +15,7 @@ import { usePieces } from '../maison/hooks';
 import type { Tache, FrequenceTache } from '@shared/types/entities';
 import type { Piece } from '@shared/types/modules';
 import './menage.css';
+import '../maison/MaisonModule.css';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
