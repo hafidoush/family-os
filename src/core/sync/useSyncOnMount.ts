@@ -6,9 +6,26 @@ import { v4 as uuid } from 'uuid'
 import { loadOpenAIKeyFromCloud } from '../ai/openaiService'
 
 // ── Push de TOUTES les données locales vers Supabase ─────────────────────────
-// Appelé à chaque démarrage pour garantir que rien ne reste bloqué en local.
+// Appelé au démarrage, limité à 1 fois par heure (les hooks couvrent les écritures en temps réel).
 // Idempotent : upsert côté Supabase, pas de doublon possible.
-export async function pushAllLocalData() {
+const PUSH_ALL_INTERVAL_MS = 60 * 60 * 1000 // 1 heure
+const PUSH_ALL_KEY = 'sync.lastPushAllAt'
+
+export async function pushAllLocalData(force = false) {
+  if (!force) {
+    const row = await db.parametresSync.where('cle').equals(PUSH_ALL_KEY).first()
+    if (row) {
+      const age = Date.now() - new Date(row.valeur).getTime()
+      if (age < PUSH_ALL_INTERVAL_MS) return
+    }
+  }
+  const now = new Date()
+  const existing = await db.parametresSync.where('cle').equals(PUSH_ALL_KEY).first()
+  if (existing) {
+    await db.parametresSync.update(existing.id, { valeur: now.toISOString(), updatedAt: now, derniereModification: now })
+  } else {
+    await db.parametresSync.add({ id: uuid(), cle: PUSH_ALL_KEY, valeur: now.toISOString(), derniereModification: now, createdAt: now, updatedAt: now })
+  }
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const push = async (dexieTable: string, records: any[]) => {
     if (!records.length) return
@@ -104,12 +121,11 @@ async function pushInitialProgrammesAnnuels() {
   await db.parametresSync.put({ id: uuid(), cle: CLE, valeur: 'true', derniereModification: now, createdAt: now, updatedAt: now })
 }
 
-// Dédoublonnage one-shot des produits — garde le plus ancien, supprime les copies
+// Dédoublonnage des produits — tourne à chaque démarrage (pas en one-shot)
+// Problème cross-appareils : le seed génère des UUIDs aléatoires, donc "farine" a
+// des IDs différents sur chaque device. Cette fonction fusionne les doublons par nom
+// ET re-pointe les ingrédients vers l'ID conservé pour réparer les références cassées.
 async function deduplicateProduits() {
-  const CLE = 'produits_deduplicated_v2'
-  const already = await db.parametresSync.where('cle').equals(CLE).first()
-  if (already) return
-
   const produits = await db.produits.filter(p => !p.deletedAt && !p.archive && !!p.nom).toArray()
 
   // Grouper par nom normalisé
@@ -125,13 +141,48 @@ async function deduplicateProduits() {
     if (groupe.length <= 1) continue
     // Garder le plus ancien (createdAt le plus petit), supprimer les autres
     groupe.sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime())
+    const keeper = groupe[0]
     const doublons = groupe.slice(1)
-    await Promise.all(doublons.map(d =>
-      db.produits.update(d.id, { deletedAt: now, updatedAt: now, archive: true })
-    ))
+    for (const doublon of doublons) {
+      // Re-pointer tous les ingrédients qui référencent l'ID supprimé vers l'ID conservé
+      await db.recettesIngredients
+        .where('produit').equals(doublon.id)
+        .modify({ produit: keeper.id, updatedAt: now })
+      await db.produits.update(doublon.id, { deletedAt: now, updatedAt: now, archive: true })
+    }
   }
+}
 
-  await db.parametresSync.put({ id: uuid(), cle: CLE, valeur: 'true', derniereModification: now, createdAt: now, updatedAt: now })
+// Migration : donne des IDs stables aux produits seedés (seed-prod-${nom})
+// Problème cross-appareils : le seed générait des UUIDs aléatoires → chaque device avait
+// des IDs différents pour "basilic", "farine", etc. → les ingrédients des recettes ne se
+// résolvaient pas sur l'autre appareil. Cette migration tourne à chaque démarrage (idempotente).
+async function migrateProduitToStableIds() {
+  const normStr = (s: string) => s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').trim()
+  const stableId = (nom: string) => `seed-prod-${normStr(nom)}`
+
+  const seeded = await db.produits.filter(p => (p as { deviceId?: string }).deviceId === 'seed' && !p.deletedAt && !!p.nom).toArray()
+  const toMigrate = seeded.filter(p => p.id !== stableId(p.nom))
+  if (!toMigrate.length) return
+
+  console.log(`[sync] migrateProduitToStableIds: ${toMigrate.length} produit(s) à migrer`)
+  const now = new Date()
+
+  for (const p of toMigrate) {
+    const stable = stableId(p.nom)
+    // Ajouter le produit avec l'ID stable s'il n'existe pas encore
+    const existing = await db.produits.get(stable)
+    if (!existing) {
+      await db.produits.add({ ...p, id: stable, updatedAt: now } as typeof p)
+    }
+    // Re-pointer tous les ingrédients qui référencent l'ancien ID
+    await db.recettesIngredients
+      .where('produit').equals(p.id)
+      .modify({ produit: stable, updatedAt: now })
+    // Supprimer l'ancien ID (le hook softDeleteRecord marquera l'ancien UUID comme supprimé dans Supabase)
+    await db.produits.delete(p.id)
+  }
+  console.log(`[sync] migrateProduitToStableIds: terminé`)
 }
 
 // Purge les tombstones {id} écrits dans Dexie par l'ancien bug softDeleteRecord
@@ -165,6 +216,7 @@ export function useSyncOnMount() {
       fn().catch(e => console.warn(`[sync] ${name} failed (continuing):`, e))
 
     safe(cleanupLocalTombstones, 'cleanupLocalTombstones')
+      .then(() => safe(migrateProduitToStableIds, 'migrateProduitToStableIds'))
       .then(() => safe(pushAllLocalData, 'pushAllLocalData'))
       .then(() => safe(pushInitialActivites, 'pushInitialActivites'))
       .then(() => safe(pushInitialRecettesIngredients, 'pushInitialRecettesIngredients'))

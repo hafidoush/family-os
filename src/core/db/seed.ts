@@ -1070,7 +1070,7 @@ async function seedProduitsCatalog(): Promise<void> {
     if (!categorieId) continue
     for (const p of groupe.produits) {
       produits.push({
-        id: uuid(),
+        id: `seed-prod-${norm(p.nom)}`,
         nom: p.nom,
         nomNormalise: norm(p.nom),
         type: 'consommable',
