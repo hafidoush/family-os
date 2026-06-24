@@ -956,6 +956,9 @@ async function seedProduitsCatalog(): Promise<void> {
         { nom: 'Épaule de veau',           unite: 'kg' },
         { nom: 'Foie de veau',             unite: 'kg' },
         { nom: 'Ris de veau',              unite: 'kg' },
+        { nom: 'Steak de veau',            unite: 'kg' },
+        // — Générique —
+        { nom: 'Viande hachée',            unite: 'kg' },
       ],
     },
     {
