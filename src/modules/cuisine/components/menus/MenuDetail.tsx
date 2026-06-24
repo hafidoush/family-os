@@ -47,6 +47,7 @@ export function MenuDetail({ menuId, onBack }: MenuDetailProps) {
   const [genMessage, setGenMessage] = useState<string | null>(null);
   const [assignerJours, setAssignerJours] = useState(true);
   const [intentionMenuSemaine, setIntentionMenuSemaine] = useState('');
+  const [showIntention, setShowIntention] = useState(false);
 
   if (data === undefined) {
     return (
@@ -142,7 +143,7 @@ export function MenuDetail({ menuId, onBack }: MenuDetailProps) {
           </div>
           <button
             className="menu-detail__btn-ia"
-            onClick={handleGenererIA}
+            onClick={() => setShowIntention(v => !v)}
             disabled={isGenerating}
             title={hasOpenAIKey() ? 'Générer les repas avec l\'IA' : 'Configurez une clé OpenAI dans Paramètres > IA'}
           >
@@ -158,17 +159,27 @@ export function MenuDetail({ menuId, onBack }: MenuDetailProps) {
         </div>
       </div>
 
-      {/* Intention semaine */}
-      <div className="menu-detail__intention">
-        <textarea
-          className="menu-detail__intention-input"
-          value={intentionMenuSemaine}
-          onChange={(e) => setIntentionMenuSemaine(e.target.value)}
-          placeholder="Décris ce que tu veux pour cette semaine… ex : plats équilibrés et légers, ou un mélange maghrébin et indien épicé"
-          rows={2}
-          maxLength={300}
-        />
-      </div>
+      {/* Intention semaine — visible uniquement après clic sur "Générer" */}
+      {showIntention && (
+        <div className="menu-detail__intention">
+          <textarea
+            className="menu-detail__intention-input"
+            value={intentionMenuSemaine}
+            onChange={(e) => setIntentionMenuSemaine(e.target.value)}
+            placeholder="Décris ce que tu veux pour cette semaine… ex : plats équilibrés et légers, ou un mélange maghrébin et indien épicé"
+            rows={2}
+            maxLength={300}
+            autoFocus
+          />
+          <button
+            className="menu-detail__btn-ia menu-detail__btn-lancer"
+            onClick={() => { setShowIntention(false); handleGenererIA(); }}
+            disabled={isGenerating}
+          >
+            {isGenerating ? '…' : <><IconStarShine size={14} style={{ marginRight: 4, verticalAlign: 'middle' }} /> Lancer</>}
+          </button>
+        </div>
+      )}
 
       {/* Message confirmation génération IA */}
       {genMessage && (
