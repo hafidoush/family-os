@@ -111,12 +111,12 @@ async function deduplicateProduits() {
   const already = await db.parametresSync.where('cle').equals(CLE).first()
   if (already) return
 
-  const produits = await db.produits.filter(p => !p.deletedAt && !p.archive).toArray()
+  const produits = await db.produits.filter(p => !p.deletedAt && !p.archive && !!p.nom).toArray()
 
   // Grouper par nom normalisé
   const groupes = new Map<string, typeof produits>()
   for (const p of produits) {
-    const cle = p.nom.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').trim()
+    const cle = (p.nom ?? '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').trim()
     if (!groupes.has(cle)) groupes.set(cle, [])
     groupes.get(cle)!.push(p)
   }
