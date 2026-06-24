@@ -605,18 +605,6 @@ export interface RoutineItem extends AuditWithDevice {
 
 // ─── CROISSANCE — F5 Suivi enfants ───────────────────────────────────────────
 
-export type TypeMesure = 'taille' | 'poids' | 'pointure' | 'taille_vetements'
-
-export interface CroissanceMesure extends AuditWithDevice {
-  id: string
-  enfantId: string                 // Enfant.id
-  type: TypeMesure
-  valeur: number                   // cm / kg / pointure EU / cm vêtements
-  unite?: string                   // 'cm', 'kg', 'EU'
-  date: string                     // "YYYY-MM-DD"
-  notes?: string
-}
-
 // ─── PRÉPARATION HEBDOMADAIRE — F8 ───────────────────────────────────────────
 
 export interface SessionPreparation extends AuditWithDevice {

@@ -7,14 +7,14 @@ import type {
   CoursesItem, Piece, ProjetMaison, Souvenir, ReunionFamille,
   SelfCareItem, SportSession, Tag, CategorieProduit,
   CategorieRecette, CategorieActivite, ParametreSync, ExportSnapshot,
-  Pensee, Routine, RoutineItem, CroissanceMesure, SessionPreparation,
+  Pensee, Routine, RoutineItem, SessionPreparation,
   ProgrammePedagogique, ActiviteProgramme, ProgrammeAnnuel,
   ImportRecetteIA, ContactPartage, ListePartagee, EvenementDetail,
   SortiePersonnelle,
 } from '@shared/types'
 
 // ─── Version du schéma — incrémenter à chaque migration ──────────────────────
-export const SCHEMA_VERSION = 12
+export const SCHEMA_VERSION = 13
 
 // ─── Définition de la base ────────────────────────────────────────────────────
 class FamilyOSDatabase extends Dexie {
@@ -54,9 +54,6 @@ class FamilyOSDatabase extends Dexie {
   // F6 — Routines adaptatives
   routines!: Table<Routine, string>
   routineItems!: Table<RoutineItem, string>
-
-  // F5 — Croissance enfants
-  croissanceMesures!: Table<CroissanceMesure, string>
 
   // F8 — Sessions de préparation hebdomadaire
   sessionsPreparation!: Table<SessionPreparation, string>
@@ -574,6 +571,11 @@ class FamilyOSDatabase extends Dexie {
     // ─── Version 12 — sorties personnalisées ──────────────────────────────
     this.version(12).stores({
       sortiesPersonnelles: 'id, categorie, archive, updatedAt',
+    })
+
+    // ─── Version 13 — suppression croissanceMesures (fonctionnalité abandonnée) ──
+    this.version(13).stores({
+      croissanceMesures: null,
     })
 
     // ─── Version 11 — migration avatars Blob → base64 string ────────────────
