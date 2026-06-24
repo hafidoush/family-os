@@ -2,6 +2,7 @@
 
 .param-module {
   padding: 16px;
+  padding-bottom: calc(var(--bottom-bar-h, 80px) + 24px);
   font-family: var(--font-body, sans-serif);
   color: var(--color-text, #1F2937);
   max-width: 600px;

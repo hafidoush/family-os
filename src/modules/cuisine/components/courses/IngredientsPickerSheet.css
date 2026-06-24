@@ -13,7 +13,7 @@
 /* ── Sheet ── */
 .ingr-sheet {
   width: 100%;
-  max-height: 88vh;
+  max-height: calc(88vh - var(--bottom-bar-h, 80px));
   background: #F0EFEB;
   border-radius: 24px 24px 0 0;
   display: flex;
