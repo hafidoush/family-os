@@ -73,11 +73,11 @@
 }
 
 .programme-card--planning {
-  background: linear-gradient(145deg, #fef3c7 0%, #fde68a 60%, #fcd34d 100%);
+  background: linear-gradient(145deg, #ffe0d6 0%, #ff9e80 60%, #FF7648 100%);
 }
 
 .programme-card--menage {
-  background: linear-gradient(145deg, #d1fae5 0%, #a7f3d0 60%, #6ee7b7 100%);
+  background: linear-gradient(145deg, #fff3d6 0%, #ffd980 60%, #FFC757 100%);
 }
 
 /* ─── Blob décoratif en haut à droite ────────────────────────────────────────── */
@@ -98,11 +98,11 @@
 }
 
 .programme-card--planning .programme-card__deco {
-  background: radial-gradient(circle, rgba(251,191,36,0.5) 0%, transparent 70%);
+  background: radial-gradient(circle, rgba(255,118,72,0.4) 0%, transparent 70%);
 }
 
 .programme-card--menage .programme-card__deco {
-  background: radial-gradient(circle, rgba(52,211,153,0.5) 0%, transparent 70%);
+  background: radial-gradient(circle, rgba(255,199,87,0.5) 0%, transparent 70%);
 }
 
 /* ─── Badge ──────────────────────────────────────────────────────────────────── */
@@ -130,14 +130,14 @@
 
 .programme-card__badge--ambre {
   background: rgba(255,255,255,0.5);
-  color: #92400e;
-  border: 1px solid rgba(251,191,36,0.45);
+  color: #c94a1a;
+  border: 1px solid rgba(255,118,72,0.45);
 }
 
 .programme-card__badge--lilas {
   background: rgba(255,255,255,0.5);
-  color: #065f46;
-  border: 1px solid rgba(52,211,153,0.45);
+  color: #a06b00;
+  border: 1px solid rgba(255,199,87,0.6);
 }
 
 /* ─── Glass bas ─────────────────────────────────────────────────────────────── */
@@ -182,8 +182,8 @@
 }
 
 .programme-card__progress-fill--lavande { background: #7c3aed; }
-.programme-card__progress-fill--ambre   { background: #d97706; }
-.programme-card__progress-fill--lilas   { background: #059669; }
+.programme-card__progress-fill--ambre   { background: #FF7648; }
+.programme-card__progress-fill--lilas   { background: #e6a800; }
 
 .programme-card__progress-label {
   font-size: 11.5px;
