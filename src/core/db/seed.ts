@@ -1,5 +1,6 @@
 import { v4 as uuid } from 'uuid'
 import { db, withAudit } from './database'
+import { supabase } from '../supabase/client'
 import { getNocesLabel } from '../../shared/utils/noces'
 import type {
   CategorieRecette, CategorieActivite,
@@ -3420,18 +3421,29 @@ export async function seedAnniversaires(): Promise<void> {
 
 // ── Déduplication tâches grand ménage (migration one-shot) ───────────────────
 async function dedupGrandMenageTaches(): Promise<void> {
-  const CLE = 'grandMenage.dedupDone.v1'
+  // v2 : soft-delete aussi dans Supabase pour éviter que pullAll ramène les doublons
+  const CLE = 'grandMenage.dedupDone.v2'
   const already = await db.parametresSync.where('cle').equals(CLE).first()
   if (already) return
 
-  // Supprime toutes les tâches seed maison dont l'ID n'est PAS stable (pas seed-tache-*)
   const doublons = await db.taches
-    .filter(t => t.deviceId === 'seed' && t.moduleOrigine === 'maison' && !t.id.startsWith('seed-tache-'))
+    .filter(t => t.moduleOrigine === 'maison' && !t.id.startsWith('seed-tache-'))
     .toArray()
 
   if (doublons.length > 0) {
+    const now = new Date()
+    // Soft-delete local
     await db.taches.bulkDelete(doublons.map(t => t.id))
-    console.log(`[FamilyOS] ${doublons.length} tâches grand ménage dupliquées supprimées.`)
+    // Soft-delete dans Supabase pour éviter la re-sync
+    const { data: { session } } = await supabase.auth.getSession()
+    if (session) {
+      const ids = doublons.map(t => t.id)
+      // Par batch de 100 pour éviter les requêtes trop longues
+      for (let i = 0; i < ids.length; i += 100) {
+        await supabase.from('taches').update({ deleted_at: now.toISOString() }).in('id', ids.slice(i, i + 100))
+      }
+    }
+    console.log(`[FamilyOS] ${doublons.length} tâches ménage dupliquées supprimées (local + Supabase).`)
   }
 
   const now = new Date()
