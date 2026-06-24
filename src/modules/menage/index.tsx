@@ -3,7 +3,7 @@
  * Séparation quotidiennes / périodiques avec cartes visuelles.
  */
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { db } from '../../core/db/database';
 import { newEntity } from '../../core/db/helpers';
@@ -12,6 +12,8 @@ import { MaisonService, etatColor, etatLabel, scoreToEtat } from '../maison/serv
 import { useMaisonStore } from '../maison/stores/maisonStore';
 import { TacheForm } from '../maison/components/taches';
 import { usePieces } from '../maison/hooks';
+import { isDueToday, isOverdue } from './utils/nextDueDate';
+import { useRappelMenageNatif } from './hooks/useRappelMenageNatif';
 import type { Tache, FrequenceTache } from '@shared/types/entities';
 import type { Piece } from '@shared/types/modules';
 import './menage.css';
@@ -19,7 +21,7 @@ import '../maison/MaisonModule.css';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
-type OngletMenage = 'quotidien' | 'periodique' | 'grand_menage';
+type OngletMenage = 'du_jour' | 'quotidien' | 'periodique' | 'grand_menage';
 
 interface FreqConfig {
   value: FrequenceTache;
@@ -40,23 +42,208 @@ const FREQUENCES_PERIODIQUES: FreqConfig[] = [
 
 const SUGGESTIONS_QUOTIDIENNES = [
   { titre: 'Faire les lits', emoji: '🛏' },
-  { titre: 'Ranger la cuisine', emoji: '🍽' },
+  { titre: 'Aérer les pièces 10 min', emoji: '💨' },
+  { titre: 'Ranger la cuisine après le petit-déj', emoji: '🍽' },
+  { titre: 'Essuyer le plan de travail', emoji: '🧽' },
   { titre: 'Lancer une machine', emoji: '🫧' },
-  { titre: 'Sortir les poubelles', emoji: '🗑' },
+  { titre: 'Vider le lave-vaisselle', emoji: '🥣' },
   { titre: 'Passer l\'aspirateur', emoji: '🌀' },
-  { titre: 'Nettoyer les surfaces', emoji: '🧽' },
+  { titre: 'Sortir les poubelles', emoji: '🗑' },
+  { titre: 'Ranger les affaires traînantes', emoji: '📦' },
+  { titre: 'Nettoyer les plaques de cuisson', emoji: '🔥' },
+  { titre: 'Plier et ranger le linge', emoji: '👕' },
+  { titre: 'Tour rapide des pièces communes', emoji: '🏠' },
+  { titre: 'Vider le filtre de la machine à café', emoji: '☕' },
+  { titre: 'Nettoyer les poignées de portes', emoji: '🚪' },
+  { titre: 'Fermer les volets le soir', emoji: '🌙' },
 ];
 
 const SUGGESTIONS_PERIODIQUES: Record<string, { titre: string; emoji: string }[]> = {
-  hebdomadaire:   [{ titre: 'Changer les draps', emoji: '🛏' }, { titre: 'Nettoyer la salle de bain', emoji: '🚿' }],
-  bihebdomadaire: [{ titre: 'Passer la serpillière', emoji: '🧹' }, { titre: 'Nettoyer les vitres', emoji: '🪟' }],
-  mensuelle:      [{ titre: 'Nettoyer le four', emoji: '🔥' }, { titre: 'Détartrer la cafetière', emoji: '☕' }],
-  trimestrielle:  [{ titre: 'Trier les vêtements', emoji: '👗' }, { titre: 'Nettoyer le frigo', emoji: '🧊' }],
-  semestrielle:   [{ titre: 'Laver les rideaux', emoji: '🪟' }, { titre: 'Vérifier détecteurs fumée', emoji: '🔔' }],
-  annuelle:       [{ titre: 'Grand nettoyage de printemps', emoji: '🌸' }, { titre: 'Révision chaudière', emoji: '🔧' }],
+  hebdomadaire: [
+    { titre: 'Changer les draps', emoji: '🛏' },
+    { titre: 'Nettoyer la salle de bain complète', emoji: '🚿' },
+    { titre: 'Passer la serpillière cuisine et salon', emoji: '🧹' },
+    { titre: 'Nettoyer les lavabos', emoji: '🪥' },
+    { titre: 'Laver les torchons et éponges', emoji: '🧽' },
+    { titre: 'Aspirer les canapés et fauteuils', emoji: '🛋' },
+    { titre: 'Nettoyer la plaque de cuisson en profondeur', emoji: '🍳' },
+    { titre: 'Laver le sol salle de bain', emoji: '💧' },
+    { titre: 'Vider et laver les poubelles', emoji: '🗑' },
+    { titre: 'Nettoyer les interrupteurs', emoji: '💡' },
+    { titre: 'Passer l\'aspirateur dans toutes les pièces', emoji: '🌀' },
+    { titre: 'Changer les serviettes de bain', emoji: '🏊' },
+  ],
+  bihebdomadaire: [
+    { titre: 'Nettoyer les miroirs', emoji: '🪞' },
+    { titre: 'Désinfecter les toilettes (extérieur compris)', emoji: '🚽' },
+    { titre: 'Nettoyer les vitres intérieures', emoji: '🪟' },
+    { titre: 'Décrasser le joint de baignoire / douche', emoji: '🚿' },
+    { titre: 'Laver les tapis de bain', emoji: '🧼' },
+    { titre: 'Nettoyer le dessus du réfrigérateur', emoji: '🧊' },
+    { titre: 'Dépoussiérer les meubles TV et étagères', emoji: '📺' },
+    { titre: 'Nettoyer la hotte (surface extérieure)', emoji: '💨' },
+  ],
+  mensuelle: [
+    { titre: 'Nettoyer le four', emoji: '🔥' },
+    { titre: 'Détartrer la cafetière', emoji: '☕' },
+    { titre: 'Nettoyer les filtres de la hotte', emoji: '💨' },
+    { titre: 'Nettoyer le tiroir à lessive', emoji: '🫧' },
+    { titre: 'Nettoyer le frigo (intérieur)', emoji: '🧊' },
+    { titre: 'Désinfecter les joints du frigo', emoji: '🫙' },
+    { titre: 'Dépoussiérer les plinthes', emoji: '🧹' },
+    { titre: 'Nettoyer l\'intérieur du micro-ondes', emoji: '📡' },
+    { titre: 'Laver les housses de coussins', emoji: '🛋' },
+    { titre: 'Nettoyer les prises et interrupteurs', emoji: '🔌' },
+    { titre: 'Dépoussiérer les stores et jalousies', emoji: '🪟' },
+    { titre: 'Nettoyer la bonde de douche et siphon', emoji: '🌊' },
+    { titre: 'Détartrer le pommeau de douche', emoji: '🚿' },
+    { titre: 'Nettoyer le filtre du lave-vaisselle', emoji: '🥣' },
+  ],
+  trimestrielle: [
+    { titre: 'Laver les couettes et oreillers', emoji: '🛏' },
+    { titre: 'Aspirer et retourner les matelas', emoji: '💤' },
+    { titre: 'Nettoyer le dessous du lit', emoji: '🧹' },
+    { titre: 'Trier les vêtements (donner / jeter)', emoji: '👗' },
+    { titre: 'Dégraisser les placards de cuisine', emoji: '🍳' },
+    { titre: 'Nettoyer les rails de portes coulissantes', emoji: '🚪' },
+    { titre: 'Nettoyer les conduits de ventilation', emoji: '💨' },
+    { titre: 'Laver les rideaux de douche', emoji: '🚿' },
+    { titre: 'Vider et nettoyer les tiroirs de cuisine', emoji: '🥄' },
+    { titre: 'Nettoyer les radiateurs (entre les lamelles)', emoji: '🌡' },
+    { titre: 'Laver les vitres extérieures', emoji: '🪟' },
+    { titre: 'Désinfecter les télécommandes et téléphones', emoji: '📱' },
+  ],
+  semestrielle: [
+    { titre: 'Retourner le matelas', emoji: '💤' },
+    { titre: 'Laver les rideaux', emoji: '🪟' },
+    { titre: 'Vérifier les détecteurs de fumée et CO', emoji: '🔔' },
+    { titre: 'Purger les radiateurs', emoji: '🌡' },
+    { titre: 'Nettoyer les caissons de volets roulants', emoji: '🏠' },
+    { titre: 'Nettoyer la ventilation de la sèche-linge', emoji: '🌬' },
+    { titre: 'Vérifier les joints de fenêtres', emoji: '🪟' },
+    { titre: 'Dépoussiérer livres et étagères en profondeur', emoji: '📚' },
+    { titre: 'Nettoyer le fond des armoires', emoji: '🚪' },
+    { titre: 'Vider et trier la pharmacie', emoji: '💊' },
+    { titre: 'Laver les coussins extérieurs', emoji: '🌿' },
+    { titre: 'Nettoyer les gouttières', emoji: '🌧' },
+  ],
+  annuelle: [
+    { titre: 'Grand nettoyage de printemps', emoji: '🌸' },
+    { titre: 'Révision chaudière (obligatoire)', emoji: '🔧' },
+    { titre: 'Désencombrement général (une pièce à la fois)', emoji: '📦' },
+    { titre: 'Trier et archiver les documents', emoji: '📁' },
+    { titre: 'Nettoyer derrière les gros électroménagers', emoji: '🧺' },
+    { titre: 'Nettoyer la hotte en profondeur (démonter les grilles)', emoji: '💨' },
+    { titre: 'Nettoyer les canalisations (produit enzymatique)', emoji: '🌊' },
+    { titre: 'Vérifier l\'état des joints de baignoire', emoji: '🛁' },
+    { titre: 'Tester les extincteurs', emoji: '🧯' },
+    { titre: 'Traitement anti-moisissures préventif', emoji: '🍄' },
+    { titre: 'Nettoyer les volets (lames)', emoji: '🏠' },
+    { titre: 'Inventaire et rotation du stock cuisine', emoji: '🥫' },
+    { titre: 'Nettoyer derrière et sous les meubles', emoji: '🧹' },
+  ],
 };
 
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+
+function startOfToday(): Date {
+  const d = new Date();
+  d.setHours(0, 0, 0, 0);
+  return d;
+}
+
+function isCompletedToday(tache: Tache): boolean {
+  if (tache.statut !== 'fait' || !tache.completeeLe) return false;
+  const t = startOfToday();
+  const c = new Date(tache.completeeLe);
+  c.setHours(0, 0, 0, 0);
+  return c.getTime() === t.getTime();
+}
+
+// ─── Tâches saisonnières ──────────────────────────────────────────────────────
+
+interface DefSaisonniere {
+  titre: string;
+  emoji: string;
+  mois: number[]; // 1 = janvier … 12 = décembre
+  description?: string;
+}
+
+// Identifiant stable pour retrouver une tâche saisonnière en DB
+function cléSaisonniere(titre: string, annee: number) {
+  return `saisonniere::${annee}::${titre.trim().toLowerCase()}`;
+}
+
+const TACHES_SAISONNIERES: DefSaisonniere[] = [
+  { titre: 'Grand nettoyage de printemps', emoji: '🌸', mois: [3, 4], description: 'Désencombrement, fond des placards, derrière les meubles' },
+  { titre: 'Laver les rideaux et voilages', emoji: '🪟', mois: [4], description: 'Avant l\'été, profiter de la lumière' },
+  { titre: 'Rentrer le mobilier extérieur', emoji: '🪑', mois: [10], description: 'Avant les premières gelées' },
+  { titre: 'Laver les couettes d\'hiver', emoji: '🛏', mois: [5], description: 'Ranger propres pour l\'été' },
+  { titre: 'Sortir les couettes d\'hiver', emoji: '🛏', mois: [9], description: 'Avant les nuits fraîches' },
+  { titre: 'Traitement anti-moisissures préventif', emoji: '🍄', mois: [10], description: 'Pièces humides avant l\'hiver' },
+  { titre: 'Vérifier les joints de fenêtres avant l\'hiver', emoji: '🪟', mois: [9, 10], description: 'Isolation thermique' },
+  { titre: 'Nettoyer les gouttières', emoji: '🌧', mois: [11], description: 'Après la chute des feuilles' },
+  { titre: 'Purger les radiateurs', emoji: '🌡', mois: [10], description: 'Avant de rallumer le chauffage' },
+  { titre: 'Révision de la chaudière', emoji: '🔧', mois: [9, 10], description: 'Contrat annuel obligatoire' },
+  { titre: 'Laver le mobilier extérieur', emoji: '🌿', mois: [4], description: 'Préparer la terrasse pour l\'été' },
+  { titre: 'Trier les vêtements hiver → été', emoji: '👗', mois: [4, 5], description: 'Rangement saisonnier' },
+  { titre: 'Trier les vêtements été → hiver', emoji: '🧥', mois: [9, 10], description: 'Rangement saisonnier' },
+  { titre: 'Tester les détecteurs de fumée', emoji: '🔔', mois: [3], description: 'Test annuel recommandé' },
+  { titre: 'Vider et nettoyer les placards de cuisine', emoji: '🍳', mois: [1], description: 'Bonne résolution de janvier' },
+  { titre: 'Inventaire et rotation du stock cuisine', emoji: '🥫', mois: [1, 7], description: 'Vérifier les dates de péremption' },
+];
+
+export interface TacheSaisonniereLive {
+  def: DefSaisonniere;
+  tache: Tache | null;      // null = pas encore en DB
+  faiteAnnee: boolean;      // cochée cette année
+}
+
 // ─── Hooks ────────────────────────────────────────────────────────────────────
+
+function useTachesDuJour() {
+  return useLiveQuery(async () => {
+    const all = await db.taches
+      .filter(t => !t.archive && !t.deletedAt && t.moduleOrigine === 'maison')
+      .toArray();
+
+    const now = new Date();
+    const moisActuel = now.getMonth() + 1;
+    const anneeActuelle = now.getFullYear();
+
+    const quotidiennes = all.filter(t => t.frequence === 'quotidienne');
+    const periodiques = all.filter(
+      t => t.frequence && t.frequence !== 'quotidienne' && t.frequence !== 'ponctuelle'
+        && (isDueToday(t) || isOverdue(t))
+        && !t.contexteLibre?.startsWith('saisonniere::')
+    );
+
+    // Tâches saisonnières actives ce mois-ci
+    const saisonnieres: TacheSaisonniereLive[] = TACHES_SAISONNIERES
+      .filter(def => def.mois.includes(moisActuel))
+      .map(def => {
+        const clé = cléSaisonniere(def.titre, anneeActuelle);
+        const tache = all.find(t => t.contexteLibre === clé) ?? null;
+        const faiteAnnee = tache !== null && (
+          tache.statut === 'fait' ||
+          (!!tache.completeeLe && new Date(tache.completeeLe).getFullYear() === anneeActuelle)
+        );
+        return { def, tache, faiteAnnee };
+      });
+
+    const sort = (arr: Tache[]) =>
+      arr.sort((a, b) => {
+        const ad = isCompletedToday(a) ? 1 : 0;
+        const bd = isCompletedToday(b) ? 1 : 0;
+        if (ad !== bd) return ad - bd;
+        const ao = isOverdue(a) ? 0 : 1;
+        const bo = isOverdue(b) ? 0 : 1;
+        return ao - bo;
+      });
+
+    return { quotidiennes: sort(quotidiennes), periodiques: sort(periodiques), saisonnieres };
+  });
+}
 
 function useTachesParFrequence(frequence: FrequenceTache) {
   return useLiveQuery(async () => {
@@ -79,13 +266,14 @@ function useTachesParFrequence(frequence: FrequenceTache) {
 interface TacheCardProps {
   tache: Tache;
   color?: string;
+  done?: boolean; // override: si non fourni, utilise tache.statut === 'fait'
   onToggle: () => void;
   onEdit: () => void;
   onDelete: () => void;
 }
 
-function TacheCard({ tache, color = '#A78BFA', onToggle, onEdit, onDelete }: TacheCardProps) {
-  const done = tache.statut === 'fait';
+function TacheCard({ tache, color = '#A78BFA', done: doneProp, onToggle, onEdit, onDelete }: TacheCardProps) {
+  const done = doneProp !== undefined ? doneProp : tache.statut === 'fait';
   const derniereFois = tache.completeeLe ?? (tache.statut === 'fait' ? tache.updatedAt : undefined);
   const joursDepuis = derniereFois
     ? Math.floor((Date.now() - new Date(derniereFois).getTime()) / 86400000)
@@ -154,14 +342,441 @@ function TacheCard({ tache, color = '#A78BFA', onToggle, onEdit, onDelete }: Tac
   );
 }
 
+// ─── Section Du Jour ──────────────────────────────────────────────────────────
+
+const FREQ_LABELS: Partial<Record<FrequenceTache, string>> = {
+  hebdomadaire:   'Hebdomadaire',
+  bihebdomadaire: 'Toutes les 2 sem.',
+  mensuelle:      'Mensuel',
+  trimestrielle:  'Trimestriel',
+  semestrielle:   'Semestriel',
+  annuelle:       'Annuel',
+};
+
+const FREQ_COLORS: Partial<Record<FrequenceTache, string>> = {
+  hebdomadaire:   '#60A5FA',
+  bihebdomadaire: '#818CF8',
+  mensuelle:      '#A78BFA',
+  trimestrielle:  '#FB923C',
+  semestrielle:   '#FBBF24',
+  annuelle:       '#F472B6',
+};
+
+// ─── Scoring "impact visuel" pour le mode express ────────────────────────────
+
+const MOTS_IMPACT_ELEVE = [
+  'aspirateur', 'serpillière', 'sol', 'cuisine', 'plan de travail', 'salon',
+  'salle de bain', 'wc', 'toilettes', 'lit', 'draps', 'miroir', 'vitres',
+  'poubelle', 'lavabo', 'douche', 'surfaces',
+];
+
+const MOTS_IMPACT_MOYEN = [
+  'linge', 'machine', 'éponge', 'torchon', 'coussins', 'canapé',
+  'ranger', 'affaires', 'trier',
+];
+
+function scoreImpactVisuel(titre: string): number {
+  const t = titre.toLowerCase();
+  if (MOTS_IMPACT_ELEVE.some(m => t.includes(m))) return 20;
+  if (MOTS_IMPACT_MOYEN.some(m => t.includes(m))) return 10;
+  return 0;
+}
+
+function selectionnerTachesExpress(
+  taches: Tache[],
+  pieces: import('@shared/types/modules').Piece[],
+  n = 5,
+): Tache[] {
+  const pieceScore = new Map(pieces.map(p => [p.id, p.scoreProprety]));
+
+  const scored = taches
+    .filter(t => !isCompletedToday(t))
+    .map(t => {
+      let score = 0;
+      if (isOverdue(t))    score += 30;
+      if (isDueToday(t))   score += 20;
+      score += scoreImpactVisuel(t.titre);
+      // Pièce la plus dégradée = priorité haute
+      if (t.pieceAssociee) {
+        const ps = pieceScore.get(t.pieceAssociee) ?? 100;
+        score += Math.round((100 - ps) / 5); // 0–20 pts
+      }
+      // Favoriser les tâches fréquentes (quotidienne > hebdo > …)
+      const freqBonus: Partial<Record<FrequenceTache, number>> = {
+        quotidienne: 15, hebdomadaire: 10, bihebdomadaire: 7,
+        mensuelle: 4, trimestrielle: 2, semestrielle: 1, annuelle: 0,
+      };
+      score += freqBonus[t.frequence ?? 'ponctuelle'] ?? 0;
+      return { tache: t, score };
+    });
+
+  scored.sort((a, b) => b.score - a.score);
+  return scored.slice(0, n).map(s => s.tache);
+}
+
+// ─── Timer hook ───────────────────────────────────────────────────────────────
+
+function useTimer(dureeSecondes: number, actif: boolean) {
+  const [restant, setRestant] = useState(dureeSecondes);
+
+  useEffect(() => {
+    if (!actif) { setRestant(dureeSecondes); return; }
+    if (restant <= 0) return;
+    const id = setInterval(() => setRestant(r => Math.max(0, r - 1)), 1000);
+    return () => clearInterval(id);
+  }, [actif, restant, dureeSecondes]);
+
+  const mm = String(Math.floor(restant / 60)).padStart(2, '0');
+  const ss = String(restant % 60).padStart(2, '0');
+  const pct = Math.round(((dureeSecondes - restant) / dureeSecondes) * 100);
+  return { label: `${mm}:${ss}`, pct, fini: restant === 0 };
+}
+
+// ─── Sprint Express ───────────────────────────────────────────────────────────
+
+interface SprintExpressProps {
+  taches: Tache[];
+  onQuitter: () => void;
+}
+
+function SprintExpress({ taches: tachesInitiales, onQuitter }: SprintExpressProps) {
+  const store = useMaisonStore();
+  const [taches, setTaches] = useState(tachesInitiales);
+  const [timerActif, setTimerActif] = useState(false);
+  const { label: timerLabel, pct: timerPct, fini: timerFini } = useTimer(20 * 60, timerActif);
+
+  const faites = taches.filter(isCompletedToday).length;
+  const total = taches.length;
+  const toutFait = total > 0 && faites === total;
+
+  const handleToggle = async (t: Tache) => {
+    if (isCompletedToday(t)) {
+      await TacheService.rouvrir(t.id);
+    } else {
+      await TacheService.completerTache(t.id);
+    }
+    // Mise à jour locale immédiate pour l'animation
+    setTaches(prev => prev.map(p =>
+      p.id === t.id
+        ? { ...p, statut: isCompletedToday(t) ? 'a_faire' : 'fait', completeeLe: isCompletedToday(t) ? undefined : new Date() }
+        : p
+    ));
+  };
+
+  return (
+    <div className="sprint-wrap">
+
+      {/* En-tête sprint */}
+      <div className="sprint-header">
+        <div className="sprint-header__left">
+          <span className="sprint-icon">⚡</span>
+          <div>
+            <p className="sprint-title">Coup de propre express</p>
+            <p className="sprint-sub">{faites}/{total} tâches · impact maximum</p>
+          </div>
+        </div>
+        <button className="sprint-quit" onClick={onQuitter}>✕ Quitter</button>
+      </div>
+
+      {/* Timer */}
+      <div className="sprint-timer" onClick={() => !timerFini && setTimerActif(a => !a)}>
+        <div className="sprint-timer__arc">
+          <svg viewBox="0 0 56 56" className="sprint-timer__svg">
+            <circle cx="28" cy="28" r="24" fill="none" stroke="rgba(167,139,250,0.15)" strokeWidth="4"/>
+            <circle cx="28" cy="28" r="24" fill="none"
+              stroke={toutFait ? '#34D399' : timerFini ? '#EF4444' : '#A78BFA'}
+              strokeWidth="4" strokeLinecap="round"
+              strokeDasharray={`${2 * Math.PI * 24}`}
+              strokeDashoffset={`${2 * Math.PI * 24 * (1 - timerPct / 100)}`}
+              transform="rotate(-90 28 28)"
+              style={{ transition: 'stroke-dashoffset 1s linear' }}
+            />
+          </svg>
+          <span className="sprint-timer__label">
+            {toutFait ? '✓' : timerFini ? '⏰' : timerLabel}
+          </span>
+        </div>
+        {!timerActif && !timerFini && !toutFait && (
+          <p className="sprint-timer__hint">Appuyer pour démarrer</p>
+        )}
+        {timerActif && !timerFini && (
+          <p className="sprint-timer__hint">Appuyer pour pauser</p>
+        )}
+        {timerFini && !toutFait && (
+          <p className="sprint-timer__hint" style={{ color: '#EF4444' }}>Temps écoulé</p>
+        )}
+        {toutFait && (
+          <p className="sprint-timer__hint" style={{ color: '#059669' }}>Maison nickel</p>
+        )}
+      </div>
+
+      {/* Progression globale */}
+      <div className="sprint-prog-wrap">
+        <div className="sprint-prog-bar">
+          <div className="sprint-prog-fill"
+            style={{ width: `${total > 0 ? (faites / total) * 100 : 0}%` }}
+          />
+        </div>
+      </div>
+
+      {/* Tâches */}
+      <div className="mc-cards">
+        {taches.map(t => (
+          <TacheCard key={t.id} tache={t}
+            done={isCompletedToday(t)}
+            color="#A78BFA"
+            onToggle={() => handleToggle(t)}
+            onEdit={() => store.openDrawerTache({ editId: t.id })}
+            onDelete={() => TacheService.deleteTache(t.id)}
+          />
+        ))}
+      </div>
+
+      {toutFait && (
+        <div className="dj-bravo" style={{ marginTop: 12 }}>
+          <span>🏆</span>
+          <p>Express terminé · maison impeccable</p>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ─── Section Du Jour ──────────────────────────────────────────────────────────
+
+function SectionDuJour() {
+  const data = useTachesDuJour();
+  const store = useMaisonStore();
+  const pieces = usePieces() ?? [];
+  const [sprintTaches, setSprintTaches] = useState<Tache[] | null>(null);
+
+  const quotidiennes  = data?.quotidiennes  ?? [];
+  const periodiques   = data?.periodiques   ?? [];
+  const saisonnieres  = data?.saisonnieres  ?? [];
+
+  const toutesLesTaches = [...quotidiennes, ...periodiques];
+  const totalRegulier = toutesLesTaches.length;
+  const faitesRegulier = toutesLesTaches.filter(isCompletedToday).length;
+  const totalSaison = saisonnieres.length;
+  const faitesSaison = saisonnieres.filter(s => s.faiteAnnee).length;
+  const total = totalRegulier + totalSaison;
+  const faites = faitesRegulier + faitesSaison;
+  const allDone = total > 0 && faites === total;
+  const progPct = total > 0 ? Math.round((faites / total) * 100) : 0;
+
+  const handleToggle = async (t: Tache) => {
+    if (isCompletedToday(t)) {
+      await TacheService.rouvrir(t.id);
+    } else {
+      await TacheService.completerTache(t.id);
+    }
+  };
+
+  const handleToggleSaisonniere = async (item: TacheSaisonniereLive) => {
+    const annee = new Date().getFullYear();
+    const clé = cléSaisonniere(item.def.titre, annee);
+    if (item.faiteAnnee && item.tache) {
+      // Décocher : remettre à a_faire
+      await TacheService.rouvrir(item.tache.id);
+    } else if (item.tache) {
+      // Existe déjà en DB mais pas encore cochée cette année
+      await TacheService.completerTache(item.tache.id);
+    } else {
+      // Créer et cocher immédiatement
+      const id = await db.taches.add(newEntity<Tache>({
+        titre: item.def.titre,
+        statut: 'a_faire',
+        moduleOrigine: 'maison',
+        frequence: 'annuelle',
+        recurrence: true,
+        archive: false,
+        contexteLibre: clé,
+      }));
+      await TacheService.completerTache(id as string);
+    }
+  };
+
+  const lancerExpress = () => {
+    const selection = selectionnerTachesExpress(toutesLesTaches, pieces);
+    setSprintTaches(selection);
+  };
+
+  const periodiquesByFreq = periodiques.reduce<Record<string, Tache[]>>((acc, t) => {
+    const key = t.frequence ?? 'ponctuelle';
+    if (!acc[key]) acc[key] = [];
+    acc[key].push(t);
+    return acc;
+  }, {});
+
+  const isLoading = data === undefined;
+
+  if (sprintTaches !== null) {
+    return <SprintExpress taches={sprintTaches} onQuitter={() => setSprintTaches(null)} />;
+  }
+
+  return (
+    <div className="mc-section">
+      <div className="mc-section__header">
+        <div className="mc-section__title-row">
+          <span className="mc-section__icon">📋</span>
+          <div>
+            <h3 className="mc-section__title">Aujourd'hui</h3>
+            <p className="mc-section__sub">
+              {isLoading ? 'Chargement…' : total === 0
+                ? 'Aucune tâche due aujourd\'hui'
+                : `${total} tâche${total > 1 ? 's' : ''} · ${faites} effectuée${faites > 1 ? 's' : ''}`
+              }
+            </p>
+          </div>
+        </div>
+        {total > 0 && (
+          <div className="mc-section__score-col">
+            <span className={`mc-section__score${allDone ? ' done' : ''}`}>{progPct}%</span>
+            <div className="mc-prog-bar">
+              <div className="mc-prog-fill" style={{ width: `${progPct}%`, background: allDone ? '#34D399' : '#A78BFA' }} />
+            </div>
+          </div>
+        )}
+      </div>
+
+      {total > 0 && !allDone && (
+        <button className="sprint-cta" onClick={lancerExpress}>
+          <span className="sprint-cta__icon">⚡</span>
+          <div className="sprint-cta__text">
+            <span className="sprint-cta__title">Coup de propre express</span>
+            <span className="sprint-cta__sub">5 tâches · impact maximum · 20 min</span>
+          </div>
+          <span className="sprint-cta__arrow">→</span>
+        </button>
+      )}
+
+      {allDone && total > 0 && (
+        <div className="dj-bravo">
+          <span>✨</span>
+          <p>Toutes les tâches du jour sont faites</p>
+        </div>
+      )}
+
+      {!isLoading && total === 0 && (
+        <div className="mc-empty">
+          <span>🌿</span>
+          <p>Rien à faire aujourd'hui, la maison est à jour</p>
+        </div>
+      )}
+
+      {/* ─ Tâches quotidiennes ─ */}
+      {quotidiennes.length > 0 && (
+        <div className="dj-group">
+          <span className="dj-group__label">☀️ Quotidien</span>
+          <div className="mc-cards">
+            {quotidiennes.map(t => (
+              <TacheCard key={t.id} tache={t}
+                done={isCompletedToday(t)}
+                color="#A78BFA"
+                onToggle={() => handleToggle(t)}
+                onEdit={() => store.openDrawerTache({ editId: t.id })}
+                onDelete={() => TacheService.deleteTache(t.id)}
+              />
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* ─ Tâches périodiques dues aujourd'hui ou en retard ─ */}
+      {Object.entries(periodiquesByFreq).map(([freq, taches]) => {
+        const color = FREQ_COLORS[freq as FrequenceTache] ?? '#9B8DB5';
+        const label = FREQ_LABELS[freq as FrequenceTache] ?? freq;
+        const hasOverdue = taches.some(t => isOverdue(t));
+        return (
+          <div key={freq} className="dj-group">
+            <span className="dj-group__label" style={{ color }}>
+              {hasOverdue ? '🔴' : '📅'} {label}
+              {hasOverdue && <span className="dj-badge-retard">En retard</span>}
+            </span>
+            <div className="mc-cards">
+              {taches.map(t => (
+                <TacheCard key={t.id} tache={t}
+                  done={isCompletedToday(t)}
+                  color={color}
+                  onToggle={() => handleToggle(t)}
+                  onEdit={() => store.openDrawerTache({ editId: t.id })}
+                  onDelete={() => TacheService.deleteTache(t.id)}
+                />
+              ))}
+            </div>
+          </div>
+        );
+      })}
+
+      {/* ─ Tâches saisonnières ─ */}
+      {saisonnieres.length > 0 && (
+        <div className="dj-group">
+          <span className="dj-group__label dj-group__label--saison">🍂 Ce mois-ci</span>
+          <div className="mc-cards">
+            {saisonnieres.map(item => (
+              <div
+                key={item.def.titre}
+                className={`mc-card${item.faiteAnnee ? ' mc-card--done' : ''}`}
+                onClick={() => handleToggleSaisonniere(item)}
+                role="button"
+                tabIndex={0}
+                onKeyDown={e => e.key === 'Enter' && handleToggleSaisonniere(item)}
+              >
+                <div className="mc-card__accent" style={{ background: item.faiteAnnee ? '#34D399' : '#F59E0B' }} />
+                <div className={`mc-card__check${item.faiteAnnee ? ' done' : ''}`}
+                  style={item.faiteAnnee ? {} : { borderColor: '#F59E0BAA' }}
+                  aria-hidden="true"
+                >
+                  {item.faiteAnnee && '✓'}
+                </div>
+                <div className="mc-card__body">
+                  <span className={`mc-card__titre${item.faiteAnnee ? ' done' : ''}`}>
+                    {item.def.emoji} {item.def.titre}
+                  </span>
+                  <div className="mc-card__meta">
+                    <span className="mc-card__badge saison-badge">🍂 Saisonnier</span>
+                    {item.def.description && (
+                      <span className="mc-card__badge">{item.def.description}</span>
+                    )}
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ─── Helper ajout en masse ────────────────────────────────────────────────────
+
+async function ajouterToutesLesSuggestions(
+  suggestions: { titre: string; emoji: string }[],
+  frequence: FrequenceTache,
+  existantes: Tache[],
+): Promise<number> {
+  const titresExistants = new Set(existantes.map(t => t.titre.trim().toLowerCase()));
+  const nouvelles = suggestions.filter(s => !titresExistants.has(s.titre.trim().toLowerCase()));
+  if (nouvelles.length === 0) return 0;
+  await db.taches.bulkAdd(
+    nouvelles.map(s => newEntity<Tache>({
+      titre: s.titre, statut: 'a_faire', moduleOrigine: 'maison',
+      frequence, recurrence: true, archive: false,
+    }))
+  );
+  return nouvelles.length;
+}
+
 // ─── Section Quotidiennes ─────────────────────────────────────────────────────
 
 function SectionQuotidiennes() {
   const taches = useTachesParFrequence('quotidienne') ?? [];
   const store = useMaisonStore();
   const [showSugg, setShowSugg] = useState(false);
+  const [ajoutMsg, setAjoutMsg] = useState<string | null>(null);
 
-  const faites = taches.filter(t => t.statut === 'fait').length;
+  const faites = taches.filter(isCompletedToday).length;
   const total = taches.length;
   const allDone = total > 0 && faites === total;
   const progPct = total > 0 ? (faites / total) * 100 : 0;
@@ -172,6 +787,13 @@ function SectionQuotidiennes() {
       frequence: 'quotidienne', recurrence: true, archive: false,
     }));
     setShowSugg(false);
+  };
+
+  const addAll = async () => {
+    const n = await ajouterToutesLesSuggestions(SUGGESTIONS_QUOTIDIENNES, 'quotidienne', taches);
+    setShowSugg(false);
+    setAjoutMsg(n === 0 ? 'Déjà toutes présentes' : `+${n} tâche${n > 1 ? 's' : ''} ajoutée${n > 1 ? 's' : ''}`);
+    setTimeout(() => setAjoutMsg(null), 2500);
   };
 
   return (
@@ -202,7 +824,8 @@ function SectionQuotidiennes() {
         <div className="mc-cards">
           {taches.map(t => (
             <TacheCard key={t.id} tache={t} color="#A78BFA"
-              onToggle={() => t.statut === 'fait' ? TacheService.rouvrir(t.id) : TacheService.completerTache(t.id)}
+              done={isCompletedToday(t)}
+              onToggle={() => isCompletedToday(t) ? TacheService.rouvrir(t.id) : TacheService.completerTache(t.id)}
               onEdit={() => store.openDrawerTache({ editId: t.id })}
               onDelete={() => TacheService.deleteTache(t.id)}
             />
@@ -212,6 +835,9 @@ function SectionQuotidiennes() {
 
       {showSugg && (
         <div className="mc-suggestions">
+          <button className="mc-sugg-btn mc-sugg-btn--all" onClick={addAll}>
+            ✨ Tout ajouter ({SUGGESTIONS_QUOTIDIENNES.length} tâches)
+          </button>
           {SUGGESTIONS_QUOTIDIENNES.map(s => (
             <button key={s.titre} className="mc-sugg-btn" onClick={() => addSugg(s.titre)}>
               {s.emoji} {s.titre}
@@ -222,7 +848,10 @@ function SectionQuotidiennes() {
 
       <div className="mc-actions">
         <button className="mc-btn mc-btn--primary" onClick={() => store.openDrawerTache({ frequence: 'quotidienne' })}>+ Ajouter</button>
-        <button className="mc-btn mc-btn--ghost" onClick={() => setShowSugg(s => !s)}>💡 Suggestions</button>
+        <button className="mc-btn mc-btn--ghost" onClick={() => setShowSugg(s => !s)}>
+          💡 Suggestions
+        </button>
+        {ajoutMsg && <span className="mc-ajout-msg">{ajoutMsg}</span>}
       </div>
     </div>
   );
@@ -235,9 +864,11 @@ function SectionPeriodique({ cfg }: { cfg: FreqConfig }) {
   const store = useMaisonStore();
   const [open, setOpen] = useState(true);
   const [showSugg, setShowSugg] = useState(false);
+  const [ajoutMsg, setAjoutMsg] = useState<string | null>(null);
 
   const faites = taches.filter(t => t.statut === 'fait').length;
   const total = taches.length;
+  const suggestions = SUGGESTIONS_PERIODIQUES[cfg.value] ?? [];
 
   const addSugg = async (titre: string) => {
     await db.taches.add(newEntity<Tache>({
@@ -245,6 +876,13 @@ function SectionPeriodique({ cfg }: { cfg: FreqConfig }) {
       frequence: cfg.value, recurrence: true, archive: false,
     }));
     setShowSugg(false);
+  };
+
+  const addAll = async () => {
+    const n = await ajouterToutesLesSuggestions(suggestions, cfg.value, taches);
+    setShowSugg(false);
+    setAjoutMsg(n === 0 ? 'Déjà toutes présentes' : `+${n} tâche${n > 1 ? 's' : ''} ajoutée${n > 1 ? 's' : ''}`);
+    setTimeout(() => setAjoutMsg(null), 2500);
   };
 
   return (
@@ -281,9 +919,12 @@ function SectionPeriodique({ cfg }: { cfg: FreqConfig }) {
             </div>
           )}
 
-          {showSugg && SUGGESTIONS_PERIODIQUES[cfg.value] && (
+          {showSugg && suggestions.length > 0 && (
             <div className="mc-suggestions">
-              {SUGGESTIONS_PERIODIQUES[cfg.value].map(s => (
+              <button className="mc-sugg-btn mc-sugg-btn--all" onClick={addAll}>
+                ✨ Tout ajouter ({suggestions.length} tâches)
+              </button>
+              {suggestions.map(s => (
                 <button key={s.titre} className="mc-sugg-btn" onClick={() => addSugg(s.titre)}>
                   {s.emoji} {s.titre}
                 </button>
@@ -296,9 +937,10 @@ function SectionPeriodique({ cfg }: { cfg: FreqConfig }) {
               style={{ background: cfg.color + '20', color: cfg.color, borderColor: cfg.color + '44' }}
               onClick={() => store.openDrawerTache({ frequence: cfg.value })}
             >+ Ajouter</button>
-            {SUGGESTIONS_PERIODIQUES[cfg.value] && (
+            {suggestions.length > 0 && (
               <button className="mc-btn mc-btn--ghost" onClick={() => setShowSugg(s => !s)}>💡</button>
             )}
+            {ajoutMsg && <span className="mc-ajout-msg">{ajoutMsg}</span>}
           </div>
         </div>
       )}
@@ -535,15 +1177,19 @@ function SectionGrandMenage() {
 // ─── Module principal ─────────────────────────────────────────────────────────
 
 export default function MenageModule() {
-  const [onglet, setOnglet] = useState<OngletMenage>('quotidien');
+  const [onglet, setOnglet] = useState<OngletMenage>('du_jour');
   const store = useMaisonStore();
   const pieces = usePieces();
+  useRappelMenageNatif();
 
   return (
     <div className="mc-module">
       <nav className="mc-tabs">
+        <button className={`mc-tab${onglet === 'du_jour' ? ' active' : ''}`} onClick={() => setOnglet('du_jour')}>
+          📋 Du jour
+        </button>
         <button className={`mc-tab${onglet === 'quotidien' ? ' active' : ''}`} onClick={() => setOnglet('quotidien')}>
-          ☀️ Quotidien
+          ☀️ Routine
         </button>
         <button className={`mc-tab${onglet === 'periodique' ? ' active' : ''}`} onClick={() => setOnglet('periodique')}>
           📆 Périodique
@@ -554,6 +1200,7 @@ export default function MenageModule() {
       </nav>
 
       <div className="mc-content">
+        {onglet === 'du_jour' && <SectionDuJour />}
         {onglet === 'quotidien' && <SectionQuotidiennes />}
         {onglet === 'periodique' && (
           <div className="mc-periodiques">

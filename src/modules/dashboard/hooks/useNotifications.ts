@@ -13,6 +13,7 @@ import { useMemo, useCallback } from 'react'
 import { db } from '../../../core/db/database'
 import { useHabitudes } from '../../../shared/hooks/useHabitudes'
 import { useHabituesRetard } from '../../../shared/hooks/useHabituesRetard'
+import { isDueToday, isOverdue } from '../../menage/utils/nextDueDate'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -115,6 +116,26 @@ export function useNotifications(): {
       !t.deletedAt && !t.archive && t.statut === 'a_faire' && !!t.dateEcheance
     ).toArray()
     return all.filter(t => new Date(t.dateEcheance!) < today()).length
+  }, [todayISO]) ?? 0
+
+  // M01 — Tâches ménage dues aujourd'hui (quotidiennes + périodiques à échéance)
+  const nbTachesMenageDuJour = useLiveQuery(async () => {
+    const all = await db.taches
+      .filter(t => !t.deletedAt && !t.archive && t.moduleOrigine === 'maison')
+      .toArray()
+    const todayStart = today()
+    const isdonToday = (t: import('@shared/types/entities').Tache) => {
+      if (t.statut !== 'fait' || !t.completeeLe) return false
+      const c = new Date(t.completeeLe); c.setHours(0,0,0,0)
+      return c.getTime() === todayStart.getTime()
+    }
+    const quotidiennes = all.filter(t => t.frequence === 'quotidienne' && !isdonToday(t))
+    const periodiques  = all.filter(t =>
+      t.frequence && t.frequence !== 'quotidienne' && t.frequence !== 'ponctuelle'
+      && !t.contexteLibre?.startsWith('saisonniere::')
+      && (isDueToday(t) || isOverdue(t)) && !isdonToday(t)
+    )
+    return quotidiennes.length + periodiques.length
   }, [todayISO]) ?? 0
 
   const activitesSemaineProchaine = useLiveQuery(async () => {
@@ -357,9 +378,21 @@ export function useNotifications(): {
       })
     }
 
+    // M01 — Rappel ménage matinal
+    if (estMatin && nbTachesMenageDuJour > 0) {
+      push(68, {
+        id: `menage-matin-${todayISO}`,
+        variant: 'info',
+        emoji: '🧹',
+        message: `${nbTachesMenageDuJour} tâche${nbTachesMenageDuJour > 1 ? 's' : ''} ménagère${nbTachesMenageDuJour > 1 ? 's' : ''} vous attende${nbTachesMenageDuJour > 1 ? 'nt' : ''} aujourd'hui.`,
+        actionLabel: 'Voir le ménage du jour',
+        actionRoute: '/menage',
+      })
+    }
+
     return list
   }, [
-    menusJoursRestants, nbCourses, nbTachesRetard,
+    menusJoursRestants, nbCourses, nbTachesRetard, nbTachesMenageDuJour,
     activitesSemaineProchaine, menusSemanineProchaine, aRoutineMatin,
     habitudes, retard, jour, demain, heureDecimale, estMatin,
     todayISO, tomorrowISO,
