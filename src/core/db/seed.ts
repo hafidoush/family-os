@@ -105,6 +105,8 @@ async function _seedDatabase(): Promise<void> {
     console.log('[FamilyOS] Catalogue produits initialisé avec IDs stables.')
   }
 
+  // Purge les tâches grand ménage dupliquées (UUID aléatoires seedés sur chaque appareil)
+  await dedupGrandMenageTaches()
   // Seed tâches grand ménage par pièce (idempotent via clé parametresSync)
   await seedGrandMenageTaches()
 
@@ -3416,6 +3418,26 @@ export async function seedAnniversaires(): Promise<void> {
   console.log('[FamilyOS] Anniversaires famille initialisés.')
 }
 
+// ── Déduplication tâches grand ménage (migration one-shot) ───────────────────
+async function dedupGrandMenageTaches(): Promise<void> {
+  const CLE = 'grandMenage.dedupDone.v1'
+  const already = await db.parametresSync.where('cle').equals(CLE).first()
+  if (already) return
+
+  // Supprime toutes les tâches seed maison dont l'ID n'est PAS stable (pas seed-tache-*)
+  const doublons = await db.taches
+    .filter(t => t.deviceId === 'seed' && t.moduleOrigine === 'maison' && !t.id.startsWith('seed-tache-'))
+    .toArray()
+
+  if (doublons.length > 0) {
+    await db.taches.bulkDelete(doublons.map(t => t.id))
+    console.log(`[FamilyOS] ${doublons.length} tâches grand ménage dupliquées supprimées.`)
+  }
+
+  const now = new Date()
+  await db.parametresSync.put({ id: uuid(), cle: CLE, valeur: 'true', derniereModification: now, createdAt: now, updatedAt: now })
+}
+
 // ── Grand ménage : tâches par pièce ───────────────────────────────────────────
 
 async function seedGrandMenageTaches(): Promise<void> {
@@ -3437,8 +3459,13 @@ async function seedGrandMenageTaches(): Promise<void> {
     createdAt: Date; updatedAt: Date; deviceId: string;
   }
 
+  function stableTacheId(titre: string): string {
+    const slug = titre.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').substring(0, 80)
+    return `seed-tache-${slug}`
+  }
+
   function t(titre: string, pieceId: string | undefined, freq: TacheRaw['frequence'] = 'trimestrielle'): TacheRaw {
-    return { id: uuid(), titre, statut: 'a_faire', moduleOrigine: 'maison', recurrence: true, frequence: freq, pieceAssociee: pieceId, archive: false, createdAt: now, updatedAt: now, deviceId: 'seed' }
+    return { id: stableTacheId(titre), titre, statut: 'a_faire', moduleOrigine: 'maison', recurrence: true, frequence: freq, pieceAssociee: pieceId, archive: false, createdAt: now, updatedAt: now, deviceId: 'seed' }
   }
 
   const cuisineId  = byNom('cuisine')
@@ -3544,7 +3571,7 @@ async function seedGrandMenageTaches(): Promise<void> {
     t('Nettoyer voiture', undefined, 'mensuelle'),
   ]
 
-  await db.taches.bulkAdd(taches as any)
+  await db.taches.bulkPut(taches as any)
 
   // Marquer comme seedé (put = idempotent)
   await db.parametresSync.put({ id: uuid(), cle: CLE, valeur: 'true', derniereModification: now, createdAt: now, updatedAt: now })
