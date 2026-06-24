@@ -77,7 +77,10 @@ export async function pushRecord(dexieTable: string, record: Record<string, unkn
   if (!supaTable) return
 
   const { data: { session } } = await supabase.auth.getSession()
-  if (!session) return
+  if (!session) {
+    await addToQueue(dexieTable, record.id as string, 'no-session')
+    return
+  }
 
   // Exclure les champs Blob — non sérialisables en JSON
   const blobFields = BLOB_FIELDS[dexieTable] ?? []

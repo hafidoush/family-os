@@ -95,7 +95,7 @@ export function useSyncOnMount() {
     window.addEventListener('online', handleOnline)
 
     const interval = setInterval(() => {
-      if (navigator.onLine) pullAll()
+      if (navigator.onLine) drainQueue().then(() => pullAll())
     }, 5 * 60 * 1000)
 
     return () => {
