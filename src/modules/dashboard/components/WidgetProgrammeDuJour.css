@@ -1,345 +1,171 @@
-/* ─── WidgetProgrammeDuJour ───────────────────────────────────────────────── */
+/* ── Widget Au programme aujourd'hui — visionOS style ─────────────────────── */
 
-.programme-section {
-  padding: 0 16px;
-  margin-top: 20px;
+.pdj-section {
+  background: rgba(255, 255, 255, 0.80);
+  backdrop-filter: blur(20px) saturate(160%);
+  -webkit-backdrop-filter: blur(20px) saturate(160%);
+  border: 0.5px solid rgba(200, 195, 220, 0.45);
+  border-radius: 22px;
+  padding: 18px 16px 14px;
+  box-shadow: 0 2px 20px rgba(100, 90, 140, 0.07);
+  overflow: hidden;
 }
 
-.programme-header {
+/* ── Header ── */
+.pdj-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
   margin-bottom: 14px;
 }
 
-.programme-header__title {
-  font-size: 17px;
+.pdj-title {
+  font-size: 15px;
   font-weight: 700;
-  color: #1a1a1a;
-  letter-spacing: -0.3px;
+  color: hsl(240, 12%, 14%);
+  letter-spacing: -0.02em;
+  margin: 0;
 }
 
-.programme-header__voir {
-  font-size: 14px;
+.pdj-voir {
+  font-size: 12.5px;
   font-weight: 500;
-  color: #b0aaa0;
-  background: none;
+  color: #7c6bb0;
+  background: transparent;
   border: none;
   cursor: pointer;
   padding: 0;
+  opacity: 0.8;
+  letter-spacing: -0.01em;
+  transition: opacity 0.15s ease;
 }
+.pdj-voir:hover { opacity: 1; }
 
-/* ─── Carrousel ─────────────────────────────────────────────────────────────── */
-
-.programme-carousel {
-  display: flex;
-  gap: 12px;
-  overflow-x: scroll;
-  scroll-snap-type: x mandatory;
-  scroll-behavior: smooth;
-  -webkit-overflow-scrolling: touch;
-  padding-bottom: 8px;
-  /* masque la scrollbar */
-  scrollbar-width: none;
-}
-
-.programme-carousel::-webkit-scrollbar {
-  display: none;
-}
-
-/* ─── Carte ──────────────────────────────────────────────────────────────────── */
-
-.programme-card {
-  flex: 0 0 260px;
-  height: 220px;
-  background: #F0EFEB;
-  border-radius: 20px;
-  scroll-snap-align: start;
-  position: relative;
-  overflow: hidden;
-  display: flex;
-  flex-direction: column;
-  justify-content: flex-end;
-  padding: 16px;
-  box-sizing: border-box;
-  cursor: pointer;
-  transition: transform 0.15s ease, box-shadow 0.15s ease;
-  transform: translateZ(0);
-  -webkit-transform: translateZ(0);
-  will-change: transform;
-  isolation: isolate;
-}
-
-.programme-card:active {
-  transform: scale(0.97);
-}
-
-/* Image décorative — base commune */
-.programme-card__img {
-  position: absolute;
-  object-fit: contain;
-  pointer-events: none;
-  user-select: none;
-  z-index: 0;
-  mix-blend-mode: multiply;
-}
-
-/* ── Positionnement par carte ── */
-.programme-card--enfants .programme-card__img {
-  width: 320px;
-  height: 320px;
-  top: -40px;
-  right: -50px;
-  transform: rotate(-15deg);
-}
-
-.programme-card--planning .programme-card__img {
-  width: 350px;
-  height: 350px;
-  top: -50px;
-  right: -100px;
-  transform: rotate(25deg);
-}
-
-.programme-card--menage .programme-card__img {
-  width: 500px;
-  height: 500px;
-  top: -120px;
-  right: -100px;
-  transform: rotate(25deg);
-}
-
-/* ─── Badge ──────────────────────────────────────────────────────────────────── */
-
-.programme-card__badge {
-  position: absolute;
-  top: 14px;
-  left: 14px;
-  display: inline-flex;
-  align-items: center;
-  padding: 4px 12px;
-  border-radius: 999px;
-  font-size: 10px;
-  font-weight: 700;
-  letter-spacing: 0.8px;
-  text-transform: uppercase;
-  z-index: 3;
-}
-
-.programme-card__badge--lavande {
-  background: rgba(180, 165, 240, 0.22);
-  color: #7C6BDB;
-  border: 1px solid rgba(180, 165, 240, 0.45);
-}
-
-.programme-card__badge--ambre {
-  background: rgba(251, 191, 36, 0.22);
-  color: #B45309;
-  border: 1px solid rgba(251, 191, 36, 0.45);
-}
-
-.programme-card__badge--lilas {
-  background: rgba(216, 180, 254, 0.22);
-  color: #9333EA;
-  border: 1px solid rgba(216, 180, 254, 0.45);
-}
-
-.programme-card__badge--ardoise {
-  background: rgba(99, 149, 221, 0.18);
-  color: #1E3A5F;
-  border: 1px solid rgba(99, 149, 221, 0.4);
-}
-
-/* ─── Carte À FAIRE ─────────────────────────────────────────────────────────── */
-
-.programme-card--afaire {
-  background: #F0EFEB;
-  justify-content: flex-end;
-}
-
-/* Emoji décoratif en fond */
-.programme-card__afaire-bg {
-  position: absolute;
-  top: -10px;
-  right: -10px;
-  font-size: 120px;
-  line-height: 1;
-  opacity: 0.1;
-  pointer-events: none;
-  user-select: none;
-  z-index: 0;
-  transform: rotate(15deg);
-}
-
-/* Glass bleu adapté */
-.programme-card__glass--vert {
-  background: rgba(255, 255, 255, 0.04);
-  -webkit-mask-image: linear-gradient(
-    to bottom,
-    transparent 25%,
-    rgba(0,0,0,0.5) 55%,
-    black 70%
-  );
-  mask-image: linear-gradient(
-    to bottom,
-    transparent 25%,
-    rgba(0,0,0,0.5) 55%,
-    black 70%
-  );
-}
-
-.programme-afaire__list {
-  position: relative;
-  z-index: 3;
+/* ── Liste de rows ── */
+.pdj-list {
   display: flex;
   flex-direction: column;
   gap: 8px;
-  margin-bottom: 12px;
 }
 
-.programme-afaire__item {
+/* ── Row individuelle ── */
+.pdj-row {
   display: flex;
   align-items: center;
-  gap: 9px;
-}
-
-.programme-afaire__check {
-  width: 20px;
-  height: 20px;
-  border-radius: 50%;
-  border: 1.5px solid rgba(99, 149, 221, 0.5);
-  background: rgba(255, 255, 255, 0.6);
+  gap: 10px;
+  width: 100%;
+  padding: 11px 12px;
+  background: rgba(250, 249, 255, 0.75);
+  border: 0.5px solid rgba(210, 205, 235, 0.5);
+  border-radius: 14px;
   cursor: pointer;
+  text-align: left;
+  transition: background 0.15s ease, transform 0.1s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+.pdj-row:active { transform: scale(0.985); }
+.pdj-row:hover  { background: rgba(245, 243, 255, 0.9); }
+
+.pdj-row--done {
+  opacity: 0.55;
+}
+.pdj-row--done .pdj-row-name {
+  text-decoration: line-through;
+  color: hsl(240, 6%, 60%);
+}
+
+/* ── Pills catégorie ── */
+.pdj-pill {
   flex-shrink: 0;
-  transition: background 0.15s ease, border-color 0.15s ease;
-  appearance: none;
-  -webkit-appearance: none;
+  font-size: 9.5px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 3px 8px;
+  border-radius: 999px;
 }
 
-.programme-afaire__check:hover {
-  background: rgba(99, 149, 221, 0.25);
-  border-color: #6395DD;
+.pdj-pill--lavande {
+  background: rgba(237, 231, 246, 0.9);
+  color: #5b21b6;
 }
 
-.programme-afaire__titre {
-  font-size: 13px;
+.pdj-pill--ambre {
+  background: rgba(254, 243, 199, 0.9);
+  color: #92400e;
+}
+
+.pdj-pill--vert {
+  background: rgba(209, 250, 229, 0.9);
+  color: #065f46;
+}
+
+/* ── Corps de la row ── */
+.pdj-row-body {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.pdj-row-name {
+  font-size: 13.5px;
   font-weight: 500;
-  color: #1E3A5F;
+  color: hsl(240, 12%, 14%);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  flex: 1;
+  letter-spacing: -0.01em;
 }
 
-.programme-afaire__reste {
+.pdj-row-time {
   font-size: 11px;
-  color: #6B7280;
-  padding-left: 29px;
-  font-style: italic;
+  color: hsl(240, 6%, 55%);
+  font-weight: 400;
+  letter-spacing: -0.005em;
 }
 
-/* ─── Glass bas ─────────────────────────────────────────────────────────────── */
-
-/* Verre dépoli — backdrop-filter au-dessus de l'image, sous le texte */
-.programme-card__glass {
-  position: absolute;
-  inset: 0;
-  backdrop-filter: blur(8px) saturate(1.1);
-  -webkit-backdrop-filter: blur(8px) saturate(1.1);
-  background: rgba(255, 255, 255, 0.06);
-  -webkit-mask-image: linear-gradient(
-    to bottom,
-    transparent 35%,
-    rgba(0,0,0,0.6) 58%,
-    black 72%
-  );
-  mask-image: linear-gradient(
-    to bottom,
-    transparent 35%,
-    rgba(0,0,0,0.6) 58%,
-    black 72%
-  );
-  z-index: 2;
-  pointer-events: none;
-  border-radius: 0 0 20px 20px;
-}
-
-/* ─── Contenu bas ────────────────────────────────────────────────────────────── */
-
-.programme-card__title {
-  font-size: 22px;
-  font-weight: 500;
-  color: #1a1a1a;
-  line-height: 1.15;
-  letter-spacing: -0.5px;
-  margin: 0 0 10px 0;
-  position: relative;
-  z-index: 3;
-  -webkit-transform: translateZ(0);
-  transform: translateZ(0);
-}
-
-/* Barre de progression */
-.programme-card__progress-bar {
-  position: relative;
-  z-index: 3;
-  -webkit-transform: translateZ(0);
-  transform: translateZ(0);
-  width: 100%;
-  height: 3px;
-  background: rgba(0, 0, 0, 0.1);
-  border-radius: 99px;
-  overflow: hidden;
-  margin-bottom: 6px;
-}
-
-.programme-card__progress-fill {
-  height: 100%;
-  border-radius: 99px;
-  transition: width 0.4s ease;
-}
-
-.programme-card__progress-fill--lavande { background: #9B8FD0; }
-.programme-card__progress-fill--ambre   { background: #F59E0B; }
-.programme-card__progress-fill--lilas   { background: #C084FC; }
-.programme-card__progress-fill--ardoise { background: #6395DD; }
-
-.programme-card__progress-label {
-  font-size: 12px;
-  font-weight: 500;
-  color: #6b6b6b;
-  position: relative;
-  z-index: 3;
-  -webkit-transform: translateZ(0);
-  transform: translateZ(0);
-}
-
-.programme-card__events {
-  position: relative;
-  z-index: 3;
-}
-
-/* Liste événements (carte PLANNING) */
-.programme-card__events {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  margin-top: 2px;
-}
-
-.programme-card__event-item {
+/* ── Avatar initiales ── */
+.pdj-avatar {
+  flex-shrink: 0;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  font-size: 11px;
+  font-weight: 700;
   display: flex;
   align-items: center;
-  gap: 6px;
-  font-size: 12px;
-  color: #4a4a4a;
-  font-weight: 400;
+  justify-content: center;
+  letter-spacing: 0.01em;
 }
 
-.programme-card__event-dot {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: #c8c3b8;
+/* ── Checkbox circulaire ── */
+.pdj-check {
   flex-shrink: 0;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  border: 1.5px solid rgba(180, 170, 210, 0.5);
+  background: rgba(255, 255, 255, 0.8);
+  color: #5b21b6;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+.pdj-check--done {
+  background: rgba(237, 231, 246, 0.9);
+  border-color: rgba(109, 40, 217, 0.35);
+  color: #6d28d9;
+}
+
+/* ── État vide ── */
+.pdj-empty {
+  font-size: 13px;
+  color: hsl(240, 6%, 58%);
+  text-align: center;
+  padding: 24px 0 8px;
+  letter-spacing: -0.01em;
 }
