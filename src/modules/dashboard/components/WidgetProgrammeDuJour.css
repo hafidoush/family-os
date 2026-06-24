@@ -68,16 +68,10 @@
 
 /* ─── Fond coloré par carte ── */
 
-.programme-card--enfants {
-  background: linear-gradient(145deg, #ede7f6 0%, #ddd6fe 60%, #c4b5fd 100%);
-}
-
-.programme-card--planning {
-  background: linear-gradient(145deg, #ffe0d6 0%, #ff9e80 60%, #FF7648 100%);
-}
-
+.programme-card--enfants,
+.programme-card--planning,
 .programme-card--menage {
-  background: linear-gradient(145deg, #fff3d6 0%, #ffd980 60%, #FFC757 100%);
+  background: #F0EFEB;
 }
 
 /* ─── Blob décoratif en haut à droite ────────────────────────────────────────── */
