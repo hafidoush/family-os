@@ -27,7 +27,7 @@ export function useRecettes(filters: RecettesFilters = {}) {
     }
     if (filters.recherche) {
       const q = filters.recherche.toLowerCase()
-      recettes = recettes.filter((r) => r.nom.toLowerCase().includes(q))
+      recettes = recettes.filter((r) => (r.nom ?? '').toLowerCase().includes(q))
     }
     if (filters.tags && filters.tags.length > 0) {
       recettes = recettes.filter((r) =>

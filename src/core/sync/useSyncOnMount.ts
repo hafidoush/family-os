@@ -135,6 +135,21 @@ async function deduplicateProduits() {
   await db.parametresSync.put({ id: uuid(), cle: CLE, valeur: 'true', derniereModification: now, createdAt: now, updatedAt: now })
 }
 
+// Purge les tombstones {id} écrits dans Dexie par l'ancien bug softDeleteRecord
+// Doit tourner en PREMIER pour éviter tout crash sur .nom dans le reste du démarrage
+async function cleanupLocalTombstones() {
+  const produitsTombstones = await db.produits.filter(p => !p.nom).toArray()
+  if (produitsTombstones.length) {
+    await db.produits.bulkDelete(produitsTombstones.map(p => p.id))
+    console.log(`[sync] cleanup: ${produitsTombstones.length} produit(s) tombstone supprimés de Dexie`)
+  }
+  const ingTombstones = await db.recettesIngredients.filter(i => !i.recette || !i.produit).toArray()
+  if (ingTombstones.length) {
+    await db.recettesIngredients.bulkDelete(ingTombstones.map(i => i.id))
+    console.log(`[sync] cleanup: ${ingTombstones.length} ingrédient(s) tombstone supprimés de Dexie`)
+  }
+}
+
 // Restaure automatiquement produits + ingrédients si la table locale est vide
 // mais que Supabase en a avec deleted_at (cas du bug softDelete)
 // Restaure systématiquement produits + ingrédients marqués deleted_at dans Supabase
@@ -173,7 +188,8 @@ export function useSyncOnMount() {
 
     // Démarrage : push TOUT le local vers Supabase d'abord, puis pull
     // Garantit que rien n'est jamais perdu même si le cache a été vidé entre deux sessions
-    autoRestoreIfEmpty()
+    cleanupLocalTombstones()
+      .then(() => autoRestoreIfEmpty())
       .then(() => pushAllLocalData())
       .then(() => pushInitialActivites())
       .then(() => pushInitialRecettesIngredients())
