@@ -175,6 +175,9 @@ export async function pullAll() {
 
     let records = data
       .filter((row: { id: string; updated_at: string; data: Record<string, unknown> }) => {
+        // Tombstone détecté : data ne contient que l'id — créé par l'ancien bug softDeleteRecord
+        // Ne jamais écrire ces records vides dans Dexie, ils casseraient toute UI qui lit .nom
+        if (row.data && Object.keys(row.data).length === 1 && 'id' in row.data) return false
         // Modification locale non encore envoyée — priorité absolue au local
         if (pendingIds.has(row.id)) return false
         const local = localMap.get(row.id)

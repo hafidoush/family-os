@@ -833,30 +833,27 @@ function SectionSync() {
     const { data: { session } } = await supabase.auth.getSession()
     if (!session) { setRepairMsg('Non connecté.'); return }
 
-    setRepairMsg('Restauration des ingrédients en cours…')
+    setRepairMsg('Restauration en cours…')
     try {
-      const { count } = await supabase
-        .from('recettes_ingredients')
-        .select('id', { count: 'exact', head: true })
-        .eq('user_id', session.user.id)
-        .not('deleted_at', 'is', null)
-
-      if (!count || count === 0) {
-        setRepairMsg('Aucun ingrédient supprimé trouvé dans le cloud.')
-        return
-      }
-
-      const { error } = await supabase
+      // Restaurer ingrédients supprimés
+      await supabase
         .from('recettes_ingredients')
         .update({ deleted_at: null })
         .eq('user_id', session.user.id)
         .not('deleted_at', 'is', null)
 
-      if (error) { setRepairMsg(`Erreur : ${error.message}`); return }
+      // Restaurer produits supprimés (nécessaire pour résoudre les noms)
+      await supabase
+        .from('produits')
+        .update({ deleted_at: null })
+        .eq('user_id', session.user.id)
+        .not('deleted_at', 'is', null)
 
+      setRepairMsg('Cloud mis à jour — téléchargement en local…')
       await pullAll()
       const localIng = await db.recettesIngredients.count()
-      setRepairMsg(`✓ ${localIng} ingrédient(s) synchronisés.`)
+      const localProd = await db.produits.count()
+      setRepairMsg(`✓ ${localIng} ingrédient(s) et ${localProd} produit(s) synchronisés.`)
     } catch (e: unknown) {
       setRepairMsg(`Erreur inattendue : ${e instanceof Error ? e.message : String(e)}`)
     }
