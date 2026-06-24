@@ -19,9 +19,13 @@ async function pushAllLocalData() {
     console.log(`[sync] pushAll ${dexieTable}: ${records.length} enregistrement(s)`)
   }
   const f = (r: { deletedAt?: unknown }) => !r.deletedAt
+  // Garde supplémentaire : rejette les tombstones {id} créés par l'ancien bug softDelete
+  // Un vrai enregistrement a toujours ses champs métier remplis
+  const fRecette    = (r: { deletedAt?: unknown; nom?: unknown }) => !r.deletedAt && !!r.nom
+  const fIngredient = (r: { deletedAt?: unknown; recette?: unknown; produit?: unknown }) => !r.deletedAt && !!r.recette && !!r.produit
 
-  try { await push('recettes',            await db.recettes.filter(f).toArray()) } catch(e) { console.warn('[sync] pushAll recettes', e) }
-  try { await push('recettesIngredients', await db.recettesIngredients.filter(f).toArray()) } catch(e) { console.warn('[sync] pushAll recettesIngredients', e) }
+  try { await push('recettes',            await db.recettes.filter(fRecette).toArray()) } catch(e) { console.warn('[sync] pushAll recettes', e) }
+  try { await push('recettesIngredients', await db.recettesIngredients.filter(fIngredient).toArray()) } catch(e) { console.warn('[sync] pushAll recettesIngredients', e) }
   try { await push('menus',               await db.menus.filter(f).toArray()) } catch(e) { console.warn('[sync] pushAll menus', e) }
   try { await push('menuSlots',           await db.menuSlots.filter(f).toArray()) } catch(e) { console.warn('[sync] pushAll menuSlots', e) }
   try { await push('membres',             await db.membres.filter(f).toArray()) } catch(e) { console.warn('[sync] pushAll membres', e) }
