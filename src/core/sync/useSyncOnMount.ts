@@ -137,29 +137,28 @@ async function deduplicateProduits() {
 
 // Restaure automatiquement produits + ingrédients si la table locale est vide
 // mais que Supabase en a avec deleted_at (cas du bug softDelete)
+// Restaure systématiquement produits + ingrédients marqués deleted_at dans Supabase
+// Idempotent : ne fait rien si aucun enregistrement n'est marqué supprimé
 async function autoRestoreIfEmpty() {
   const { data: { session } } = await supabase.auth.getSession()
   if (!session) return
 
-  const localProduits = await db.produits.count()
-  const localIng = await db.recettesIngredients.count()
+  const [{ count: cp }, { count: ci }] = await Promise.all([
+    supabase.from('produits').select('id', { count: 'exact', head: true })
+      .eq('user_id', session.user.id).not('deleted_at', 'is', null),
+    supabase.from('recettes_ingredients').select('id', { count: 'exact', head: true })
+      .eq('user_id', session.user.id).not('deleted_at', 'is', null),
+  ])
 
-  if (localProduits === 0) {
-    await supabase
-      .from('produits')
-      .update({ deleted_at: null })
-      .eq('user_id', session.user.id)
-      .not('deleted_at', 'is', null)
-    console.log('[sync] autoRestore: produits restaurés dans Supabase')
+  if (cp && cp > 0) {
+    await supabase.from('produits').update({ deleted_at: null })
+      .eq('user_id', session.user.id).not('deleted_at', 'is', null)
+    console.log(`[sync] autoRestore: ${cp} produit(s) restaurés`)
   }
-
-  if (localIng === 0) {
-    await supabase
-      .from('recettes_ingredients')
-      .update({ deleted_at: null })
-      .eq('user_id', session.user.id)
-      .not('deleted_at', 'is', null)
-    console.log('[sync] autoRestore: recettes_ingredients restaurés dans Supabase')
+  if (ci && ci > 0) {
+    await supabase.from('recettes_ingredients').update({ deleted_at: null })
+      .eq('user_id', session.user.id).not('deleted_at', 'is', null)
+    console.log(`[sync] autoRestore: ${ci} ingrédient(s) restaurés`)
   }
 }
 
