@@ -211,7 +211,7 @@ async function migrerCategoriesProduits(): Promise<void> {
   const catsFinales = await db.categoriesProduits.toArray()
   const laitierCat = catsFinales.find(c => c.nom === 'Produits Laitiers')
   if (laitierCat) {
-    const existing = await db.produits.filter(p => !p.archive).toArray()
+    const existing = await db.produits.filter(p => !p.archive && !!p.nom).toArray()
     const existingNoms = new Set(existing.map(p => p.nom.toLowerCase()))
     const produits = [
       'Lait entier','Lait demi-écrémé','Beurre salé','Beurre doux',
@@ -398,7 +398,7 @@ async function dedupCategoriesProduits(): Promise<void> {
 }
 
 async function dedupPieces(): Promise<void> {
-  const all = await db.pieces.filter(p => p.actif && !p.deletedAt).toArray()
+  const all = await db.pieces.filter(p => p.actif && !p.deletedAt && !!p.nom).toArray()
   if (all.length === 0) return
 
   const byNom = new Map<string, typeof all>()

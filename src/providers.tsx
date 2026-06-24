@@ -54,6 +54,10 @@ function useDbInit() {
     async function init() {
     try {
       await db.open()
+      // Purge tombstones {id} écrits par l'ancien bug softDeleteRecord
+      // Doit tourner avant seedDatabase pour éviter tout crash sur .nom
+      await db.produits.filter(p => !p.nom).delete()
+      await db.recettesIngredients.filter(i => !i.recette || !i.produit).delete()
       // A-42 — Initialisation des données par défaut au premier lancement
       await seedDatabase()
       // Trigger A-42 — seed default data on first launch
