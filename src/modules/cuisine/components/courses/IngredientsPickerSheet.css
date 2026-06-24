@@ -8,6 +8,7 @@
   z-index: 200;
   display: flex;
   align-items: flex-end;
+  padding-bottom: var(--bottom-bar-h, 80px);
 }
 
 /* ── Sheet ── */
