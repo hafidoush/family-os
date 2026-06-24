@@ -829,6 +829,39 @@ function SectionSync() {
     }
   }
 
+  async function restaurerIngredientsSeulement() {
+    const { data: { session } } = await supabase.auth.getSession()
+    if (!session) { setRepairMsg('Non connecté.'); return }
+
+    setRepairMsg('Restauration des ingrédients en cours…')
+    try {
+      const { count } = await supabase
+        .from('recettes_ingredients')
+        .select('id', { count: 'exact', head: true })
+        .eq('user_id', session.user.id)
+        .not('deleted_at', 'is', null)
+
+      if (!count || count === 0) {
+        setRepairMsg('Aucun ingrédient supprimé trouvé dans le cloud.')
+        return
+      }
+
+      const { error } = await supabase
+        .from('recettes_ingredients')
+        .update({ deleted_at: null })
+        .eq('user_id', session.user.id)
+        .not('deleted_at', 'is', null)
+
+      if (error) { setRepairMsg(`Erreur : ${error.message}`); return }
+
+      await pullAll()
+      const localIng = await db.recettesIngredients.count()
+      setRepairMsg(`✓ ${localIng} ingrédient(s) synchronisés.`)
+    } catch (e: unknown) {
+      setRepairMsg(`Erreur inattendue : ${e instanceof Error ? e.message : String(e)}`)
+    }
+  }
+
   async function restaurerRecettes() {
     const { data: { session } } = await supabase.auth.getSession()
     if (!session) { setRepairMsg('Non connecté.'); return }
@@ -1003,13 +1036,22 @@ function SectionSync() {
       )}
 
 
-      {/* Restauration recettes supprimées par erreur */}
+      {/* Synchronisation des ingrédients uniquement */}
       <button
         className="param-btn param-btn--warning"
-        onClick={restaurerRecettes}
+        onClick={restaurerIngredientsSeulement}
         style={{ marginTop: 12 }}
       >
-        Restaurer mes recettes depuis le cloud
+        Synchroniser les ingrédients depuis le cloud
+      </button>
+
+      {/* Restauration recettes + ingrédients supprimés par erreur */}
+      <button
+        className="param-btn param-btn--secondary"
+        onClick={restaurerRecettes}
+        style={{ marginTop: 8 }}
+      >
+        Restaurer les recettes supprimées (⚠ ancien contenu)
       </button>
 
       {repairMsg && (
