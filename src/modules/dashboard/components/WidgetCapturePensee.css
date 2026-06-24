@@ -129,6 +129,14 @@
   margin: 0;
 }
 
+/* ── Bloc question + sous-titre ── */
+.widget-hero__question-block {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+
 /* ── Question principale ── */
 .widget-hero__question {
   font-family: var(--font-display, system-ui);
@@ -138,6 +146,16 @@
   color: var(--text-primary, hsl(240, 7%, 11%));
   letter-spacing: -0.025em;
   margin: 0;
+}
+
+/* ── Sous-titre contextuel ── */
+.widget-hero__sous-titre {
+  font-size: 14px;
+  font-weight: 400;
+  color: var(--text-secondary, hsl(240, 6%, 45%));
+  text-align: center;
+  margin: 0;
+  line-height: 1.4;
 }
 
 /* ── Suggestions : colonne unique sur mobile, 2 col sur tablette+ ── */

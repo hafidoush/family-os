@@ -17,7 +17,7 @@ import type {
   Pensee, CategoriePensee, Evenement, Tache,
   CoursesItem, TypeEvenement, WishlistItem,
 } from '../../../shared/types'
-import { useSuggestions } from '../hooks/useSuggestions'
+import { useContexteHoraire } from '../hooks/useContexteHoraire'
 import './WidgetCapturePensee.css'
 
 // ─── Icône envoi ──────────────────────────────────────────────────────────────
@@ -580,7 +580,7 @@ function useChargeDetail() {
 
 export function WidgetCapturePensee() {
   const navigate    = useNavigate()
-  const suggestions = useSuggestions()
+  const contexte    = useContexteHoraire()
   const charge      = useChargeScore()
   const detail      = useChargeDetail()
   const [texte,        setTexte]        = useState('')
@@ -642,16 +642,19 @@ export function WidgetCapturePensee() {
           <p className="widget-hero__salam">Salam Mommy</p>
         </div>
 
-        <h2 className="widget-hero__question">
-          Comment puis-je<br />t'aider aujourd'hui&nbsp;?
-        </h2>
+        <div className="widget-hero__question-block">
+          <h2 className="widget-hero__question">{contexte.titre}</h2>
+          {contexte.sousTitre && (
+            <p className="widget-hero__sous-titre">{contexte.sousTitre}</p>
+          )}
+        </div>
 
         <div className="widget-hero__suggestions">
-          {suggestions.map(({ label, route, state, badge, urgent }) => (
+          {contexte.chips.map(({ label, route, badge }) => (
             <button
               key={label}
-              className={`widget-hero__chip${urgent ? ' widget-hero__chip--urgent' : ''}`}
-              onClick={() => navigate(route, state ? { state } : undefined)}
+              className="widget-hero__chip"
+              onClick={() => route && navigate(route)}
             >
               {label}
               {badge && <span className="widget-hero__chip-badge">{badge}</span>}
