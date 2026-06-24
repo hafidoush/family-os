@@ -26,6 +26,10 @@ const BLOB_FIELDS: Record<string, string[]> = {}
 
 // Mapping nom de table Dexie → nom de table Supabase
 const TABLE_MAP: Record<string, string> = {
+  // Produits en premier : les ingrédients référencent des produits,
+  // ils doivent être dans Dexie avant que les ingrédients soient tirés
+  produits:                 'produits',
+  categoriesProduits:       'categories_produits',
   recettes:                 'recettes',
   recettesIngredients:      'recettes_ingredients',
   menus:                    'menus',
@@ -58,11 +62,9 @@ const TABLE_MAP: Record<string, string> = {
   programmesPedagogiques:   'programmes_pedagogiques',
   activitesProgramme:       'activites_programme',
   programmesAnnuels:        'programmes_annuels',
-  produits:                 'produits',
   categoriesRecettes:       'categories_recettes',
   categoriesActivites:      'categories_activites',
   tags:                     'tags',
-  categoriesProduits:       'categories_produits',
   evenementsDetails:        'evenements_details',
   sortiesPersonnelles:      'sorties_personnelles',
 }
@@ -137,15 +139,39 @@ export async function pullAll() {
     const table = (db as any)[dexieTable]
     if (!table) continue
 
+    // Charger l'état local + la file d'attente UNE SEULE FOIS par table
+    // Utilisé à la fois pour l'étape 1 (guard delete) et l'étape 2 (conflict resolution)
+    const existing = await table.toArray()
+    const localMap = new Map<string, Record<string, unknown>>(
+      existing.map((r: Record<string, unknown>) => [r.id as string, r])
+    )
+    const pendingQueue = await getQueue()
+    const pendingIds = new Set(
+      pendingQueue.filter(q => q.table === dexieTable).map(q => q.id)
+    )
+
     // 1. Supprimer localement les enregistrements effacés sur Supabase
+    // Guard : ne supprime jamais un enregistrement local plus récent que la suppression distante,
+    // ni un enregistrement dont le push est encore en attente (pendingIds)
     const { data: deleted } = await supabase
       .from(supaTable)
-      .select('id')
+      .select('id, deleted_at')
       .eq('user_id', session.user.id)
       .not('deleted_at', 'is', null)
 
     if (deleted?.length) {
-      await table.bulkDelete(deleted.map((r: { id: string }) => r.id))
+      const toDelete = (deleted as { id: string; deleted_at: string }[])
+        .filter(r => {
+          if (pendingIds.has(r.id)) return false
+          const local = localMap.get(r.id)
+          if (!local) return true
+          const localUpdatedAt = local.updatedAt instanceof Date
+            ? (local.updatedAt as Date).toISOString()
+            : String(local.updatedAt ?? '')
+          return r.deleted_at >= localUpdatedAt
+        })
+        .map(r => r.id)
+      if (toDelete.length) await table.bulkDelete(toDelete)
     }
 
     // 2. Récupérer et appliquer les enregistrements vivants
@@ -160,18 +186,6 @@ export async function pullAll() {
       continue
     }
     if (!data?.length) continue
-
-    // Charger les enregistrements locaux + la file d'attente pour la résolution de conflits
-    const existing = await table.toArray()
-    const localMap = new Map<string, Record<string, unknown>>(
-      existing.map((r: Record<string, unknown>) => [r.id as string, r])
-    )
-
-    // IDs en attente de push : ne jamais les écraser depuis Supabase
-    const pendingQueue = await getQueue()
-    const pendingIds = new Set(
-      pendingQueue.filter(q => q.table === dexieTable).map(q => q.id)
-    )
 
     let records = data
       .filter((row: { id: string; updated_at: string; data: Record<string, unknown> }) => {

@@ -4,7 +4,6 @@ import { pullAll, installDexieHooks, startRealtime, stopRealtime, pushRecord, dr
 import { db } from '../db/database'
 import { v4 as uuid } from 'uuid'
 import { loadOpenAIKeyFromCloud } from '../ai/openaiService'
-import { supabase } from '../supabase/client'
 
 // ── Push de TOUTES les données locales vers Supabase ─────────────────────────
 // Appelé à chaque démarrage pour garantir que rien ne reste bloqué en local.
@@ -150,32 +149,6 @@ async function cleanupLocalTombstones() {
   }
 }
 
-// Restaure automatiquement produits + ingrédients si la table locale est vide
-// mais que Supabase en a avec deleted_at (cas du bug softDelete)
-// Restaure systématiquement produits + ingrédients marqués deleted_at dans Supabase
-// Idempotent : ne fait rien si aucun enregistrement n'est marqué supprimé
-async function autoRestoreIfEmpty() {
-  const { data: { session } } = await supabase.auth.getSession()
-  if (!session) return
-
-  const [{ count: cp }, { count: ci }] = await Promise.all([
-    supabase.from('produits').select('id', { count: 'exact', head: true })
-      .eq('user_id', session.user.id).not('deleted_at', 'is', null),
-    supabase.from('recettes_ingredients').select('id', { count: 'exact', head: true })
-      .eq('user_id', session.user.id).not('deleted_at', 'is', null),
-  ])
-
-  if (cp && cp > 0) {
-    await supabase.from('produits').update({ deleted_at: null })
-      .eq('user_id', session.user.id).not('deleted_at', 'is', null)
-    console.log(`[sync] autoRestore: ${cp} produit(s) restaurés`)
-  }
-  if (ci && ci > 0) {
-    await supabase.from('recettes_ingredients').update({ deleted_at: null })
-      .eq('user_id', session.user.id).not('deleted_at', 'is', null)
-    console.log(`[sync] autoRestore: ${ci} ingrédient(s) restaurés`)
-  }
-}
 
 export function useSyncOnMount() {
   const { session } = useAuth()
@@ -188,15 +161,17 @@ export function useSyncOnMount() {
 
     // Démarrage : push TOUT le local vers Supabase d'abord, puis pull
     // Garantit que rien n'est jamais perdu même si le cache a été vidé entre deux sessions
-    cleanupLocalTombstones()
-      .then(() => autoRestoreIfEmpty())
-      .then(() => pushAllLocalData())
-      .then(() => pushInitialActivites())
-      .then(() => pushInitialRecettesIngredients())
-      .then(() => pushInitialProduits())
-      .then(() => pushInitialProgrammesAnnuels())
-      .then(() => deduplicateProduits())
-      .then(() => drainQueue())
+    const safe = (fn: () => Promise<void>, name: string) =>
+      fn().catch(e => console.warn(`[sync] ${name} failed (continuing):`, e))
+
+    safe(cleanupLocalTombstones, 'cleanupLocalTombstones')
+      .then(() => safe(pushAllLocalData, 'pushAllLocalData'))
+      .then(() => safe(pushInitialActivites, 'pushInitialActivites'))
+      .then(() => safe(pushInitialRecettesIngredients, 'pushInitialRecettesIngredients'))
+      .then(() => safe(pushInitialProduits, 'pushInitialProduits'))
+      .then(() => safe(pushInitialProgrammesAnnuels, 'pushInitialProgrammesAnnuels'))
+      .then(() => safe(deduplicateProduits, 'deduplicateProduits'))
+      .then(() => safe(drainQueue, 'drainQueue'))
       .then(() => pullAll())
 
     startRealtime()
