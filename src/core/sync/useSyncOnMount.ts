@@ -4,6 +4,7 @@ import { pullAll, installDexieHooks, startRealtime, stopRealtime, pushRecord, dr
 import { db } from '../db/database'
 import { v4 as uuid } from 'uuid'
 import { loadOpenAIKeyFromCloud } from '../ai/openaiService'
+import { supabase } from '../supabase/client'
 
 // ── Push de TOUTES les données locales vers Supabase ─────────────────────────
 // Appelé à chaque démarrage pour garantir que rien ne reste bloqué en local.
@@ -134,6 +135,34 @@ async function deduplicateProduits() {
   await db.parametresSync.put({ id: uuid(), cle: CLE, valeur: 'true', derniereModification: now, createdAt: now, updatedAt: now })
 }
 
+// Restaure automatiquement produits + ingrédients si la table locale est vide
+// mais que Supabase en a avec deleted_at (cas du bug softDelete)
+async function autoRestoreIfEmpty() {
+  const { data: { session } } = await supabase.auth.getSession()
+  if (!session) return
+
+  const localProduits = await db.produits.count()
+  const localIng = await db.recettesIngredients.count()
+
+  if (localProduits === 0) {
+    await supabase
+      .from('produits')
+      .update({ deleted_at: null })
+      .eq('user_id', session.user.id)
+      .not('deleted_at', 'is', null)
+    console.log('[sync] autoRestore: produits restaurés dans Supabase')
+  }
+
+  if (localIng === 0) {
+    await supabase
+      .from('recettes_ingredients')
+      .update({ deleted_at: null })
+      .eq('user_id', session.user.id)
+      .not('deleted_at', 'is', null)
+    console.log('[sync] autoRestore: recettes_ingredients restaurés dans Supabase')
+  }
+}
+
 export function useSyncOnMount() {
   const { session } = useAuth()
 
@@ -145,7 +174,8 @@ export function useSyncOnMount() {
 
     // Démarrage : push TOUT le local vers Supabase d'abord, puis pull
     // Garantit que rien n'est jamais perdu même si le cache a été vidé entre deux sessions
-    pushAllLocalData()
+    autoRestoreIfEmpty()
+      .then(() => pushAllLocalData())
       .then(() => pushInitialActivites())
       .then(() => pushInitialRecettesIngredients())
       .then(() => pushInitialProduits())
