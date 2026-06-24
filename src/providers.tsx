@@ -59,7 +59,8 @@ function useDbInit() {
       await db.produits.filter(p => !p.nom).delete()
       await db.recettesIngredients.filter(i => !i.recette || !i.produit).delete()
       // A-42 — Initialisation des données par défaut au premier lancement
-      await seedDatabase()
+      // La seed est non-fatale : un échec partiel ne bloque pas l'app
+      try { await seedDatabase() } catch (seedErr) { console.warn('[DB] seedDatabase non-fatal:', seedErr) }
       // Trigger A-42 — seed default data on first launch
       await emit('app.first_launch', {})
       // Trigger A-13 — daily cleanliness degradation catch-up
