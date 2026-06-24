@@ -171,7 +171,7 @@ export function useContexteHoraire(): ContexteHoraire {
         chips.push({ label: 'Voir le planning', route: '/programme-du-jour' })
         chips.push({ label: 'Mes tâches', route: '/maison' })
       }
-      return { moment, titre: 'Ce matin', sousTitre, chips }
+      return { moment, titre: 'Une nouvelle journée', sousTitre: sousTitre || 'Tout est là pour commencer sereinement', chips }
     }
 
     if (moment === 'midi') {
@@ -185,7 +185,7 @@ export function useContexteHoraire(): ContexteHoraire {
         { label: 'Choisir le dîner', route: '/cuisine' },
         { label: 'Mes tâches', route: '/maison' },
       ]
-      return { moment, titre: 'Cet après-midi', sousTitre, chips }
+      return { moment, titre: 'Le cœur de la journée', sousTitre: sousTitre || 'Tout avance à son rythme', chips }
     }
 
     if (moment === 'aprem_soir') {
@@ -197,12 +197,15 @@ export function useContexteHoraire(): ContexteHoraire {
       const chips: ChipContextuel[] = nbRepas > 0
         ? repasDisponibles.slice(0, 4).map(r => ({ label: r.nom, route: '/cuisine' }))
         : [{ label: 'Planifier les repas', route: '/cuisine' }]
-      return { moment, titre: 'Ce soir', sousTitre, chips }
+      const titreSoir = heure < 18 ? "L'après-midi continue" : 'La soirée commence'
+      const sousTitreSoirDefaut = heure < 18 ? 'Ce soir se prépare doucement' : 'Le reste attendra demain'
+      return { moment, titre: titreSoir, sousTitre: sousTitre || sousTitreSoirDefaut, chips }
     }
 
     // nuit
-    const jourLabel = JOUR_NOM[(jourIdx + 1) % 7]
-    const jourCapitalize = jourLabel.charAt(0).toUpperCase() + jourLabel.slice(1)
+    const jourDemainLabel = JOUR_NOM[(jourIdx + 1) % 7]
+    const jourCapitalize = jourDemainLabel.charAt(0).toUpperCase() + jourDemainLabel.slice(1)
+    const titre = 'Bonne nuit'
     const nbTotal = activitesDemain.length + evtsDemain + tachesDemain
     const partsDemain: string[] = []
     if (infoDem.pasEcole && infoDem.raison) partsDemain.push(infoDem.raison === 'Samedi' || infoDem.raison === 'Dimanche' ? '' : `Pas d'école · ${infoDem.raison}`)
@@ -210,14 +213,14 @@ export function useContexteHoraire(): ContexteHoraire {
     if (activitesDemain.length > 0) partsDemain.push(`${activitesDemain.length} activité${activitesDemain.length > 1 ? 's' : ''}`)
     if (evtsDemain > 0) partsDemain.push(`${evtsDemain} événement${evtsDemain > 1 ? 's' : ''}`)
     if (tachesDemain > 0) partsDemain.push(`${tachesDemain} tâche${tachesDemain > 1 ? 's' : ''}`)
-    const sousTitre = partsDemain.filter(Boolean).join(' · ') || 'Journée calme demain'
+    const sousTitre = partsDemain.filter(Boolean).join(' · ') || 'Demain prendra soin de lui-même'
     const chips: ChipContextuel[] = [
       ...(activitesDemain.length > 0 ? [{ label: `${activitesDemain.length} activité${activitesDemain.length > 1 ? 's' : ''}`, route: '/enfants' }] : []),
       ...(evtsDemain > 0 ? [{ label: `${evtsDemain} événement${evtsDemain > 1 ? 's' : ''}`, route: '/famille' }] : []),
       ...(tachesDemain > 0 ? [{ label: `${tachesDemain} tâche${tachesDemain > 1 ? 's' : ''}`, route: '/maison' }] : []),
       { label: 'Voir demain', route: '/programme-du-jour' },
     ].slice(0, 3)
-    return { moment, titre: jourCapitalize, sousTitre, chips }
+    return { moment, titre, sousTitre, chips }
 
-  }, [moment, activitesAujourdhui, tachesMatinales, repasDisponibles, activitesDemain, evtsDemain, tachesDemain, jourIdx])
+  }, [moment, heure, activitesAujourdhui, tachesMatinales, repasDisponibles, activitesDemain, evtsDemain, tachesDemain, jourIdx])
 }
