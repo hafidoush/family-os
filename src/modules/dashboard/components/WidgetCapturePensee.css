@@ -15,7 +15,7 @@
   position: relative;
   overflow: hidden;
   isolation: isolate;
-  background: #F0EFEB;
+  background: #F7F7F9;
   border: none;
   border-radius: 20px;
   padding: 40px 24px 160px;
@@ -35,7 +35,7 @@
   width: 320px;
   height: 320px;
 
-  background: url('/cercle.png') center / cover no-repeat;
+  background: url('/hero-blob.png') center / cover no-repeat;
 
   border-radius: 50%;
   opacity: 1;
