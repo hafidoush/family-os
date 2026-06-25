@@ -12,6 +12,11 @@ function norm(s: string): string {
   return s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[-–]/g, ' ').replace(/\s+/g, ' ').trim()
 }
 
+// Incrémenter à chaque fois que le catalogue produits est mis à jour
+// → force tous les appareils existants à recevoir les nouveaux produits
+const CATALOG_VERSION = '3'
+const CATALOG_VERSION_KEY = 'family_os_catalog_version'
+
 // ID stable déterministe pour les activités seedées — identique sur tous les appareils
 function stableActivityId(nom: string): string {
   const slug = nom.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').substring(0, 60)
@@ -90,10 +95,13 @@ async function _seedDatabase(): Promise<void> {
   await migrateActivitesToStableIds()
 
   // Seed catalogue produits si absent OU si des produits seedés ont encore des UUIDs aléatoires
+  // OU si le catalogue a été mis à jour depuis le dernier seed (CATALOG_VERSION)
   // Les hooks ne sont pas encore installés ici → bulkDelete ne flood pas Supabase
   const produitsCount = await db.produits.count()
   const hasUnstableIds = produitsCount > 0 &&
     !!(await db.produits.filter(p => (p as { deviceId?: string }).deviceId === 'seed' && !!p.nom && !p.id.startsWith('seed-prod-')).first())
+  const storedCatalogVersion = localStorage.getItem(CATALOG_VERSION_KEY)
+  const catalogOutdated = storedCatalogVersion !== CATALOG_VERSION
 
   if (produitsCount === 0 || hasUnstableIds) {
     if (hasUnstableIds) {
@@ -103,7 +111,14 @@ async function _seedDatabase(): Promise<void> {
     await db.categoriesProduits.clear()
     await seedCategoriesProduits()
     await seedProduitsCatalog()
+    localStorage.setItem(CATALOG_VERSION_KEY, CATALOG_VERSION)
     console.log('[FamilyOS] Catalogue produits initialisé avec IDs stables.')
+  } else if (catalogOutdated) {
+    // Catalogue mis à jour — ajoute les nouveaux produits sans effacer les données utilisateur
+    await migrerCategoriesProduits()
+    await seedProduitsCatalog()
+    localStorage.setItem(CATALOG_VERSION_KEY, CATALOG_VERSION)
+    console.log('[FamilyOS] Catalogue produits mis à jour (v' + CATALOG_VERSION + ').')
   }
 
   // Purge les tâches grand ménage dupliquées (UUID aléatoires seedés sur chaque appareil)
