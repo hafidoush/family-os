@@ -1,6 +1,6 @@
 import { useEffect } from 'react'
 import { useAuth } from '../auth/AuthContext'
-import { pullAll, installDexieHooks, startRealtime, stopRealtime, pushRecord, drainQueue } from './syncService'
+import { pullAll, installDexieHooks, startRealtime, stopRealtime, pushRecord, drainQueue, setHooksSuppressed } from './syncService'
 import { db } from '../db/database'
 import { v4 as uuid } from 'uuid'
 import { loadOpenAIKeyFromCloud } from '../ai/openaiService'
@@ -62,12 +62,19 @@ export async function pushAllLocalData(force = false) {
 }
 
 // Purge les tombstones écrits par l'ancien bug softDeleteRecord (data = {id} seulement)
+// setHooksSuppressed(true) : ces suppressions sont LOCALES uniquement — on ne veut PAS
+// déclencher softDeleteRecord sur Supabase, sinon des ingrédients valides seraient détruits.
 async function cleanupLocalTombstones() {
-  const produitsTombstones = await db.produits.filter(p => !p.nom).toArray()
-  if (produitsTombstones.length) await db.produits.bulkDelete(produitsTombstones.map(p => p.id))
+  setHooksSuppressed(true)
+  try {
+    const produitsTombstones = await db.produits.filter(p => !p.nom).toArray()
+    if (produitsTombstones.length) await db.produits.bulkDelete(produitsTombstones.map(p => p.id))
 
-  const ingTombstones = await db.recettesIngredients.filter(i => !i.recette || !i.produit).toArray()
-  if (ingTombstones.length) await db.recettesIngredients.bulkDelete(ingTombstones.map(i => i.id))
+    const ingTombstones = await db.recettesIngredients.filter(i => !i.recette || !i.produit).toArray()
+    if (ingTombstones.length) await db.recettesIngredients.bulkDelete(ingTombstones.map(i => i.id))
+  } finally {
+    setHooksSuppressed(false)
+  }
 }
 
 export function useSyncOnMount() {

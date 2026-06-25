@@ -20,6 +20,9 @@ import { addToQueue, removeFromQueue, getQueue, setLastPullAt, setLastError, cle
 // (sinon bulkDelete déclenche softDeleteRecord qui écrase le champ data avec { id })
 let isPulling = false
 
+// Permet aux opérations de nettoyage local de supprimer sans déclencher softDeleteRecord
+export function setHooksSuppressed(val: boolean) { isPulling = val }
+
 // Champs Blob non sérialisables en JSON — exclus du push, préservés au pull
 // avatar est désormais stocké en base64 (string) et se synchronise normalement
 const BLOB_FIELDS: Record<string, string[]> = {}
@@ -255,6 +258,35 @@ export async function pullAll() {
     }
   } catch (e) {
     console.warn('[sync] repair produits manquants:', e)
+  }
+
+  // Filet de sécurité : recettes locales sans ingrédients → force-fetch depuis Supabase.
+  // Couvre le cas où des ingrédients ont été supprimés par erreur localement (via hooks sur
+  // cleanupLocalTombstones) ou n'ont jamais été reçus (Realtime manqué, push échoué).
+  try {
+    const recettes = await db.recettes.filter(r => !r.deletedAt).toArray()
+    const recetteIds = recettes.map(r => r.id)
+    if (recetteIds.length > 0) {
+      const allIngs = await db.recettesIngredients.filter(i => !i.deletedAt && !!i.recette).toArray()
+      const recettesAvecIngs = new Set(allIngs.map(i => i.recette))
+      const recettesSansIngs = recetteIds.filter(id => !recettesAvecIngs.has(id))
+      if (recettesSansIngs.length > 0) {
+        console.log(`[sync] repair: ${recettesSansIngs.length} recette(s) sans ingrédients → fetch Supabase`)
+        const { data: rows } = await supabase
+          .from('recettes_ingredients')
+          .select('id, data, deleted_at')
+          .in('data->>recette', recettesSansIngs)
+          .eq('user_id', session.user.id)
+          .is('deleted_at', null)
+        if (rows?.length) {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          await db.recettesIngredients.bulkPut(rows.map((r: { data: Record<string, unknown> }) => r.data as any))
+          console.log(`[sync] repair: ${rows.length} ingrédient(s) restauré(s)`)
+        }
+      }
+    }
+  } catch (e) {
+    console.warn('[sync] repair recettes sans ingrédients:', e)
   }
 
   await setLastPullAt()
