@@ -13,9 +13,19 @@ export function WidgetProgrammeDuJour() {
   const activites  = useTodayActivites() ?? [];
   const evenements = useTodayEvents()    ?? [];
 
-  // ENFANTS — % activités réalisées
-  const totalActiv   = activites.length;
-  const faitesActiv  = activites.filter(a => a.statut === 'realisee').length;
+  // Activités du programme IA planifiées aujourd'hui
+  const progActivites = useLiveQuery(
+    () => db.activitesProgramme
+      .filter(a => !a.archive && !a.deletedAt && a.datePlanifiee === today)
+      .toArray(),
+    [today],
+    []
+  ) ?? [];
+
+  // ENFANTS — % activités réalisées (planif + programme IA)
+  const totalActiv   = activites.length + progActivites.length;
+  const faitesActiv  = activites.filter(a => a.statut === 'realisee').length
+                     + progActivites.filter(a => a.statutRealisation === 'realise').length;
   const pctActivites = totalActiv > 0 ? Math.round((faitesActiv / totalActiv) * 100) : 0;
 
   // PLANNING — % événements passés
