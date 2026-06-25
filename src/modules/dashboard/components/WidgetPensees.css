@@ -1,11 +1,8 @@
 /* ── Widget Pensées ─────────────────────────────────────────────────────────── */
 
 .widget-pensees {
-  background: #FFFFFF;
-  border: 0.5px solid rgba(189,195,234,0.4);
-  border-radius: 20px;
-  padding: 14px 12px;
-  box-shadow: 0 2px 12px rgba(111,126,214,0.06);
+  background: transparent;
+  padding: 0;
 }
 
 .widget-pensees__header {
@@ -41,11 +38,11 @@
 .widget-pensee-item {
   display: flex;
   flex-direction: column;
-  gap: 5px;
-  padding: 8px 9px;
-  background: #F7F7F9;
-  border-radius: 10px;
-  border: 1px solid rgba(0,0,0,0.05);
+  gap: 4px;
+  padding: 9px 12px;
+  background: #ffffff;
+  border-radius: 16px;
+  border: none;
 }
 
 .widget-pensee-item__top {
@@ -80,6 +77,18 @@
 }
 .widget-pensee-item__check:hover { background: rgba(167,243,208,0.6); }
 
+.widget-pensee-item__delete {
+  width: 20px; height: 20px;
+  border: none; background: transparent;
+  color: rgba(156,163,175,0.4);
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+  transition: color 0.15s ease;
+  padding: 0;
+}
+.widget-pensee-item__delete:hover { color: #EF4444; }
+
 /* Pensée en cours de traitement */
 .widget-pensee-item--traitee {
   opacity: 0.45;
@@ -99,8 +108,8 @@
 
 /* Pensée marquée À faire */
 .widget-pensee-item--afaire {
+  background: #ffffff;
   border-left: 3px solid #6F7ED6;
-  background: #F7F7F9;
 }
 
 .widget-pensee-item__afaire-badge {
@@ -124,27 +133,30 @@
 
 .widget-pensee-item__chip {
   font-size: 11px; font-weight: 600;
-  padding: 3px 9px; border-radius: 999px;
-  border: 1px solid; cursor: pointer;
+  padding: 4px 11px; border-radius: 999px;
+  border: 1px solid rgba(255,255,255,0.6);
+  cursor: pointer;
   transition: opacity 0.12s ease;
   white-space: nowrap;
+  backdrop-filter: blur(12px) saturate(180%);
+  -webkit-backdrop-filter: blur(12px) saturate(180%);
 }
 .widget-pensee-item__chip:active { opacity: 0.7; }
 
 .widget-pensee-item__chip--tache {
-  color: #6F7ED6;
-  border-color: #BDC3EA;
-  background: rgba(189,195,234,0.18);
+  color: #5B52C4;
+  background: rgba(167,139,250,0.18);
+  border-color: rgba(167,139,250,0.35);
 }
 .widget-pensee-item__chip--achat {
-  color: #C69CE2;
-  border-color: #ECE1F6;
-  background: rgba(236,225,246,0.4);
+  color: #92600A;
+  background: rgba(251,191,36,0.18);
+  border-color: rgba(251,191,36,0.4);
 }
 .widget-pensee-item__chip--cal {
-  color: #FD7746;
-  border-color: #FBA98C;
-  background: rgba(251,169,140,0.15);
+  color: #C2440A;
+  background: rgba(251,146,60,0.15);
+  border-color: rgba(251,146,60,0.35);
 }
 
 /* ── Sélecteur date planifier ── */

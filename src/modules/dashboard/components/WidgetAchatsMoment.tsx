@@ -62,6 +62,11 @@ export function WidgetAchatsMoment() {
     await db.wishlistItems.update(item.id, withUpdate<WishlistItem>({ statut: newStatut }))
   }, [])
 
+  const supprimer = useCallback(async (item: WishlistItem, e: React.MouseEvent) => {
+    e.stopPropagation()
+    await db.wishlistItems.update(item.id, withUpdate<WishlistItem>({ archive: true }))
+  }, [])
+
   const visibles = (items ?? []).slice(0, 4)
   const reste        = (items ?? []).length - visibles.length
   const urgenceLabel = (items ?? [])[0]?.priorite === 'haute' ? 'Cette semaine' : null
@@ -95,9 +100,6 @@ export function WidgetAchatsMoment() {
       <div className="wam__list">
         {visibles.map(item => (
           <div key={item.id} className="wam__item">
-            <span className="wam__cat">
-              {CAT_EMOJI[item.sousContexte ?? ''] ?? '🛍️'}
-            </span>
             <div className="wam__item-body">
               <span className="wam__item-nom">{item.nom}</span>
               {item.notes && (
@@ -116,6 +118,13 @@ export function WidgetAchatsMoment() {
                 onClick={e => toggle(item, e)}
                 aria-label="Marquer comme acheté"
               >○</button>
+              <button
+                className="wam__delete"
+                onClick={e => supprimer(item, e)}
+                aria-label="Supprimer"
+              >
+                <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M1 1l8 8M9 1L1 9" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/></svg>
+              </button>
             </div>
           </div>
         ))}

@@ -1,12 +1,9 @@
 /* ── Widget À acheter ───────────────────────────────────────────────────────── */
 
 .widget-achats-moment {
-  background: #FFFFFF;
-  border: 0.5px solid rgba(254,195,85,0.35);
-  border-radius: 20px;
-  padding: 14px 12px;
+  background: transparent;
+  padding: 0;
   overflow: hidden;
-  box-shadow: 0 2px 12px rgba(254,195,85,0.08);
 }
 
 /* ── Header ── */
@@ -69,14 +66,16 @@
   gap: 5px;
 }
 
+.wam__list { display: flex; flex-direction: column; gap: 8px; }
+
 .wam__item {
   display: flex;
   align-items: center;
   gap: 7px;
-  padding: 7px 9px;
-  background: #F7F7F9;
-  border-radius: 10px;
-  border: 1px solid rgba(0,0,0,0.05);
+  padding: 9px 12px;
+  background: #ffffff;
+  border-radius: 16px;
+  border: none;
 }
 
 .wam__cat {
@@ -155,6 +154,18 @@
   border-color: rgba(52,211,153,0.4);
   color: #065F46;
 }
+
+.wam__delete {
+  width: 20px; height: 20px;
+  border: none; background: transparent;
+  color: rgba(156,163,175,0.4);
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+  transition: color 0.15s ease;
+  padding: 0;
+}
+.wam__delete:hover { color: #EF4444; }
 
 /* ── Voir plus ── */
 .wam__voir-plus {

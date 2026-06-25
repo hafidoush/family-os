@@ -8,7 +8,7 @@ import { useLiveQuery } from 'dexie-react-hooks'
 import { useNavigate } from 'react-router-dom'
 import { db } from '../../../core/db/database'
 import { newEntity, withUpdate } from '../../../core/db/helpers'
-import type { Pensee, Tache, CoursesItem, Evenement } from '../../../shared/types'
+import type { Pensee, Tache, CoursesItem, Evenement, WishlistItem, PrioriteWishlist } from '../../../shared/types'
 import './WidgetPensees.css'
 
 const ALIMENTAIRE_MOTS = [
@@ -89,6 +89,11 @@ export function WidgetPensees() {
     setDateChoisie('')
   }, [dateChoisie])
 
+  const supprimer = useCallback(async (p: Pensee, e: React.MouseEvent) => {
+    e.stopPropagation()
+    await db.pensees.update(p.id, withUpdate<Pensee>({ statut: 'traitee' }))
+  }, [])
+
   const transformer = useCallback(async (
     p: Pensee,
     vers: 'tache' | 'achat',
@@ -99,16 +104,10 @@ export function WidgetPensees() {
       await db.pensees.update(p.id, withUpdate<Pensee>({ aFaire: !p.aFaire }))
       return
     }
-    if (estAlimentaire(p.contenu)) {
-      await db.coursesItems.add(newEntity<CoursesItem>({
-        produit: '', nom: p.contenu, coche: false, source: 'manuel', dateAjout: new Date(),
-      }))
-    } else {
-      await db.taches.add(newEntity<Tache>({
-        titre: p.contenu, statut: 'a_faire', priorite: 'normale',
-        moduleOrigine: 'famille', recurrence: false, archive: false,
-      }))
-    }
+    await db.wishlistItems.add(newEntity<WishlistItem>({
+      nom: p.contenu, contexte: 'achats_besoins', statut: 'a_decider',
+      priorite: 'normale' as PrioriteWishlist, archive: false,
+    }))
     await db.pensees.update(p.id, withUpdate<Pensee>({ statut: 'traitee' }))
   }, [])
 
@@ -133,7 +132,6 @@ export function WidgetPensees() {
             enCoursDeSuppression ? 'widget-pensee-item--traitee' : '',
           ].filter(Boolean).join(' ')}>
             <div className="widget-pensee-item__top">
-              <span className="widget-pensee-item__cat">{CAT_EMOJI[p.categorie] ?? '💭'}</span>
               <span className="widget-pensee-item__contenu">{p.contenu}</span>
               {p.aFaire && !enCoursDeSuppression && <span className="widget-pensee-item__afaire-badge">À faire</span>}
               {enCoursDeSuppression
@@ -142,6 +140,11 @@ export function WidgetPensees() {
                   ? <button className="widget-pensee-item__check" onClick={e => traiter(p, e)} title="Traité">✓</button>
                   : null
               }
+              {!enCoursDeSuppression && (
+                <button className="widget-pensee-item__delete" onClick={e => supprimer(p, e)} title="Supprimer" aria-label="Supprimer">
+                  <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M1 1l8 8M9 1L1 9" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/></svg>
+                </button>
+              )}
             </div>
 
             {!p.aFaire && planifierId === p.id ? (
