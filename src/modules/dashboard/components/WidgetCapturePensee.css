@@ -13,13 +13,12 @@
 /* ── Carte haute : dégradé + question ── */
 .widget-hero {
   position: relative;
-  /* overflow: hidden remplacé par clip-path pour laisser le blob déborder en bas */
-  clip-path: inset(0 0 -120px 0 round 20px);
+  overflow: hidden;
   isolation: isolate;
   background: #F7F7F9;
   border: none;
   border-radius: 20px;
-  padding: 40px 24px 80px;
+  padding: 40px 24px 160px;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -27,16 +26,19 @@
   text-align: center;
 }
 
-/* ── Blob décoratif — pleine largeur ── */
+/* ── Cercle dégradé décoratif — centré ── */
 .widget-hero__blob {
   position: absolute;
-  bottom: -80px;
-  left: 0;
-  right: 0;
-  width: 100%;
-  height: 340px;
+  bottom: -60px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 320px;
+  height: 320px;
 
-  background: url('/hero-blob.svg') center bottom / 100% 100% no-repeat;
+  background: url('/hero-blob.png') center / cover no-repeat;
+
+  border-radius: 50%;
+  opacity: 1;
 
   pointer-events: none;
   z-index: 0;
@@ -282,7 +284,7 @@
   font-family: var(--font-body, system-ui);
   font-size: var(--text-base, 15px);
   line-height: 1.45;
-  background: rgba(255, 255, 255, 0.88);
+  background: rgba(255, 255, 255, 0.70);
   color: var(--text-primary);
   outline: none;
   transition: border-color 0.15s ease;
