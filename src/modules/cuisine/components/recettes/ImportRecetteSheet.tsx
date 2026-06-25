@@ -97,6 +97,7 @@ function IngredientNomInput({ value, produitId, tousLesProduits, onChange }: Ing
 const TAGS_GROUPES = [
   { groupe: 'Cuisine', tags: [
     { id: 'française', label: 'Française' }, { id: 'italienne', label: 'Italienne' },
+    { id: 'espagnole', label: 'Espagnole' }, { id: 'grecque', label: 'Grecque' },
     { id: 'marocaine', label: 'Marocaine' }, { id: 'asiatique', label: 'Asiatique' },
     { id: 'indienne', label: 'Indienne' },   { id: 'mexicaine', label: 'Mexicaine' },
     { id: 'fast-food', label: 'Fast-food' }, { id: 'autre', label: 'Autre' },
@@ -109,8 +110,18 @@ const TAGS_GROUPES = [
     { id: 'rapide', label: 'Rapide' }, { id: 'batch cooking', label: 'Batch cooking' },
   ]},
   { groupe: 'Occasion', tags: [
-    { id: 'apéro', label: 'Apéro' }, { id: 'barbecue', label: 'Barbecue' },
-    { id: 'fête', label: 'Fête' },   { id: 'ramadan', label: 'Ramadan' },
+    { id: 'apéro', label: 'Apéro' },       { id: 'barbecue', label: 'Barbecue' },
+    { id: 'fête', label: 'Fête' },         { id: 'réception', label: 'Réception' },
+    { id: 'ramadan', label: 'Ramadan' },   { id: 'pizza & tartes', label: 'Pizza & tartes' },
+  ]},
+  { groupe: 'Saison', tags: [
+    { id: 'printemps', label: 'Printemps' }, { id: 'été', label: 'Été' },
+    { id: 'automne', label: 'Automne' },     { id: 'hiver', label: 'Hiver' },
+  ]},
+  { groupe: 'Profil', tags: [
+    { id: 'enfant', label: 'Enfant' },           { id: 'bébé', label: 'Bébé' },
+    { id: 'sans viande', label: 'Sans viande' }, { id: 'économique', label: 'Économique' },
+    { id: 'hyperprotéiné', label: 'Hyperprotéiné' },
   ]},
 ]
 
