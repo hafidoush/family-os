@@ -23,6 +23,7 @@ interface SlotRecette {
   id: string;
   nom: string;
   image?: Blob;
+  imageData?: string;
   jour?: string;
   repas?: string;
   recetteId?: string;
@@ -66,6 +67,7 @@ function useWeekSlots(): SlotRecette[] | null | undefined {
         id: s.id,
         nom: recette?.nom ?? s.descriptionLibre ?? '—',
         image: recette?.image,
+        imageData: recette?.imageData,
         jour: s.jour,
         repas: s.repas,
         recetteId: s.recette,
@@ -76,15 +78,16 @@ function useWeekSlots(): SlotRecette[] | null | undefined {
 
 // ── Image avec fallback ──────────────────────────────────────────────────────
 
-function RecetteImage({ image, nom }: { image?: Blob; nom: string }) {
-  const [src, setSrc] = useState<string | null>(null);
+function RecetteImage({ image, imageData, nom }: { image?: Blob; imageData?: string; nom: string }) {
+  const [blobSrc, setBlobSrc] = useState<string | null>(null);
   useEffect(() => {
     if (!image) return;
     const url = URL.createObjectURL(image);
-    setSrc(url);
+    setBlobSrc(url);
     return () => URL.revokeObjectURL(url);
   }, [image]);
 
+  const src = imageData ?? blobSrc;
   if (src) return <img src={src} alt={nom} className="wmenu-card__img" />;
   return (
     <div className="wmenu-card__img wmenu-card__img--placeholder">
@@ -241,7 +244,7 @@ export function WidgetMenu() {
               className="wmenu-card"
               onClick={() => slot.recetteId && setApercu(slot)}
             >
-              <RecetteImage image={slot.image} nom={slot.nom} />
+              <RecetteImage image={slot.image} imageData={slot.imageData} nom={slot.nom} />
               <div className="wmenu-card__overlay" />
               <div className="wmenu-card__body">
                 <p className="wmenu-card__nom">{slot.nom}</p>
