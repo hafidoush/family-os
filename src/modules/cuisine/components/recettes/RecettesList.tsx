@@ -141,6 +141,32 @@ export function RecettesList({ onSelectRecette, onCreateRecette }: Props) {
     setTimeout(() => setBatchDone(false), 4000)
   }
 
+  const exporterRecettes = useCallback(async () => {
+    const toutes = await db.recettes.filter(r => !r.deletedAt && !r.archive).toArray()
+    const tousIngredients = await db.recetteIngredients.filter(i => !i.deletedAt).toArray()
+
+    const blobToBase64 = (b: Blob): Promise<string> =>
+      new Promise(res => { const r = new FileReader(); r.onload = () => res(r.result as string); r.readAsDataURL(b) })
+
+    const recettesExport = await Promise.all(toutes.map(async r => {
+      const ingredients = tousIngredients.filter(i => i.recette === r.id)
+      // Convertit le Blob legacy en base64 si imageData absent
+      let imageData = r.imageData
+      if (!imageData && r.image) {
+        try { imageData = await blobToBase64(r.image) } catch { /* ignore */ }
+      }
+      return { ...r, image: undefined, imageData, ingredients }
+    }))
+
+    const blob = new Blob([JSON.stringify(recettesExport, null, 2)], { type: 'application/json' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `family-os-recettes-${new Date().toISOString().split('T')[0]}.json`
+    a.click()
+    URL.revokeObjectURL(url)
+  }, [])
+
   const exitBatchMode = () => {
     setBatchMode(false)
     setBatchSelected(new Set())
@@ -231,6 +257,16 @@ export function RecettesList({ onSelectRecette, onCreateRecette }: Props) {
           title="Importer depuis Instagram, blog, image…"
         >
           <IconStarShine size={18} />
+        </button>
+
+        <button
+          className="recettes-list__filter-btn"
+          onClick={exporterRecettes}
+          title="Exporter toutes mes recettes (sauvegarde JSON)"
+        >
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M12 3v12m0 0l-4-4m4 4l4-4M4 17v2a2 2 0 002 2h12a2 2 0 002-2v-2" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+          </svg>
         </button>
       </div>
 
