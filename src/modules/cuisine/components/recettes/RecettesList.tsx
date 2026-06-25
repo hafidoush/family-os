@@ -143,13 +143,13 @@ export function RecettesList({ onSelectRecette, onCreateRecette }: Props) {
 
   const exporterRecettes = useCallback(async () => {
     const toutes = await db.recettes.filter(r => !r.deletedAt && !r.archive).toArray()
-    const tousIngredients = await db.recetteIngredients.filter(i => !i.deletedAt).toArray()
+    const tousIngredients = await db.recettesIngredients.filter((i: import('../../../../shared/types').RecetteIngredient) => !i.deletedAt).toArray()
 
     const blobToBase64 = (b: Blob): Promise<string> =>
       new Promise(res => { const r = new FileReader(); r.onload = () => res(r.result as string); r.readAsDataURL(b) })
 
     const recettesExport = await Promise.all(toutes.map(async r => {
-      const ingredients = tousIngredients.filter(i => i.recette === r.id)
+      const ingredients = tousIngredients.filter((i: import('../../../../shared/types').RecetteIngredient) => i.recette === r.id)
       // Convertit le Blob legacy en base64 si imageData absent
       let imageData = r.imageData
       if (!imageData && r.image) {
