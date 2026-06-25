@@ -275,10 +275,12 @@ export function installDexieHooks() {
     if (!table) continue
 
     table.hook('creating', (_key: string, obj: Record<string, unknown>) => {
+      if (isPulling) return
       pushRecord(dexieTable, obj)
     })
 
     table.hook('updating', (mods: Record<string, unknown>, _key: string, obj: Record<string, unknown>) => {
+      if (isPulling) return
       pushRecord(dexieTable, { ...obj, ...mods })
     })
 
