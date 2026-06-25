@@ -289,12 +289,11 @@ function ActiviteProgrammeCard({ activite }: { activite: import('../../../shared
               <span className="activite-card__pill activite-card__pill--purple">⏱ {activite.duree} min</span>
             )}
             <span className="activite-card__pill activite-card__pill--blue">Programme</span>
-            {done && <span className="activite-card__pill activite-card__pill--green">Réalisée</span>}
           </div>
         </div>
         <button
           className={`activite-card__btn-commencer ${done ? 'activite-card__btn-commencer--done' : 'activite-card__btn-commencer--start'}`}
-          style={{ minWidth: 90, fontSize: '0.75rem' }}
+          style={{ minWidth: 90, width: 'auto', fontSize: '0.75rem' }}
           onClick={handleToggle}
           disabled={loading}
         >
