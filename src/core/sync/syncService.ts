@@ -262,33 +262,49 @@ export async function pullAll() {
     console.warn('[sync] repair produits manquants:', e)
   }
 
-  // Filet de sécurité : recettes locales sans ingrédients → force-fetch depuis Supabase.
-  // Couvre le cas où des ingrédients ont été supprimés par erreur localement (via hooks sur
-  // cleanupLocalTombstones) ou n'ont jamais été reçus (Realtime manqué, push échoué).
+  // Filet de sécurité : re-fetch TOUS les ingrédients vivants depuis Supabase pour
+  // toutes les recettes locales. Couvre les ingrédients partiellement manquants (pas
+  // seulement le cas "zéro ingrédient") — par ex. si seulement 4 sur 11 sont présents.
+  // bulkPut est idempotent : les ingrédients déjà en local ne sont écrasés que si le
+  // remote est plus récent (guard tsMs ci-dessus dans le loop principal).
   try {
     const recettes = await db.recettes.filter(r => !r.deletedAt).toArray()
     const recetteIds = recettes.map(r => r.id)
     if (recetteIds.length > 0) {
-      const allIngs = await db.recettesIngredients.filter(i => !i.deletedAt && !!i.recette).toArray()
-      const recettesAvecIngs = new Set(allIngs.map(i => i.recette))
-      const recettesSansIngs = recetteIds.filter(id => !recettesAvecIngs.has(id))
-      if (recettesSansIngs.length > 0) {
-        console.log(`[sync] repair: ${recettesSansIngs.length} recette(s) sans ingrédients → fetch Supabase`)
+      // Fetch par batch de 50 pour éviter les URLs trop longues
+      const BATCH = 50
+      let restored = 0
+      for (let i = 0; i < recetteIds.length; i += BATCH) {
+        const batch = recetteIds.slice(i, i + BATCH)
         const { data: rows } = await supabase
           .from('recettes_ingredients')
           .select('id, data, deleted_at')
-          .in('data->>recette', recettesSansIngs)
+          .in('data->>recette', batch)
           .eq('user_id', session.user.id)
           .is('deleted_at', null)
         if (rows?.length) {
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          await db.recettesIngredients.bulkPut(rows.map((r: { data: Record<string, unknown> }) => r.data as any))
-          console.log(`[sync] repair: ${rows.length} ingrédient(s) restauré(s)`)
+          // N'upsert que les ingrédients absents ou soft-deletés localement
+          const localIngs = await db.recettesIngredients
+            .where('id').anyOf(rows.map((r: { id: string }) => r.id))
+            .toArray()
+          const localIngMap = new Map(localIngs.map(i => [i.id, i]))
+          const toWrite = rows.filter((r: { id: string; data: Record<string, unknown> }) => {
+            const local = localIngMap.get(r.id)
+            if (!local) return true
+            if (local.deletedAt) return true
+            return false
+          })
+          if (toWrite.length) {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            await db.recettesIngredients.bulkPut(toWrite.map((r: { data: Record<string, unknown> }) => r.data as any))
+            restored += toWrite.length
+          }
         }
       }
+      if (restored > 0) console.log(`[sync] repair ingrédients: ${restored} restauré(s)`)
     }
   } catch (e) {
-    console.warn('[sync] repair recettes sans ingrédients:', e)
+    console.warn('[sync] repair ingrédients:', e)
   }
 
   await setLastPullAt()
