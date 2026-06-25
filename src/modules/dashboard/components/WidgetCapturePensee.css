@@ -13,7 +13,8 @@
 /* ── Carte haute : dégradé + question ── */
 .widget-hero {
   position: relative;
-  overflow: hidden;
+  /* overflow: hidden remplacé par clip-path pour laisser le blob déborder en bas */
+  clip-path: inset(0 0 -120px 0 round 20px);
   isolation: isolate;
   background: #F7F7F9;
   border: none;
