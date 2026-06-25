@@ -201,6 +201,8 @@ export async function pullAll() {
         if (pendingIds.has(row.id)) return false
         const local = localMap.get(row.id)
         if (!local) return true // nouvel enregistrement → accepter
+        // Le remote est vivant (deleted_at IS NULL) mais local est soft-deleté → restaurer
+        if (local.deletedAt) return true
         // Remote gagne seulement s'il est strictement plus récent
         const localUpdatedAt = local.updatedAt instanceof Date
           ? local.updatedAt.toISOString()
