@@ -1,34 +1,85 @@
-.wpa { display: flex; flex-direction: column; gap: 12px; }
+.wpa {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  background: linear-gradient(145deg, #f0eeff 0%, #f7f3ff 60%, #fdf8f0 100%);
+  border: 1px solid rgba(167, 139, 250, 0.25);
+  border-radius: 24px;
+  padding: 14px;
+  box-shadow: 0 0 0 4px rgba(167, 139, 250, 0.06), 0 2px 16px rgba(167, 139, 250, 0.1);
+}
 
 .wpa__tabs {
   display: flex;
   gap: 4px;
-  background: #F7F7F9;
+  background: #ffffff;
   border-radius: 999px;
-  padding: 4px;
+  padding: 6px;
 }
 
 .wpa__tab {
   flex: 1;
-  padding: 9px 12px;
+  padding: 11px 12px;
   border-radius: 999px;
   border: none;
   background: transparent;
-  font-size: 13px;
-  font-weight: 600;
-  color: #9CA3AF;
+  font-size: 14px;
+  font-weight: 500;
+  color: #9490b8;
   cursor: pointer;
   transition: background 0.18s ease, color 0.18s ease;
-  letter-spacing: -0.01em;
 }
 
-.wpa__tab--active {
-  background: #FFFFFF;
-  box-shadow: 0 1px 6px rgba(0,0,0,0.08);
+.wpa__tab--active.wpa__tab--lavande {
+  background: rgba(107, 99, 196, 0.75);
+  color: #ffffff;
+  border: 0.5px solid rgba(255,255,255,0.18);
+  backdrop-filter: blur(16px) saturate(180%);
+  -webkit-backdrop-filter: blur(16px) saturate(180%);
+  box-shadow: inset 0 0.5px 0 rgba(255,255,255,0.15), 0 2px 8px rgba(107,99,196,0.2);
 }
 
-.wpa__tab--active.wpa__tab--lavande { color: #6F7ED6; }
-.wpa__tab--active.wpa__tab--ambre   { color: #D4900A; }
+.wpa__tab--active.wpa__tab--ambre {
+  background: rgba(245, 158, 11, 0.75);
+  color: #ffffff;
+  border: 0.5px solid rgba(255,255,255,0.18);
+  backdrop-filter: blur(16px) saturate(180%);
+  -webkit-backdrop-filter: blur(16px) saturate(180%);
+  box-shadow: inset 0 0.5px 0 rgba(255,255,255,0.15), 0 2px 8px rgba(245,158,11,0.2);
+}
+
+.wpa__badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 18px;
+  height: 18px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 0 5px;
+  margin-left: 6px;
+}
+
+.wpa__badge--lavande {
+  background: rgba(255,255,255,0.3);
+  color: #ffffff;
+}
+
+.wpa__tab:not(.wpa__tab--active) .wpa__badge--lavande {
+  background: rgba(107,99,196,0.15);
+  color: #6B63C4;
+}
+
+.wpa__badge--ambre {
+  background: rgba(255,255,255,0.3);
+  color: #ffffff;
+}
+
+.wpa__tab:not(.wpa__tab--active) .wpa__badge--ambre {
+  background: rgba(245,158,11,0.15);
+  color: #B45309;
+}
 
 .wpa__content {
   animation: wpa-fade 0.18s ease both;
