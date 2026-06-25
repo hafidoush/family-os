@@ -82,10 +82,12 @@ export function useSyncOnMount() {
     const safe = (fn: () => Promise<void>, name: string) =>
       fn().catch(e => console.warn(`[sync] ${name} failed:`, e))
 
+    // pullAll EN PREMIER : récupère les dernières versions distantes avant de pousser le local.
+    // Évite qu'un device pousse ses vieilles données par-dessus une version plus récente sur Supabase.
     safe(cleanupLocalTombstones, 'cleanupLocalTombstones')
-      .then(() => safe(pushAllLocalData, 'pushAllLocalData'))
-      .then(() => safe(drainQueue, 'drainQueue'))
       .then(() => pullAll())
+      .then(() => safe(drainQueue, 'drainQueue'))
+      .then(() => safe(pushAllLocalData, 'pushAllLocalData'))
 
     startRealtime()
 

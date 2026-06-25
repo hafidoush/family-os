@@ -94,7 +94,9 @@ export async function pushRecord(dexieTable: string, record: Record<string, unkn
       id:         record.id,
       user_id:    session.user.id,
       data,
-      updated_at: new Date().toISOString(),
+      // Utiliser l'updatedAt réel du record pour que la résolution de conflit soit correcte.
+      // Si on utilisait new Date() ici, un push tardif d'un vieux record écraserait un plus récent.
+      updated_at: record.updatedAt ? new Date(record.updatedAt as string).toISOString() : new Date().toISOString(),
       deleted_at: record.deletedAt ? new Date(record.deletedAt as string).toISOString() : null,
     }, { onConflict: 'id' })
 
