@@ -39,10 +39,7 @@ export default function Dashboard() {
       {/* ── Menu de la semaine ── */}
       <WidgetMenu />
 
-      {/* ── Événements ── */}
-      <WidgetCalendrier />
-
-      {/* ── Widgets secondaires ── */}
+{/* ── Widgets secondaires ── */}
       {showSecondaires && (
         <div className="dashboard-secondaires">
           <WidgetOrchestrateur />
