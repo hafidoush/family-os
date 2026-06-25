@@ -3,7 +3,7 @@
 .wpa__tabs {
   display: flex;
   gap: 4px;
-  background: #EBEBEF;
+  background: #F7F7F9;
   border-radius: 999px;
   padding: 4px;
 }

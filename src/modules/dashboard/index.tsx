@@ -32,7 +32,9 @@ export default function Dashboard() {
       <WidgetProgrammeDuJour />
 
       {/* ── Dans ma tête / À acheter ── */}
-      <WidgetPenseesAchats />
+      <div style={{ marginTop: 8 }}>
+        <WidgetPenseesAchats />
+      </div>
 
       {/* ── Menu de la semaine ── */}
       <WidgetMenu />
