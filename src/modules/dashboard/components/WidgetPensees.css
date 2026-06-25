@@ -1,14 +1,11 @@
 /* ── Widget Pensées ─────────────────────────────────────────────────────────── */
 
 .widget-pensees {
-  background: rgba(255,255,255,0.72);
-  backdrop-filter: blur(20px) saturate(150%);
-  -webkit-backdrop-filter: blur(20px) saturate(150%);
-  border: 0.5px solid rgba(221,214,254,0.5);
+  background: #FFFFFF;
+  border: 0.5px solid rgba(189,195,234,0.4);
   border-radius: 20px;
   padding: 14px 12px;
-  border-top: 2px solid rgba(167,139,250,0.55);
-  box-shadow: 0 2px 16px rgba(124,107,176,0.07);
+  box-shadow: 0 2px 12px rgba(111,126,214,0.06);
 }
 
 .widget-pensees__header {
@@ -25,14 +22,14 @@
   flex: 1;
   font-size: 0.78rem;
   font-weight: 700;
-  color: #6D28D9;
+  color: #6F7ED6;
   text-transform: uppercase;
   letter-spacing: 0.05em;
 }
 
 .widget-pensees__count {
-  background: rgba(221,214,254,0.6);
-  color: #5B21B6;
+  background: #BDC3EA;
+  color: #6F7ED6;
   border-radius: 999px;
   padding: 2px 8px;
   font-size: 0.72rem;
@@ -46,9 +43,9 @@
   flex-direction: column;
   gap: 5px;
   padding: 8px 9px;
-  background: rgba(245,243,255,0.6);
+  background: #F7F7F9;
   border-radius: 10px;
-  border: 1px solid rgba(221,214,254,0.2);
+  border: 1px solid rgba(0,0,0,0.05);
 }
 
 .widget-pensee-item__top {
@@ -83,7 +80,7 @@
 }
 .widget-pensee-item__check:hover { background: rgba(167,243,208,0.6); }
 
-/* Pensée en cours de traitement — animation rayé 2s */
+/* Pensée en cours de traitement */
 .widget-pensee-item--traitee {
   opacity: 0.45;
   transition: opacity 0.3s ease;
@@ -102,16 +99,16 @@
 
 /* Pensée marquée À faire */
 .widget-pensee-item--afaire {
-  border-left: 3px solid #6395DD;
-  background: rgba(239,246,255,0.6);
+  border-left: 3px solid #6F7ED6;
+  background: #F7F7F9;
 }
 
 .widget-pensee-item__afaire-badge {
   font-size: 10px;
   font-weight: 700;
-  color: #1E3A5F;
-  background: rgba(99,149,221,0.15);
-  border: 1px solid rgba(99,149,221,0.3);
+  color: #6F7ED6;
+  background: rgba(189,195,234,0.25);
+  border: 1px solid rgba(111,126,214,0.3);
   border-radius: 999px;
   padding: 2px 7px;
   white-space: nowrap;
@@ -135,19 +132,19 @@
 .widget-pensee-item__chip:active { opacity: 0.7; }
 
 .widget-pensee-item__chip--tache {
-  color: hsl(262, 45%, 44%);
-  border-color: hsl(262, 40%, 80%);
-  background: hsl(262, 55%, 96%);
+  color: #6F7ED6;
+  border-color: #BDC3EA;
+  background: rgba(189,195,234,0.18);
 }
 .widget-pensee-item__chip--achat {
-  color: hsl(142, 45%, 32%);
-  border-color: hsl(142, 40%, 80%);
-  background: hsl(142, 50%, 95%);
+  color: #C69CE2;
+  border-color: #ECE1F6;
+  background: rgba(236,225,246,0.4);
 }
 .widget-pensee-item__chip--cal {
-  color: hsl(208, 50%, 36%);
-  border-color: hsl(208, 45%, 80%);
-  background: hsl(208, 60%, 95%);
+  color: #FD7746;
+  border-color: #FBA98C;
+  background: rgba(251,169,140,0.15);
 }
 
 /* ── Sélecteur date planifier ── */
@@ -162,15 +159,15 @@
   flex: 1;
   font-size: 11px;
   padding: 4px 8px;
-  border: 1px solid rgba(99,149,221,0.4);
+  border: 1px solid rgba(111,126,214,0.35);
   border-radius: 8px;
-  background: rgba(239,246,255,0.8);
-  color: #1E3A5F;
+  background: rgba(189,195,234,0.12);
+  color: #1A1A2E;
   outline: none;
   min-width: 0;
 }
 .widget-pensee-item__date-input:focus {
-  border-color: rgba(99,149,221,0.8);
+  border-color: rgba(111,126,214,0.7);
 }
 
 .widget-pensee-item__chip--annuler {
@@ -196,24 +193,23 @@
 .widget-pensees__empty-add {
   font-size: 0.78rem;
   font-weight: 600;
-  color: #6D28D9;
-  background: rgba(221,214,254,0.2);
-  border: 1px solid rgba(221,214,254,0.4);
+  color: #6F7ED6;
+  background: rgba(189,195,234,0.2);
+  border: 1px solid rgba(189,195,234,0.4);
   border-radius: 999px;
   padding: 4px 12px;
   cursor: pointer;
   transition: background 0.15s ease;
 }
-
 .widget-pensees__empty-add:hover {
-  background: rgba(221,214,254,0.35);
+  background: rgba(189,195,234,0.35);
 }
 
 .widget-pensees__voir-plus {
   margin-top: 10px;
   width: 100%;
   padding: 7px;
-  border: 1.5px dashed rgba(180,160,210,0.3);
+  border: 1.5px dashed rgba(111,126,214,0.25);
   border-radius: 8px;
   background: transparent;
   font-size: 0.78rem;
@@ -221,5 +217,4 @@
   cursor: pointer;
   transition: background 0.15s ease;
 }
-
-.widget-pensees__voir-plus:hover { background: rgba(201,184,232,0.1); }
+.widget-pensees__voir-plus:hover { background: rgba(189,195,234,0.1); }

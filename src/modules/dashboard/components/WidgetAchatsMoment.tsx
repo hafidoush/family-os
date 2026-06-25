@@ -68,16 +68,6 @@ export function WidgetAchatsMoment() {
 
   return (
     <div className="widget-achats-moment">
-      <div className="wam__header" onClick={() => navigate('/achats')}>
-        <span className="wam__icon">📦</span>
-        <div className="wam__header-text">
-          <span className="wam__title">À acheter</span>
-          {urgenceLabel && <span className="wam__urgence">{urgenceLabel}</span>}
-        </div>
-        {(items ?? []).length > 0 && <span className="wam__count">{(items ?? []).length}</span>}
-        <span className="wam__arrow">›</span>
-      </div>
-
       {/* Ajout rapide */}
       {adding ? (
         <div className="wam__quick-add">

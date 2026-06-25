@@ -1,15 +1,12 @@
-/* ── Widget À acheter (Liste du moment) ─────────────────────────────────────── */
+/* ── Widget À acheter ───────────────────────────────────────────────────────── */
 
 .widget-achats-moment {
-  background: rgba(255,255,255,0.72);
-  backdrop-filter: blur(20px) saturate(150%);
-  -webkit-backdrop-filter: blur(20px) saturate(150%);
-  border: 0.5px solid rgba(251,191,36,0.35);
+  background: #FFFFFF;
+  border: 0.5px solid rgba(254,195,85,0.35);
   border-radius: 20px;
   padding: 14px 12px;
   overflow: hidden;
-  border-top: 2px solid rgba(245,158,11,0.55);
-  box-shadow: 0 2px 16px rgba(180,130,0,0.07);
+  box-shadow: 0 2px 12px rgba(254,195,85,0.08);
 }
 
 /* ── Header ── */
@@ -34,7 +31,7 @@
 .wam__title {
   font-size: 0.78rem;
   font-weight: 700;
-  color: #B45309;
+  color: #FEC355;
   text-transform: uppercase;
   letter-spacing: 0.05em;
 }
@@ -42,16 +39,16 @@
 .wam__urgence {
   font-size: 0.7rem;
   font-weight: 600;
-  color: #B45309;
-  background: rgba(251,191,36,0.18);
-  border: 1px solid rgba(251,191,36,0.35);
+  color: #FEC355;
+  background: #FAE2B7;
+  border: 1px solid #FEC355;
   border-radius: 999px;
   padding: 1px 7px;
 }
 
 .wam__count {
-  background: rgba(253,230,138,0.5);
-  color: #92400E;
+  background: #FAE2B7;
+  color: #FEC355;
   border-radius: 999px;
   padding: 2px 8px;
   font-size: 0.72rem;
@@ -77,9 +74,9 @@
   align-items: center;
   gap: 7px;
   padding: 7px 9px;
-  background: rgba(255,251,235,0.6);
+  background: #F7F7F9;
   border-radius: 10px;
-  border: 1px solid rgba(251,191,36,0.15);
+  border: 1px solid rgba(0,0,0,0.05);
 }
 
 .wam__cat {
@@ -129,7 +126,7 @@
 }
 
 .wam__dot--urgent {
-  background: #F59E0B;
+  background: #FEC355;
 }
 
 .wam__prix {
@@ -142,7 +139,7 @@
   width: 24px;
   height: 24px;
   border-radius: 6px;
-  border: 1.5px solid rgba(180,160,100,0.3);
+  border: 1.5px solid rgba(254,195,85,0.35);
   background: rgba(255,255,255,0.6);
   color: var(--color-muted, #9CA3AF);
   cursor: pointer;
@@ -164,7 +161,7 @@
   margin-top: 10px;
   width: 100%;
   padding: 7px;
-  border: 1.5px dashed rgba(251,191,36,0.3);
+  border: 1.5px dashed rgba(254,195,85,0.3);
   border-radius: 8px;
   background: transparent;
   font-size: 0.78rem;
@@ -174,7 +171,7 @@
 }
 
 .wam__voir-plus:hover {
-  background: rgba(251,191,36,0.06);
+  background: rgba(250,226,183,0.15);
 }
 
 /* ── État vide ── */
@@ -193,16 +190,15 @@
 .wam__empty-add {
   font-size: 0.78rem;
   font-weight: 600;
-  color: #B45309;
-  background: rgba(251,191,36,0.15);
-  border: 1px solid rgba(251,191,36,0.3);
+  color: #FEC355;
+  background: rgba(250,226,183,0.25);
+  border: 1px solid rgba(254,195,85,0.4);
   border-radius: 999px;
   padding: 4px 12px;
   cursor: pointer;
   transition: background 0.15s ease;
 }
-
-.wam__empty-add:hover { background: rgba(251,191,36,0.25); }
+.wam__empty-add:hover { background: rgba(250,226,183,0.4); }
 
 /* ── Ajout rapide ── */
 .wam__quick-add {
@@ -216,15 +212,14 @@
   flex: 1;
   padding: 7px 10px;
   border-radius: 8px;
-  border: 1.5px solid rgba(251,191,36,0.4);
-  background: rgba(255,251,235,0.8);
+  border: 1.5px solid rgba(254,195,85,0.4);
+  background: rgba(250,226,183,0.2);
   font-size: 0.84rem;
   font-family: inherit;
   color: var(--color-text, #1A1A2E);
   outline: none;
 }
-
-.wam__quick-input:focus { border-color: rgba(251,191,36,0.7); }
+.wam__quick-input:focus { border-color: rgba(254,195,85,0.7); }
 
 .wam__quick-ok,
 .wam__quick-cancel {

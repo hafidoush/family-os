@@ -5,8 +5,7 @@ import { WidgetCapturePensee }       from './components/WidgetCapturePensee';
 import { WidgetProgrammeDuJour }     from './components/WidgetProgrammeDuJour';
 import { WidgetMenu }                from './components/WidgetMenu';
 import { WidgetCalendrier }          from './components/WidgetCalendrier';
-import { WidgetPensees }             from './components/WidgetPensees';
-import { WidgetAchatsMoment }        from './components/WidgetAchatsMoment';
+import { WidgetPenseesAchats }       from './components/WidgetPenseesAchats';
 import { WidgetBilanSemaine }        from './components/WidgetBilanSemaine';
 import { WidgetOrchestrateur }       from './components/WidgetOrchestrateur';
 import { WidgetProgrammeActif }      from './components/WidgetProgrammeActif';
@@ -32,11 +31,8 @@ export default function Dashboard() {
       {/* ── Activités du jour ── */}
       <WidgetProgrammeDuJour />
 
-      {/* ── Capture rapide côte à côte ── */}
-      <div className="dashboard-duo">
-        <WidgetPensees />
-        <WidgetAchatsMoment />
-      </div>
+      {/* ── Dans ma tête / À acheter ── */}
+      <WidgetPenseesAchats />
 
       {/* ── Menu de la semaine ── */}
       <WidgetMenu />

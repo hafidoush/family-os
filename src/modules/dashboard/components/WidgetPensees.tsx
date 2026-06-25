@@ -114,14 +114,6 @@ export function WidgetPensees() {
 
   return (
     <div className="widget-pensees">
-      <div className="widget-pensees__header" onClick={() => navigate('/pensees')}>
-        <span className="widget-pensees__icon">💭</span>
-        <span className="widget-pensees__title">Dans ta tête</span>
-        {(pensees ?? []).length > 0 && (
-          <span className="widget-pensees__count">{(pensees ?? []).length}</span>
-        )}
-      </div>
-
       {(!pensees || pensees.length === 0) && (
         <div className="widget-pensees__empty">
           <span className="widget-pensees__empty-text">Tête libre</span>
@@ -146,11 +138,13 @@ export function WidgetPensees() {
               {p.aFaire && !enCoursDeSuppression && <span className="widget-pensee-item__afaire-badge">À faire</span>}
               {enCoursDeSuppression
                 ? <span className="widget-pensee-item__traitee-label">Traité ✓</span>
-                : <button className="widget-pensee-item__check" onClick={e => traiter(p, e)} title="Traité">✓</button>
+                : p.aFaire
+                  ? <button className="widget-pensee-item__check" onClick={e => traiter(p, e)} title="Traité">✓</button>
+                  : null
               }
             </div>
 
-            {planifierId === p.id ? (
+            {!p.aFaire && planifierId === p.id ? (
               <div className="widget-pensee-item__planifier" onClick={e => e.stopPropagation()}>
                 <input
                   type="date"
@@ -174,7 +168,7 @@ export function WidgetPensees() {
                   ✕
                 </button>
               </div>
-            ) : (
+            ) : !p.aFaire ? (
               <div className="widget-pensee-item__actions">
                 <button className="widget-pensee-item__chip widget-pensee-item__chip--tache"
                   onClick={e => transformer(p, 'tache', e)}>
@@ -185,7 +179,7 @@ export function WidgetPensees() {
                 <button className="widget-pensee-item__chip widget-pensee-item__chip--cal"
                   onClick={e => ouvrirPlanifier(p, e)}>→ Planifier</button>
               </div>
-            )}
+            ) : null}
           </div>
         )})}
       </div>

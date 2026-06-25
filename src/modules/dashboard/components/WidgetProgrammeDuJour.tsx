@@ -1,7 +1,7 @@
 import { useNavigate }        from 'react-router-dom';
 import { useLiveQuery }      from 'dexie-react-hooks';
 import { useTodayActivites } from '../hooks/useTodayActivites';
-import { useTodayEvents }    from '../hooks/useTodayEvents';
+import { useTodayEvents, useWeekEvents } from '../hooks/useTodayEvents';
 import { toISODate }         from '../../../shared/utils/formatDate';
 import { db }                from '../../../core/db/database';
 import { nextDueDate }       from '../../menage/utils/nextDueDate';
@@ -50,6 +50,15 @@ export function WidgetProgrammeDuJour() {
     ? Math.round((menageData.faites / menageData.total) * 100)
     : 0;
 
+  // PROCHAINS ÉVÉNEMENTS — semaine hors aujourd'hui
+  const allWeekEvents = useWeekEvents() ?? [];
+  const nowDate = new Date();
+  const todayY = nowDate.getFullYear(), todayM = nowDate.getMonth(), todayD = nowDate.getDate();
+  const prochains = allWeekEvents.filter(e => {
+    const d = new Date(e.dateDebut);
+    return !(d.getFullYear() === todayY && d.getMonth() === todayM && d.getDate() === todayD);
+  });
+
   return (
     <section className="programme-section">
       <div className="programme-header">
@@ -57,16 +66,16 @@ export function WidgetProgrammeDuJour() {
         <button className="programme-header__voir" onClick={() => navigate('/programme-du-jour')}>Tout voir</button>
       </div>
 
-      <div className="programme-carousel">
+      <div className="programme-grid">
 
-        {/* ── Carte ENFANTS ── */}
+        {/* ── Carte ACTIVITÉS ── */}
         <div className="programme-card programme-card--enfants" onClick={() => navigate('/activites-du-jour')} role="button" tabIndex={0}>
           <div className="programme-card__deco" aria-hidden="true" />
           <div className="programme-card__glass" />
-          <span className="programme-card__badge programme-card__badge--lavande">Enfants</span>
+          <span className="programme-card__badge programme-card__badge--activite">Activité</span>
           <h3 className="programme-card__title">Activités<br />du jour</h3>
           <div className="programme-card__progress-bar">
-            <div className="programme-card__progress-fill programme-card__progress-fill--lavande" style={{ width: `${pctActivites}%` }} />
+            <div className="programme-card__progress-fill programme-card__progress-fill--activite" style={{ width: `${pctActivites}%` }} />
           </div>
           <span className="programme-card__progress-label">{pctActivites}% effectuées</span>
         </div>
@@ -75,26 +84,64 @@ export function WidgetProgrammeDuJour() {
         <div className="programme-card programme-card--planning" onClick={() => navigate('/programme-du-jour')} role="button" tabIndex={0}>
           <div className="programme-card__deco" aria-hidden="true" />
           <div className="programme-card__glass" />
-          <span className="programme-card__badge programme-card__badge--ambre">Planning</span>
+          <span className="programme-card__badge programme-card__badge--planning">Planning</span>
           <h3 className="programme-card__title">
             {evenements.length} événement{evenements.length !== 1 ? 's' : ''}<br />aujourd'hui
           </h3>
-          <div className="programme-card__progress-bar">
-            <div className="programme-card__progress-fill programme-card__progress-fill--ambre" style={{ width: `${pctPlanning}%` }} />
-          </div>
-          <span className="programme-card__progress-label">{pctPlanning}% effectués</span>
+          {evenements.length > 0 && (
+            <ul className="programme-card__events-list">
+              {evenements.slice(0, 3).map(e => {
+                const d = new Date(e.dateDebut);
+                const heure = e.journeeEntiere ? '' : `${String(d.getHours()).padStart(2,'0')}h${String(d.getMinutes()).padStart(2,'0')} `;
+                return <li key={e.id}>{heure}{e.titre}</li>;
+              })}
+            </ul>
+          )}
+          {evenements.length === 0 && (
+            <>
+              <div className="programme-card__progress-bar">
+                <div className="programme-card__progress-fill programme-card__progress-fill--planning" style={{ width: `${pctPlanning}%` }} />
+              </div>
+              <span className="programme-card__progress-label">{pctPlanning}% effectués</span>
+            </>
+          )}
         </div>
 
         {/* ── Carte MÉNAGE ── */}
         <div className="programme-card programme-card--menage" onClick={() => navigate('/menage-du-jour')} role="button" tabIndex={0}>
           <div className="programme-card__deco" aria-hidden="true" />
           <div className="programme-card__glass" />
-          <span className="programme-card__badge programme-card__badge--lilas">Ménage</span>
+          <span className="programme-card__badge programme-card__badge--menage">Ménage</span>
           <h3 className="programme-card__title">Tâches<br />ménagères</h3>
           <div className="programme-card__progress-bar">
-            <div className="programme-card__progress-fill programme-card__progress-fill--lilas" style={{ width: `${pctMenage}%` }} />
+            <div className="programme-card__progress-fill programme-card__progress-fill--menage" style={{ width: `${pctMenage}%` }} />
           </div>
           <span className="programme-card__progress-label">{pctMenage}% effectuées</span>
+        </div>
+
+        {/* ── Carte PROCHAINS ÉVÉNEMENTS ── */}
+        <div className="programme-card programme-card--prochains" onClick={() => navigate('/programme-du-jour')} role="button" tabIndex={0}>
+          <div className="programme-card__deco" aria-hidden="true" />
+          <div className="programme-card__glass" />
+          <span className="programme-card__badge programme-card__badge--prochains">Prochains</span>
+          <h3 className="programme-card__title">Prochains<br />événements</h3>
+          {prochains.length > 0 ? (
+            <ul className="programme-card__events-list">
+              {prochains.slice(0, 3).map(e => {
+                const d = new Date(e.dateDebut);
+                const jours = ['Dim','Lun','Mar','Mer','Jeu','Ven','Sam'];
+                const label = `${jours[d.getDay()]} `;
+                return <li key={e.id}>{label}{e.titre}</li>;
+              })}
+            </ul>
+          ) : (
+            <>
+              <div className="programme-card__progress-bar">
+                <div className="programme-card__progress-fill programme-card__progress-fill--prochains" style={{ width: '0%' }} />
+              </div>
+              <span className="programme-card__progress-label">Semaine tranquille</span>
+            </>
+          )}
         </div>
 
       </div>

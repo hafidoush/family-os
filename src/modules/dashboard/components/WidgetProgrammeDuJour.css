@@ -29,27 +29,19 @@
   opacity: 0.8;
 }
 
-/* ─── Carrousel ─────────────────────────────────────────────────────────────── */
+/* ─── Grille 2×2 ─────────────────────────────────────────────────────────── */
 
-.programme-carousel {
-  display: flex;
+.programme-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
   gap: 12px;
-  overflow-x: scroll;
-  scroll-snap-type: x mandatory;
-  scroll-behavior: smooth;
-  -webkit-overflow-scrolling: touch;
-  padding-bottom: 6px;
-  scrollbar-width: none;
 }
-.programme-carousel::-webkit-scrollbar { display: none; }
 
-/* ─── Carte ──────────────────────────────────────────────────────────────────── */
+/* ─── Carte ──────────────────────────────────────────────────────────────── */
 
 .programme-card {
-  flex: 0 0 220px;
   height: 200px;
   border-radius: 22px;
-  scroll-snap-align: start;
   position: relative;
   overflow: hidden;
   display: flex;
@@ -62,44 +54,16 @@
   transform: translateZ(0);
   -webkit-transform: translateZ(0);
   isolation: isolate;
+  background: #F7F7F9;
   border: 0.5px solid rgba(200, 195, 220, 0.3);
 }
 .programme-card:active { transform: scale(0.97); }
 
-/* ─── Fond coloré par carte ── */
+/* ─── Blob décoratif — désactivé ────────────────────────────────────────── */
 
-.programme-card--enfants,
-.programme-card--planning,
-.programme-card--menage {
-  background: #F0EFEB;
-}
+.programme-card__deco { display: none; }
 
-/* ─── Blob décoratif en haut à droite ────────────────────────────────────────── */
-
-.programme-card__deco {
-  position: absolute;
-  width: 160px;
-  height: 160px;
-  top: -40px;
-  right: -40px;
-  border-radius: 50%;
-  pointer-events: none;
-  z-index: 0;
-}
-
-.programme-card--enfants .programme-card__deco {
-  background: radial-gradient(circle, rgba(167,139,250,0.45) 0%, transparent 70%);
-}
-
-.programme-card--planning .programme-card__deco {
-  background: radial-gradient(circle, rgba(255,118,72,0.4) 0%, transparent 70%);
-}
-
-.programme-card--menage .programme-card__deco {
-  background: radial-gradient(circle, rgba(255,199,87,0.5) 0%, transparent 70%);
-}
-
-/* ─── Badge ──────────────────────────────────────────────────────────────────── */
+/* ─── Badge ──────────────────────────────────────────────────────────────── */
 
 .programme-card__badge {
   position: absolute;
@@ -116,44 +80,54 @@
   z-index: 3;
 }
 
-.programme-card__badge--lavande {
-  background: rgba(255,255,255,0.5);
-  color: #5b21b6;
-  border: 1px solid rgba(167,139,250,0.35);
+/* Activité — lavande */
+.programme-card__badge--activite {
+  background: #BDC3EA;
+  color: #6F7ED6;
+  border: 1px solid #6F7ED6;
 }
 
-.programme-card__badge--ambre {
-  background: rgba(255,255,255,0.5);
-  color: #c94a1a;
-  border: 1px solid rgba(255,118,72,0.45);
+/* Planning — ambre */
+.programme-card__badge--planning {
+  background: #FAE2B7;
+  color: #FEC355;
+  border: 1px solid #FEC355;
 }
 
-.programme-card__badge--lilas {
-  background: rgba(255,255,255,0.5);
-  color: #a06b00;
-  border: 1px solid rgba(255,199,87,0.6);
+/* Ménage — lilas */
+.programme-card__badge--menage {
+  background: #ECE1F6;
+  color: #C69CE2;
+  border: 1px solid #C69CE2;
 }
 
-/* ─── Glass bas ─────────────────────────────────────────────────────────────── */
+/* Prochains événements — corail */
+.programme-card__badge--prochains {
+  background: #FBA98C;
+  color: #FD7746;
+  border: 1px solid #FD7746;
+}
+
+/* ─── Glass bas ──────────────────────────────────────────────────────────── */
 
 .programme-card__glass {
   position: absolute;
   inset: 0;
-  background: linear-gradient(to bottom, transparent 35%, rgba(255,255,255,0.25) 70%);
+  background: linear-gradient(to bottom, transparent 35%, rgba(255,255,255,0.2) 70%);
   z-index: 2;
   pointer-events: none;
   border-radius: 0 0 22px 22px;
 }
 
-/* ─── Contenu bas ────────────────────────────────────────────────────────────── */
+/* ─── Contenu bas ────────────────────────────────────────────────────────── */
 
 .programme-card__title {
-  font-size: 20px;
+  font-size: 18px;
   font-weight: 600;
   color: hsl(240, 20%, 18%);
   line-height: 1.2;
   letter-spacing: -0.4px;
-  margin: 0 0 10px 0;
+  margin: 0 0 8px 0;
   position: relative;
   z-index: 3;
 }
@@ -163,7 +137,7 @@
   z-index: 3;
   width: 100%;
   height: 3px;
-  background: rgba(0,0,0,0.12);
+  background: rgba(0,0,0,0.10);
   border-radius: 99px;
   overflow: hidden;
   margin-bottom: 6px;
@@ -175,14 +149,38 @@
   transition: width 0.4s ease;
 }
 
-.programme-card__progress-fill--lavande { background: #7c3aed; }
-.programme-card__progress-fill--ambre   { background: #FF7648; }
-.programme-card__progress-fill--lilas   { background: #e6a800; }
+.programme-card__progress-fill--activite  { background: #6F7ED6; }
+.programme-card__progress-fill--planning  { background: #FEC355; }
+.programme-card__progress-fill--menage    { background: #C69CE2; }
+.programme-card__progress-fill--prochains { background: #FD7746; }
 
 .programme-card__progress-label {
-  font-size: 11.5px;
+  font-size: 11px;
   font-weight: 500;
-  color: hsl(240, 10%, 35%);
+  color: hsl(240, 10%, 42%);
   position: relative;
   z-index: 3;
+}
+
+/* ─── Liste événements inline ────────────────────────────────────────────── */
+
+.programme-card__events-list {
+  list-style: none;
+  margin: 0 0 2px;
+  padding: 0;
+  position: relative;
+  z-index: 3;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.programme-card__events-list li {
+  font-size: 11px;
+  font-weight: 500;
+  color: hsl(240, 12%, 28%);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  line-height: 1.3;
 }
