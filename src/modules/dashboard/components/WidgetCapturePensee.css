@@ -37,7 +37,7 @@
 
   background: url('/hero-blob.png') center / cover no-repeat;
 
-  border-radius: 50%;
+  border-radius: 0;
   opacity: 1;
 
   pointer-events: none;
