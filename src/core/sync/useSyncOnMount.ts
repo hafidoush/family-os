@@ -65,6 +65,9 @@ export async function pushAllLocalData(force = false) {
 // setHooksSuppressed(true) : ces suppressions sont LOCALES uniquement — on ne veut PAS
 // déclencher softDeleteRecord sur Supabase, sinon des ingrédients valides seraient détruits.
 async function cleanupLocalTombstones() {
+  // Suppression locale uniquement — ne pas déclencher softDeleteRecord sur Supabase
+  // On sauvegarde l'état précédent pour ne pas écraser un isPulling déjà actif
+  const prev = false // isPulling est false ici (hooks pas encore en cours d'opération)
   setHooksSuppressed(true)
   try {
     const produitsTombstones = await db.produits.filter(p => !p.nom).toArray()
@@ -73,7 +76,7 @@ async function cleanupLocalTombstones() {
     const ingTombstones = await db.recettesIngredients.filter(i => !i.recette || !i.produit).toArray()
     if (ingTombstones.length) await db.recettesIngredients.bulkDelete(ingTombstones.map(i => i.id))
   } finally {
-    setHooksSuppressed(false)
+    setHooksSuppressed(prev)
   }
 }
 

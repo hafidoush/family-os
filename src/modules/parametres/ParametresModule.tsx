@@ -424,8 +424,8 @@ function SectionDonnees() {
       setImportMsg(`Import local terminé (${count} enregistrements). Synchronisation vers le cloud…`);
 
       // Pousser toutes les données importées vers Supabase
-      // bulkPut bypasse les hooks Dexie — on doit pousser manuellement
-      await pushAllLocalData();
+      // force=true : bulkPut bypasse les hooks, on doit pousser manuellement sans attendre le délai 1h
+      await pushAllLocalData(true);
 
       setImportMsg(`✅ ${count} enregistrements importés et synchronisés vers le cloud.`);
     } catch (err) {

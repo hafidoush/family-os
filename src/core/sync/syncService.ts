@@ -23,6 +23,14 @@ let isPulling = false
 // Permet aux opérations de nettoyage local de supprimer sans déclencher softDeleteRecord
 export function setHooksSuppressed(val: boolean) { isPulling = val }
 
+// Comparaison de timestamps robuste — gère Date, ISO string, et nombre (ms epoch)
+function tsMs(ts: unknown): number {
+  if (ts instanceof Date) return ts.getTime()
+  if (typeof ts === 'string' && ts) return new Date(ts).getTime()
+  if (typeof ts === 'number') return ts
+  return 0
+}
+
 // Champs Blob non sérialisables en JSON — exclus du push, préservés au pull
 // avatar est désormais stocké en base64 (string) et se synchronise normalement
 const BLOB_FIELDS: Record<string, string[]> = {}
@@ -173,10 +181,7 @@ export async function pullAll() {
           if (pendingIds.has(r.id)) return false
           const local = localMap.get(r.id)
           if (!local) return true
-          const localUpdatedAt = local.updatedAt instanceof Date
-            ? (local.updatedAt as Date).toISOString()
-            : String(local.updatedAt ?? '')
-          return r.deleted_at >= localUpdatedAt
+          return tsMs(r.deleted_at) >= tsMs(local.updatedAt)
         })
         .map(r => r.id)
       if (toDelete.length) await table.bulkDelete(toDelete)
@@ -207,10 +212,7 @@ export async function pullAll() {
         // Le remote est vivant (deleted_at IS NULL) mais local est soft-deleté → restaurer
         if (local.deletedAt) return true
         // Remote gagne seulement s'il est strictement plus récent
-        const localUpdatedAt = local.updatedAt instanceof Date
-          ? local.updatedAt.toISOString()
-          : String(local.updatedAt ?? '')
-        return row.updated_at > localUpdatedAt
+        return tsMs(row.updated_at) > tsMs(local.updatedAt)
       })
       .map((row: { data: Record<string, unknown> }) => row.data)
 
@@ -364,12 +366,9 @@ function buildRealtimeChannel() {
         // Résolution de conflit : ne jamais écraser une version locale plus récente
         const local: Record<string, unknown> | undefined = await table.get(row.data.id)
         if (local) {
-          const localUpdatedAt = local.updatedAt instanceof Date
-            ? (local.updatedAt as Date).toISOString()
-            : String(local.updatedAt ?? '')
           // Le remote doit être STRICTEMENT plus récent que le local pour s'appliquer
           const remoteTs = row.deleted_at ?? row.updated_at ?? ''
-          if (remoteTs <= localUpdatedAt) return
+          if (tsMs(remoteTs) <= tsMs(local.updatedAt)) return
         }
 
         if (row.deleted_at) {
