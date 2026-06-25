@@ -396,7 +396,12 @@ export async function drainQueue(): Promise<void> {
     const table = (db as any)[item.table]
     if (!table) continue
     const record = await table.get(item.id)
-    if (record) await pushRecord(item.table, record)
+    if (record) {
+      await pushRecord(item.table, record)
+    } else {
+      // Enregistrement supprimé de Dexie — retirer de la queue pour ne pas bloquer indéfiniment
+      await removeFromQueue(item.table, item.id)
+    }
   }
 }
 
