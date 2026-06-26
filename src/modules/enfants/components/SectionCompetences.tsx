@@ -1,10 +1,30 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { db } from '../../../core/db/database';
 import { useEnfantsStore } from '../stores/enfantsStore';
 import { useEnfants } from '../hooks/useEnfants';
 import { newEntity } from '../../../core/db/helpers';
 import type { Competence, CompetenceSuivi } from '../../../shared/types';
+
+async function deduplicateCompetences(): Promise<void> {
+  const all = await db.competences.toArray();
+  const seen = new Map<string, string>(); // "domaine|nom" → id à garder
+  const toDelete: string[] = [];
+  for (const c of all) {
+    const key = `${c.domaine}|${c.nom.trim().toLowerCase()}`;
+    if (seen.has(key)) {
+      toDelete.push(c.id);
+    } else {
+      seen.set(key, c.id);
+    }
+  }
+  if (toDelete.length > 0) {
+    await db.competences.bulkDelete(toDelete);
+    await db.competencesSuivi
+      .filter((s) => toDelete.includes(s.competence))
+      .delete();
+  }
+}
 
 // ── Domaines ──────────────────────────────────────────────────────────────────
 
@@ -75,6 +95,8 @@ export function SectionCompetences() {
   const { activeEnfantId } = useEnfantsStore();
   const { competences, suivis, isLoading } = useCompetences(activeEnfantId);
   const [showForm, setShowForm] = useState(false);
+
+  useEffect(() => { deduplicateCompetences(); }, []);
   const [newNom, setNewNom] = useState('');
   const [saving, setSaving] = useState(false);
   const [domaineFiltreActif, setDomaineFiltreActif] = useState<string | null>(null);
