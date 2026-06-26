@@ -1,24 +1,137 @@
-import { useState }           from 'react';
+import { useState, useRef, useCallback } from 'react';
 import { useNavigate }        from 'react-router-dom';
 import { useLiveQuery }      from 'dexie-react-hooks';
 import { useTodayActivites } from '../hooks/useTodayActivites';
 import { useTodayEvents, useWeekEvents } from '../hooks/useTodayEvents';
 import { toISODate }         from '../../../shared/utils/formatDate';
 import { db }                from '../../../core/db/database';
-import { nextDueDate }       from '../../menage/utils/nextDueDate';
 import { MenageModal }        from './WidgetMenage';
 import { useTachesDuJourEngine } from '../../menage/hooks/useTachesDuJourEngine';
 import type { FrequenceTache } from '@shared/types/entities';
 import './WidgetProgrammeDuJour.css';
 
+// ─── Modal générique pour aperçu card dashboard ───────────────────────────────
+
+interface PreviewItem {
+  id: string;
+  label: string;
+  sublabel?: string;
+  done?: boolean;
+}
+
+function PreviewModal({
+  color, modalBg, title, meta, progPct, items, ctaLabel, emptyText, onCta, onClose,
+}: {
+  color: string;
+  modalBg: string;
+  title: string;
+  meta: string;
+  progPct: number;
+  items: PreviewItem[];
+  ctaLabel: string;
+  emptyText: string;
+  onCta: () => void;
+  onClose: () => void;
+}) {
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const [scrolled, setScrolled] = useState(false);
+  const [thumbPct, setThumbPct] = useState(0);
+
+  const onScroll = useCallback(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+    const { scrollTop, scrollHeight, clientHeight } = el;
+    const max = scrollHeight - clientHeight;
+    setScrolled(scrollTop > 40);
+    setThumbPct(max > 0 ? scrollTop / max : 0);
+  }, []);
+
+  const scrollToTop = () => scrollRef.current?.scrollTo({ top: 0, behavior: 'smooth' });
+
+  return (
+    <div className="wm-modal-overlay" onClick={onClose}>
+      <div className="wm-modal" style={{ background: modalBg }} onClick={e => e.stopPropagation()}>
+
+        {/* ── En-tête fixe ── */}
+        <div className="wm-modal__top">
+          <button className="wm-modal__close" onClick={onClose} aria-label="Fermer">✕</button>
+          <div className="wm-modal__header">
+            <span className="wm-modal__title" style={{ color: '#1E1C2E' }}>{title}</span>
+            <span className="wm-modal__meta" style={{ color: color }}>{meta}</span>
+          </div>
+          {progPct > 0 && (
+            <div className="wm-modal__prog-bar">
+              <div className="wm-modal__prog-fill" style={{ width: `${progPct}%`, background: color }} />
+            </div>
+          )}
+        </div>
+
+        {/* ── Zone scrollable ── */}
+        <div className="wm-modal__scroll-wrap">
+          <div className="wm-modal__scroll" ref={scrollRef} onScroll={onScroll}>
+            <div className="wm-modal__tasks">
+              {items.length === 0 ? (
+                <p className="wm-modal__empty">{emptyText}</p>
+              ) : (
+                items.map(item => (
+                  <div key={item.id} className={`wm-modal__task${item.done ? ' done' : ''}`} style={{ cursor: 'default' }}>
+                    <span
+                      className="wm-modal__task-check"
+                      style={item.done
+                        ? { background: color, borderColor: color }
+                        : { borderColor: color + '88' }
+                      }
+                    >
+                      {item.done && '✓'}
+                    </span>
+                    <span className="wm-modal__task-titre">{item.label}</span>
+                    {item.sublabel && (
+                      <span style={{ fontSize: 11, color: '#9B8DB5', flexShrink: 0, whiteSpace: 'nowrap' }}>
+                        {item.sublabel}
+                      </span>
+                    )}
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+
+          {items.length > 4 && (
+            <div className="wm-scroll-track">
+              <div className="wm-scroll-thumb" style={{ top: `${thumbPct * 70}%`, background: color + 'A0' }} />
+            </div>
+          )}
+
+          {scrolled && (
+            <button className="wm-scroll-top" style={{ color }} onClick={scrollToTop} aria-label="Retour en haut">↑</button>
+          )}
+        </div>
+
+        {/* ── CTA fixe en bas ── */}
+        <div className="wm-modal__bottom">
+          <button className="wm-modal__cta" style={{ background: color }} onClick={onCta}>
+            {ctaLabel}
+          </button>
+        </div>
+
+      </div>
+    </div>
+  );
+}
+
+// ─── Widget principal ─────────────────────────────────────────────────────────
+
 export function WidgetProgrammeDuJour() {
   const navigate   = useNavigate();
-  const [menageModalOpen, setMenageModalOpen] = useState(false);
+  const [menageModalOpen,    setMenageModalOpen]    = useState(false);
+  const [activitesModalOpen, setActivitesModalOpen] = useState(false);
+  const [planningModalOpen,  setPlanningModalOpen]  = useState(false);
+  const [prochainModalOpen,  setProchainModalOpen]  = useState(false);
+
   const today      = toISODate(new Date());
   const activites  = useTodayActivites() ?? [];
   const evenements = useTodayEvents()    ?? [];
 
-  // Activités du programme IA planifiées aujourd'hui
   const progActivites = useLiveQuery(
     () => db.activitesProgramme
       .filter(a => !a.archive && !a.deletedAt && a.datePlanifiee === today)
@@ -27,7 +140,7 @@ export function WidgetProgrammeDuJour() {
     []
   ) ?? [];
 
-  // ENFANTS — % activités réalisées (planif + programme IA)
+  // ENFANTS — % activités réalisées
   const totalActiv   = activites.length + progActivites.length;
   const faitesActiv  = activites.filter(a => a.statut === 'realisee').length
                      + progActivites.filter(a => a.statutRealisation === 'realise').length;
@@ -67,6 +180,24 @@ export function WidgetProgrammeDuJour() {
     const d = new Date(e.dateDebut);
     return !(d.getFullYear() === todayY && d.getMonth() === todayM && d.getDate() === todayD);
   });
+  const JOURS = ['Dim','Lun','Mar','Mer','Jeu','Ven','Sam'];
+
+  // Items pour les modals
+  const activitesItems: PreviewItem[] = [
+    ...activites.map(a => ({ id: String(a.id), label: (a.activite as { nom?: string } | undefined)?.nom ?? '–', done: a.statut === 'realisee' })),
+    ...progActivites.map(a => ({ id: String(a.id) + '_p', label: a.titre ?? '', done: a.statutRealisation === 'realise' })),
+  ];
+
+  const planningItems: PreviewItem[] = evenements.map(e => {
+    const d = new Date(e.dateDebut);
+    const heure = e.journeeEntiere ? 'Journée' : `${String(d.getHours()).padStart(2,'0')}h${String(d.getMinutes()).padStart(2,'0')}`;
+    return { id: String(e.id), label: e.titre ?? '', sublabel: heure, done: d < now };
+  });
+
+  const prochainItems: PreviewItem[] = prochains.map(e => {
+    const d = new Date(e.dateDebut);
+    return { id: String(e.id), label: e.titre ?? '', sublabel: JOURS[d.getDay()] };
+  });
 
   return (
     <>
@@ -79,7 +210,7 @@ export function WidgetProgrammeDuJour() {
       <div className="programme-grid">
 
         {/* ── Carte ACTIVITÉS ── */}
-        <div className="programme-card programme-card--enfants" onClick={() => navigate('/activites-du-jour')} role="button" tabIndex={0}>
+        <div className="programme-card programme-card--enfants" onClick={() => setActivitesModalOpen(true)} role="button" tabIndex={0}>
           <div className="programme-card__deco" aria-hidden="true" />
           <div className="programme-card__glass" />
           <span className="programme-card__badge programme-card__badge--activite">Activité</span>
@@ -91,7 +222,7 @@ export function WidgetProgrammeDuJour() {
         </div>
 
         {/* ── Carte PLANNING ── */}
-        <div className="programme-card programme-card--planning" onClick={() => navigate('/programme-du-jour')} role="button" tabIndex={0}>
+        <div className="programme-card programme-card--planning" onClick={() => setPlanningModalOpen(true)} role="button" tabIndex={0}>
           <div className="programme-card__deco" aria-hidden="true" />
           <div className="programme-card__glass" />
           <span className="programme-card__badge programme-card__badge--planning">Planning</span>
@@ -148,34 +279,76 @@ export function WidgetProgrammeDuJour() {
         </div>
 
         {/* ── Carte PROCHAINS ÉVÉNEMENTS ── */}
-        <div className="programme-card programme-card--prochains" onClick={() => navigate('/programme-du-jour')} role="button" tabIndex={0}>
+        <div className="programme-card programme-card--prochains" onClick={() => setProchainModalOpen(true)} role="button" tabIndex={0}>
           <div className="programme-card__deco" aria-hidden="true" />
           <div className="programme-card__glass" />
           <span className="programme-card__badge programme-card__badge--prochains">Prochains</span>
-          <h3 className="programme-card__title">Prochains<br />événements</h3>
-          {prochains.length > 0 ? (
+          <h3 className="programme-card__title">
+            {prochains.length} événement{prochains.length !== 1 ? 's' : ''}<br />cette semaine
+          </h3>
+          {prochains.length > 0 && (
             <ul className="programme-card__events-list">
               {prochains.slice(0, 3).map(e => {
                 const d = new Date(e.dateDebut);
-                const jours = ['Dim','Lun','Mar','Mer','Jeu','Ven','Sam'];
-                const label = `${jours[d.getDay()]} `;
-                return <li key={e.id}>{label}{e.titre}</li>;
+                return <li key={e.id}>{JOURS[d.getDay()]} · {e.titre}</li>;
               })}
             </ul>
-          ) : (
-            <>
-              <div className="programme-card__progress-bar">
-                <div className="programme-card__progress-fill programme-card__progress-fill--prochains" style={{ width: '0%' }} />
-              </div>
-              <span className="programme-card__progress-label">Semaine tranquille</span>
-            </>
           )}
         </div>
 
       </div>
     </section>
 
-    {menageModalOpen && <MenageModal onClose={() => setMenageModalOpen(false)} />}
+    {/* ── Modals ── */}
+
+    {menageModalOpen && (
+      <MenageModal onClose={() => setMenageModalOpen(false)} />
+    )}
+
+    {activitesModalOpen && (
+      <PreviewModal
+        color="#6F7ED6"
+        modalBg="#E8EAF6"
+        title="Activités du jour"
+        meta={totalActiv === 0 ? 'Rien de prévu' : `${faitesActiv}/${totalActiv} réalisées`}
+        progPct={pctActivites}
+        items={activitesItems}
+        ctaLabel="Voir les activités"
+        emptyText="Aucune activité aujourd'hui"
+        onCta={() => { setActivitesModalOpen(false); navigate('/activites-du-jour'); }}
+        onClose={() => setActivitesModalOpen(false)}
+      />
+    )}
+
+    {planningModalOpen && (
+      <PreviewModal
+        color="#D4990A"
+        modalBg="#FDF3DC"
+        title="Agenda du jour"
+        meta={evenements.length === 0 ? 'Journée libre' : `${evenements.length} événement${evenements.length > 1 ? 's' : ''}`}
+        progPct={pctPlanning}
+        items={planningItems}
+        ctaLabel="Voir le planning"
+        emptyText="Aucun événement aujourd'hui"
+        onCta={() => { setPlanningModalOpen(false); navigate('/programme-du-jour'); }}
+        onClose={() => setPlanningModalOpen(false)}
+      />
+    )}
+
+    {prochainModalOpen && (
+      <PreviewModal
+        color="#FD7746"
+        modalBg="#FEF0EB"
+        title="Cette semaine"
+        meta={prochains.length === 0 ? 'Semaine tranquille' : `${prochains.length} événement${prochains.length > 1 ? 's' : ''} à venir`}
+        progPct={0}
+        items={prochainItems}
+        ctaLabel="Voir la semaine"
+        emptyText="Semaine tranquille"
+        onCta={() => { setProchainModalOpen(false); navigate('/programme-du-jour'); }}
+        onClose={() => setProchainModalOpen(false)}
+      />
+    )}
     </>
   );
 }
