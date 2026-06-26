@@ -1,3 +1,4 @@
+import { useState }           from 'react';
 import { useNavigate }        from 'react-router-dom';
 import { useLiveQuery }      from 'dexie-react-hooks';
 import { useTodayActivites } from '../hooks/useTodayActivites';
@@ -5,10 +6,14 @@ import { useTodayEvents, useWeekEvents } from '../hooks/useTodayEvents';
 import { toISODate }         from '../../../shared/utils/formatDate';
 import { db }                from '../../../core/db/database';
 import { nextDueDate }       from '../../menage/utils/nextDueDate';
+import { MenageModal }        from './WidgetMenage';
+import { useTachesDuJourEngine } from '../../menage/hooks/useTachesDuJourEngine';
+import type { FrequenceTache } from '@shared/types/entities';
 import './WidgetProgrammeDuJour.css';
 
 export function WidgetProgrammeDuJour() {
   const navigate   = useNavigate();
+  const [menageModalOpen, setMenageModalOpen] = useState(false);
   const today      = toISODate(new Date());
   const activites  = useTodayActivites() ?? [];
   const evenements = useTodayEvents()    ?? [];
@@ -34,31 +39,25 @@ export function WidgetProgrammeDuJour() {
     ? Math.round((evenements.filter(e => new Date(e.dateDebut) < now).length / evenements.length) * 100)
     : 0;
 
-  // MÉNAGE
-  const menageData = useLiveQuery(async () => {
-    const todayStart = new Date(); todayStart.setHours(0, 0, 0, 0);
-    const all = await db.taches
-      .filter(t => !t.archive && !t.deletedAt && t.moduleOrigine === 'maison')
-      .toArray();
+  // MÉNAGE — moteur
+  const menageTasks = useTachesDuJourEngine('normal') ?? [];
+  const todayMidnight = (() => { const d = new Date(); d.setHours(0,0,0,0); return d.getTime(); })();
+  const isCompletedToday = (t: { statut?: string; completeeLe?: Date | string }) => {
+    if (t.statut !== 'fait' || !t.completeeLe) return false;
+    const c = new Date(t.completeeLe); c.setHours(0,0,0,0);
+    return c.getTime() === todayMidnight;
+  };
+  const menageFaites   = menageTasks.filter(isCompletedToday).length;
+  const menageTotal    = menageTasks.length;
+  const menageRestants = menageTotal - menageFaites;
+  const menageDurMin   = menageTasks.filter(t => !isCompletedToday(t)).reduce((s, t) => s + (t.dureeEstimee ?? 10), 0);
+  const pctMenage      = menageTotal > 0 ? Math.round((menageFaites / menageTotal) * 100) : 0;
+  const menageAllDone  = menageTotal > 0 && menageFaites === menageTotal;
 
-    let total = 0; let faites = 0;
-    for (const t of all) {
-      if (t.statut === 'fait' && t.completeeLe) {
-        const d = new Date(t.completeeLe); d.setHours(0,0,0,0);
-        if (d.getTime() === todayStart.getTime()) { total++; faites++; continue; }
-        continue;
-      }
-      const due = nextDueDate(t);
-      if (!due) continue;
-      const dueStart = new Date(due); dueStart.setHours(0,0,0,0);
-      if (dueStart <= todayStart) { total++; }
-    }
-    return { total, faites };
-  }, [today]) ?? { total: 0, faites: 0 };
-
-  const pctMenage = menageData.total > 0
-    ? Math.round((menageData.faites / menageData.total) * 100)
-    : 0;
+  const FREQ_DOT: Partial<Record<FrequenceTache, string>> = {
+    quotidienne: '#1D9E75', hebdomadaire: '#378ADD', bihebdomadaire: '#378ADD',
+    mensuelle: '#7F77DD', trimestrielle: '#BA7517', semestrielle: '#BA7517', annuelle: '#BA7517',
+  };
 
   // PROCHAINS ÉVÉNEMENTS — semaine hors aujourd'hui
   const allWeekEvents = useWeekEvents() ?? [];
@@ -70,6 +69,7 @@ export function WidgetProgrammeDuJour() {
   });
 
   return (
+    <>
     <section className="programme-section">
       <div className="programme-header">
         <h2 className="programme-header__title">Au programme aujourd'hui</h2>
@@ -118,15 +118,33 @@ export function WidgetProgrammeDuJour() {
         </div>
 
         {/* ── Carte MÉNAGE ── */}
-        <div className="programme-card programme-card--menage" onClick={() => navigate('/menage-du-jour')} role="button" tabIndex={0}>
+        <div className="programme-card programme-card--menage" onClick={() => setMenageModalOpen(true)} role="button" tabIndex={0}>
           <div className="programme-card__deco" aria-hidden="true" />
           <div className="programme-card__glass" />
-          <span className="programme-card__badge programme-card__badge--menage">Ménage</span>
-          <h3 className="programme-card__title">Tâches<br />ménagères</h3>
+          <span className="programme-card__badge programme-card__badge--menage">MÉNAGE</span>
+          <div className="pm-menage__dots-row">
+            {menageTasks.slice(0, 8).map(t => (
+              <span
+                key={t.id}
+                className="pm-menage__dot"
+                style={{
+                  background: FREQ_DOT[t.frequence ?? 'ponctuelle'] ?? '#9B8DB5',
+                  opacity: isCompletedToday(t) ? 0.2 : 1,
+                }}
+              />
+            ))}
+            <span className="pm-menage__counter">{menageFaites}/{menageTotal}</span>
+          </div>
+          <h3 className="programme-card__title">Tâches ménagères</h3>
           <div className="programme-card__progress-bar">
             <div className="programme-card__progress-fill programme-card__progress-fill--menage" style={{ width: `${pctMenage}%` }} />
           </div>
-          <span className="programme-card__progress-label">{pctMenage}% effectuées</span>
+          <span className="programme-card__progress-label">
+            {menageAllDone
+              ? 'Tout fait ✓'
+              : `~${menageDurMin} min · ${menageRestants} restante${menageRestants > 1 ? 's' : ''}`
+            }
+          </span>
         </div>
 
         {/* ── Carte PROCHAINS ÉVÉNEMENTS ── */}
@@ -156,6 +174,9 @@ export function WidgetProgrammeDuJour() {
 
       </div>
     </section>
+
+    {menageModalOpen && <MenageModal onClose={() => setMenageModalOpen(false)} />}
+    </>
   );
 }
 

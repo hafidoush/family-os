@@ -3,7 +3,7 @@
  * Séparation quotidiennes / périodiques avec cartes visuelles.
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useRef, useCallback, useEffect } from 'react';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { db } from '../../core/db/database';
 import { newEntity } from '../../core/db/helpers';
@@ -12,8 +12,14 @@ import { MaisonService, etatColor, etatLabel, scoreToEtat } from '../maison/serv
 import { useMaisonStore } from '../maison/stores/maisonStore';
 import { TacheForm } from '../maison/components/taches';
 import { usePieces } from '../maison/hooks';
-import { isDueToday, isOverdue } from './utils/nextDueDate';
 import { useRappelMenageNatif } from './hooks/useRappelMenageNatif';
+import { useTachesDuJourEngine } from './hooks/useTachesDuJourEngine';
+import {
+  enrichTask,
+  computeSkipPatch,
+  type MenageMode,
+  type MenageTask,
+} from './engine/menageEngine';
 import type { Tache, FrequenceTache } from '@shared/types/entities';
 import type { Piece } from '@shared/types/modules';
 import './menage.css';
@@ -21,7 +27,7 @@ import '../maison/MaisonModule.css';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
-type OngletMenage = 'du_jour' | 'quotidien' | 'periodique' | 'grand_menage';
+type OngletMenage = 'du_jour' | 'mes_taches' | 'grand_menage';
 
 interface FreqConfig {
   value: FrequenceTache;
@@ -34,7 +40,7 @@ interface FreqConfig {
 const FREQUENCES_PERIODIQUES: FreqConfig[] = [
   { value: 'hebdomadaire',   label: 'Hebdomadaire',     emoji: '📅', description: 'Chaque semaine',          color: '#60A5FA' },
   { value: 'bihebdomadaire', label: 'Toutes les 2 sem', emoji: '🗓', description: 'Toutes les 2 semaines',   color: '#818CF8' },
-  { value: 'mensuelle',      label: 'Mensuel',           emoji: '🌙', description: 'Chaque mois',            color: '#A78BFA' },
+  { value: 'mensuelle',      label: 'Mensuel',           emoji: '🌙', description: 'Chaque mois',            color: '#C69CE2' },
   { value: 'trimestrielle',  label: 'Trimestriel',       emoji: '🍂', description: 'Tous les 3 mois',        color: '#FB923C' },
   { value: 'semestrielle',   label: 'Semestriel',        emoji: '☀️', description: 'Tous les 6 mois',       color: '#FBBF24' },
   { value: 'annuelle',       label: 'Annuel',            emoji: '🎆', description: 'Une fois par an',        color: '#F472B6' },
@@ -199,51 +205,29 @@ export interface TacheSaisonniereLive {
   faiteAnnee: boolean;      // cochée cette année
 }
 
-// ─── Hooks ────────────────────────────────────────────────────────────────────
+// ─── Hooks moteur ─────────────────────────────────────────────────────────────
 
-function useTachesDuJour() {
+function useSaisonnieres() {
   return useLiveQuery(async () => {
     const all = await db.taches
       .filter(t => !t.archive && !t.deletedAt && t.moduleOrigine === 'maison')
       .toArray();
-
-    const now = new Date();
-    const moisActuel = now.getMonth() + 1;
-    const anneeActuelle = now.getFullYear();
-
-    const quotidiennes = all.filter(t => t.frequence === 'quotidienne');
-    const periodiques = all.filter(
-      t => t.frequence && t.frequence !== 'quotidienne' && t.frequence !== 'ponctuelle'
-        && (isDueToday(t) || isOverdue(t))
-        && !t.contexteLibre?.startsWith('saisonniere::')
-    );
-
-    // Tâches saisonnières actives ce mois-ci
-    const saisonnieres: TacheSaisonniereLive[] = TACHES_SAISONNIERES
+    const moisActuel   = new Date().getMonth() + 1;
+    const anneeActuelle = new Date().getFullYear();
+    return TACHES_SAISONNIERES
       .filter(def => def.mois.includes(moisActuel))
       .map(def => {
-        const clé = cléSaisonniere(def.titre, anneeActuelle);
+        const clé   = cléSaisonniere(def.titre, anneeActuelle);
         const tache = all.find(t => t.contexteLibre === clé) ?? null;
         const faiteAnnee = tache !== null && (
           tache.statut === 'fait' ||
           (!!tache.completeeLe && new Date(tache.completeeLe).getFullYear() === anneeActuelle)
         );
-        return { def, tache, faiteAnnee };
+        return { def, tache, faiteAnnee } as TacheSaisonniereLive;
       });
-
-    const sort = (arr: Tache[]) =>
-      arr.sort((a, b) => {
-        const ad = isCompletedToday(a) ? 1 : 0;
-        const bd = isCompletedToday(b) ? 1 : 0;
-        if (ad !== bd) return ad - bd;
-        const ao = isOverdue(a) ? 0 : 1;
-        const bo = isOverdue(b) ? 0 : 1;
-        return ao - bo;
-      });
-
-    return { quotidiennes: sort(quotidiennes), periodiques: sort(periodiques), saisonnieres };
   });
 }
+
 
 function useTachesParFrequence(frequence: FrequenceTache) {
   return useLiveQuery(async () => {
@@ -266,13 +250,14 @@ function useTachesParFrequence(frequence: FrequenceTache) {
 interface TacheCardProps {
   tache: Tache;
   color?: string;
-  done?: boolean; // override: si non fourni, utilise tache.statut === 'fait'
-  onToggle: () => void;
+  done?: boolean;
+  hideCheck?: boolean;
+  onToggle?: () => void;
   onEdit: () => void;
   onDelete: () => void;
 }
 
-function TacheCard({ tache, color = '#A78BFA', done: doneProp, onToggle, onEdit, onDelete }: TacheCardProps) {
+function TacheCard({ tache, color = '#C69CE2', done: doneProp, hideCheck, onToggle, onEdit, onDelete }: TacheCardProps) {
   const done = doneProp !== undefined ? doneProp : tache.statut === 'fait';
   const derniereFois = tache.completeeLe ?? (tache.statut === 'fait' ? tache.updatedAt : undefined);
   const joursDepuis = derniereFois
@@ -294,124 +279,150 @@ function TacheCard({ tache, color = '#A78BFA', done: doneProp, onToggle, onEdit,
 
   return (
     <div
-      className={`mc-card${done ? ' mc-card--done' : ''}`}
-      onClick={onToggle}
-      role="button"
-      tabIndex={0}
-      onKeyDown={e => e.key === 'Enter' && onToggle()}
+      className={`mc-card${done && !hideCheck ? ' mc-card--done' : ''}`}
+      onClick={hideCheck ? undefined : onToggle}
+      role={hideCheck ? undefined : 'button'}
+      tabIndex={hideCheck ? undefined : 0}
+      onKeyDown={hideCheck ? undefined : (e => e.key === 'Enter' && onToggle?.())}
     >
-      <div className="mc-card__accent" style={{ background: done ? '#34D399' : color }} />
-
-      {/* Indicateur visuel de statut (non interactif, le clic est sur la carte entière) */}
-      <div className={`mc-card__check${done ? ' done' : ''}`}
-        style={done ? {} : { borderColor: color + 'AA' }}
-        aria-hidden="true"
-      >
-        {done && '✓'}
-      </div>
+      {!hideCheck && (
+        <div className={`mc-card__check${done ? ' done' : ''}`}
+          style={done ? {} : { borderColor: color + 'AA' }}
+          aria-hidden="true"
+        >
+          {done && '✓'}
+        </div>
+      )}
 
       <div className="mc-card__body">
-        <span className={`mc-card__titre${done ? ' done' : ''}`}>{tache.titre}</span>
+        <span className={`mc-card__titre${done && !hideCheck ? ' done' : ''}`}>{tache.titre}</span>
         <div className="mc-card__meta">
-          {tache.priorite === 'urgente' && <span className="mc-card__badge mc-card__badge--urgent">🔴 Urgent</span>}
-          {tache.priorite === 'haute' && <span className="mc-card__badge mc-card__badge--high">🟡 Priorité</span>}
+          {tache.priorite === 'urgente' && <span className="mc-card__badge mc-card__badge--urgent">Urgent</span>}
+          {tache.priorite === 'haute' && <span className="mc-card__badge mc-card__badge--high">Priorité</span>}
           {ech && (
             <span className={`mc-card__badge${ech.urgent ? ' mc-card__badge--urgent' : ''}`}>
-              📅 {ech.label}
+              {ech.label}
             </span>
           )}
           {joursDepuis !== null && joursDepuis > 0 && (
             <span className="mc-card__badge mc-card__badge--history">
-              🕐 il y a {joursDepuis}j
+              il y a {joursDepuis}j
             </span>
           )}
-          {joursDepuis === 0 && <span className="mc-card__badge mc-card__badge--today">✓ Fait aujourd'hui</span>}
+          {joursDepuis === 0 && !hideCheck && <span className="mc-card__badge mc-card__badge--today">Fait aujourd'hui</span>}
         </div>
       </div>
 
       <div className="mc-card__actions" onClick={e => e.stopPropagation()}>
-        <button className="mc-card__act" onClick={onEdit}>✏️</button>
+        <button className="mc-card__act" onClick={onEdit}>✎</button>
         <button className={`mc-card__act${confirmDel ? ' confirming' : ''}`}
           onClick={() => { if (!confirmDel) { setConfirmDel(true); return; } onDelete(); setConfirmDel(false); }}
           onBlur={() => setConfirmDel(false)}
         >
-          {confirmDel ? '⚠️' : '🗑'}
+          {confirmDel ? '!' : '×'}
         </button>
       </div>
     </div>
   );
 }
 
-// ─── Section Du Jour ──────────────────────────────────────────────────────────
+// ─── Badge fréquence ──────────────────────────────────────────────────────────
 
-const FREQ_LABELS: Partial<Record<FrequenceTache, string>> = {
-  hebdomadaire:   'Hebdomadaire',
-  bihebdomadaire: 'Toutes les 2 sem.',
-  mensuelle:      'Mensuel',
-  trimestrielle:  'Trimestriel',
-  semestrielle:   'Semestriel',
-  annuelle:       'Annuel',
+const FREQ_DOT_COLOR: Partial<Record<FrequenceTache, string>> = {
+  quotidienne:    '#1D9E75',
+  hebdomadaire:   '#378ADD',
+  bihebdomadaire: '#378ADD',
+  mensuelle:      '#7F77DD',
+  trimestrielle:  '#BA7517',
+  semestrielle:   '#BA7517',
+  annuelle:       '#BA7517',
 };
 
-const FREQ_COLORS: Partial<Record<FrequenceTache, string>> = {
-  hebdomadaire:   '#60A5FA',
-  bihebdomadaire: '#818CF8',
-  mensuelle:      '#A78BFA',
-  trimestrielle:  '#FB923C',
-  semestrielle:   '#FBBF24',
-  annuelle:       '#F472B6',
-};
+// ─── Long-press hook ──────────────────────────────────────────────────────────
 
-// ─── Scoring "impact visuel" pour le mode express ────────────────────────────
+function useLongPress(callback: () => void, delay = 500) {
+  const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const fired = useRef(false);
 
-const MOTS_IMPACT_ELEVE = [
-  'aspirateur', 'serpillière', 'sol', 'cuisine', 'plan de travail', 'salon',
-  'salle de bain', 'wc', 'toilettes', 'lit', 'draps', 'miroir', 'vitres',
-  'poubelle', 'lavabo', 'douche', 'surfaces',
-];
+  const start = useCallback(() => {
+    fired.current = false;
+    timer.current = setTimeout(() => {
+      fired.current = true;
+      callback();
+    }, delay);
+  }, [callback, delay]);
 
-const MOTS_IMPACT_MOYEN = [
-  'linge', 'machine', 'éponge', 'torchon', 'coussins', 'canapé',
-  'ranger', 'affaires', 'trier',
-];
+  const cancel = useCallback(() => {
+    if (timer.current) { clearTimeout(timer.current); timer.current = null; }
+  }, []);
 
-function scoreImpactVisuel(titre: string): number {
-  const t = titre.toLowerCase();
-  if (MOTS_IMPACT_ELEVE.some(m => t.includes(m))) return 20;
-  if (MOTS_IMPACT_MOYEN.some(m => t.includes(m))) return 10;
-  return 0;
+  return { start, cancel, fired };
 }
 
-function selectionnerTachesExpress(
-  taches: Tache[],
-  pieces: import('@shared/types/modules').Piece[],
-  n = 5,
-): Tache[] {
-  const pieceScore = new Map(pieces.map(p => [p.id, p.scoreProprety]));
+// ─── Carte tâche moteur ───────────────────────────────────────────────────────
 
-  const scored = taches
-    .filter(t => !isCompletedToday(t))
-    .map(t => {
-      let score = 0;
-      if (isOverdue(t))    score += 30;
-      if (isDueToday(t))   score += 20;
-      score += scoreImpactVisuel(t.titre);
-      // Pièce la plus dégradée = priorité haute
-      if (t.pieceAssociee) {
-        const ps = pieceScore.get(t.pieceAssociee) ?? 100;
-        score += Math.round((100 - ps) / 5); // 0–20 pts
-      }
-      // Favoriser les tâches fréquentes (quotidienne > hebdo > …)
-      const freqBonus: Partial<Record<FrequenceTache, number>> = {
-        quotidienne: 15, hebdomadaire: 10, bihebdomadaire: 7,
-        mensuelle: 4, trimestrielle: 2, semestrielle: 1, annuelle: 0,
-      };
-      score += freqBonus[t.frequence ?? 'ponctuelle'] ?? 0;
-      return { tache: t, score };
-    });
+interface TaskRowEngineProps {
+  task: MenageTask;
+  onToggle: () => void;
+  onEdit: () => void;
+  onDelete: () => void;
+  onLongPress: () => void;
+}
 
-  scored.sort((a, b) => b.score - a.score);
-  return scored.slice(0, n).map(s => s.tache);
+function TaskRowEngine({ task, onToggle, onEdit, onDelete, onLongPress }: TaskRowEngineProps) {
+  const done = isCompletedToday(task);
+  const { start, cancel, fired } = useLongPress(onLongPress);
+  const [confirmDel, setConfirmDel] = useState(false);
+
+  const handleClick = () => {
+    if (fired.current) { fired.current = false; return; }
+    onToggle();
+  };
+
+  return (
+    <div
+      className={`mc-card${done ? ' mc-card--done' : ''}`}
+      onClick={handleClick}
+      onMouseDown={start}
+      onMouseUp={cancel}
+      onMouseLeave={cancel}
+      onTouchStart={start}
+      onTouchEnd={cancel}
+      onTouchMove={cancel}
+      onTouchCancel={cancel}
+      role="button"
+      tabIndex={0}
+      onKeyDown={e => e.key === 'Enter' && onToggle()}
+    >
+      <div className="mc-card__accent" style={{ background: done ? '#34D399' : '#C69CE2' }} />
+      <div
+        className={`mc-card__check${done ? ' done' : ''}`}
+        style={done ? {} : { borderColor: 'rgba(198,156,226,0.5)' }}
+        aria-hidden="true"
+      >
+        {done && '✓'}
+      </div>
+      <div className="mc-card__body">
+        <span className={`mc-card__titre${done ? ' done' : ''}`}>{task.titre}</span>
+      </div>
+      <span className="dj-freq" style={{ background: FREQ_DOT_COLOR[task.frequence ?? 'ponctuelle'] ?? '#9B8DB5' }} />
+      <div
+        className="mc-card__actions"
+        onClick={e => e.stopPropagation()}
+        onMouseDown={e => e.stopPropagation()}
+        onTouchStart={e => e.stopPropagation()}
+      >
+        <button className="mc-card__act" onClick={onEdit}>✎</button>
+        <button
+          className={`mc-card__act${confirmDel ? ' confirming' : ''}`}
+          onClick={() => { if (!confirmDel) { setConfirmDel(true); return; } onDelete(); setConfirmDel(false); }}
+          onBlur={() => setConfirmDel(false)}
+        >
+          {confirmDel ? '!' : '×'}
+        </button>
+      </div>
+    </div>
+  );
 }
 
 // ─── Timer hook ───────────────────────────────────────────────────────────────
@@ -469,7 +480,7 @@ function SprintExpress({ taches: tachesInitiales, onQuitter }: SprintExpressProp
       {/* En-tête sprint */}
       <div className="sprint-header">
         <div className="sprint-header__left">
-          <span className="sprint-icon">⚡</span>
+          <span className="sprint-icon" />
           <div>
             <p className="sprint-title">Coup de propre express</p>
             <p className="sprint-sub">{faites}/{total} tâches · impact maximum</p>
@@ -484,7 +495,7 @@ function SprintExpress({ taches: tachesInitiales, onQuitter }: SprintExpressProp
           <svg viewBox="0 0 56 56" className="sprint-timer__svg">
             <circle cx="28" cy="28" r="24" fill="none" stroke="rgba(167,139,250,0.15)" strokeWidth="4"/>
             <circle cx="28" cy="28" r="24" fill="none"
-              stroke={toutFait ? '#34D399' : timerFini ? '#EF4444' : '#A78BFA'}
+              stroke={toutFait ? '#34D399' : timerFini ? '#EF4444' : '#C69CE2'}
               strokeWidth="4" strokeLinecap="round"
               strokeDasharray={`${2 * Math.PI * 24}`}
               strokeDashoffset={`${2 * Math.PI * 24 * (1 - timerPct / 100)}`}
@@ -542,47 +553,46 @@ function SprintExpress({ taches: tachesInitiales, onQuitter }: SprintExpressProp
   );
 }
 
+// ─── Modes ────────────────────────────────────────────────────────────────────
+
+const MODE_LABELS: Record<MenageMode, string> = {
+  normal:           'Aujourd\'hui',
+  grandMenage:      'Grand ménage',
+  receptionInvites: 'Invités',
+  rattrapage:       'Rattrapage',
+};
+
 // ─── Section Du Jour ──────────────────────────────────────────────────────────
 
 function SectionDuJour() {
-  const data = useTachesDuJour();
+  const [mode, setMode] = useState<MenageMode>('normal');
+  const [skippingTask, setSkippingTask] = useState<MenageTask | null>(null);
+  const [sprintTaches, setSprintTaches] = useState<MenageTask[] | null>(null);
   const store = useMaisonStore();
-  const pieces = usePieces() ?? [];
-  const [sprintTaches, setSprintTaches] = useState<Tache[] | null>(null);
 
-  const quotidiennes  = data?.quotidiennes  ?? [];
-  const periodiques   = data?.periodiques   ?? [];
-  const saisonnieres  = data?.saisonnieres  ?? [];
+  const tasks    = useTachesDuJourEngine(mode) ?? [];
+  const saisons  = useSaisonnieres() ?? [];
 
-  const toutesLesTaches = [...quotidiennes, ...periodiques];
-  const totalRegulier = toutesLesTaches.length;
-  const faitesRegulier = toutesLesTaches.filter(isCompletedToday).length;
-  const totalSaison = saisonnieres.length;
-  const faitesSaison = saisonnieres.filter(s => s.faiteAnnee).length;
-  const total = totalRegulier + totalSaison;
-  const faites = faitesRegulier + faitesSaison;
-  const allDone = total > 0 && faites === total;
+  const faites  = tasks.filter(isCompletedToday).length;
+  const total   = tasks.length;
   const progPct = total > 0 ? Math.round((faites / total) * 100) : 0;
+  const allDone = total > 0 && faites === total;
+  const durMin  = tasks.reduce((s, t) => s + (t.dureeEstimee ?? 10), 0);
+  const isLoading = tasks === undefined;
 
-  const handleToggle = async (t: Tache) => {
-    if (isCompletedToday(t)) {
-      await TacheService.rouvrir(t.id);
-    } else {
-      await TacheService.completerTache(t.id);
-    }
+  const handleToggle = async (t: MenageTask) => {
+    if (isCompletedToday(t)) await TacheService.rouvrir(t.id);
+    else await TacheService.completerTache(t.id);
   };
 
   const handleToggleSaisonniere = async (item: TacheSaisonniereLive) => {
     const annee = new Date().getFullYear();
-    const clé = cléSaisonniere(item.def.titre, annee);
+    const clé   = cléSaisonniere(item.def.titre, annee);
     if (item.faiteAnnee && item.tache) {
-      // Décocher : remettre à a_faire
       await TacheService.rouvrir(item.tache.id);
     } else if (item.tache) {
-      // Existe déjà en DB mais pas encore cochée cette année
       await TacheService.completerTache(item.tache.id);
     } else {
-      // Créer et cocher immédiatement
       const id = await db.taches.add(newEntity<Tache>({
         titre: item.def.titre,
         statut: 'a_faire',
@@ -596,156 +606,148 @@ function SectionDuJour() {
     }
   };
 
-  const lancerExpress = () => {
-    const selection = selectionnerTachesExpress(toutesLesTaches, pieces);
-    setSprintTaches(selection);
+  const handleSkip = async () => {
+    if (!skippingTask) return;
+    const patch = computeSkipPatch(skippingTask, new Date());
+    await TacheService.applyMenagePatch(patch);
+    setSkippingTask(null);
   };
 
-  const periodiquesByFreq = periodiques.reduce<Record<string, Tache[]>>((acc, t) => {
-    const key = t.frequence ?? 'ponctuelle';
-    if (!acc[key]) acc[key] = [];
-    acc[key].push(t);
-    return acc;
-  }, {});
-
-  const isLoading = data === undefined;
+  const lancerExpress = () => {
+    const nonDone = tasks.filter(t => !isCompletedToday(t)).slice(0, 5);
+    if (nonDone.length > 0) setSprintTaches(nonDone);
+  };
 
   if (sprintTaches !== null) {
     return <SprintExpress taches={sprintTaches} onQuitter={() => setSprintTaches(null)} />;
   }
 
   return (
-    <div className="mc-section">
-      <div className="mc-section__header">
-        <div className="mc-section__title-row">
-          <span className="mc-section__icon">📋</span>
-          <div>
-            <h3 className="mc-section__title">Aujourd'hui</h3>
-            <p className="mc-section__sub">
-              {isLoading ? 'Chargement…' : total === 0
-                ? 'Aucune tâche due aujourd\'hui'
-                : `${total} tâche${total > 1 ? 's' : ''} · ${faites} effectuée${faites > 1 ? 's' : ''}`
-              }
-            </p>
+    <>
+      <div className="mc-section">
+        {/* En-tête */}
+        <div className="mc-section__header">
+          <div className="mc-section__title-row">
+            <div>
+              <h3 className="mc-section__title">Aujourd'hui</h3>
+              <p className="mc-section__sub">
+                {isLoading ? 'Chargement…'
+                  : total === 0 ? 'Maison à jour'
+                  : `${total} tâche${total > 1 ? 's' : ''} · ~${durMin} min`}
+              </p>
+            </div>
           </div>
+          {total > 0 && (
+            <div className="mc-section__score-col">
+              <span className={`mc-section__score${allDone ? ' done' : ''}`}>{progPct}%</span>
+              <div className="mc-prog-bar">
+                <div className="mc-prog-fill" style={{ width: `${progPct}%`, background: allDone ? '#34D399' : '#C69CE2' }} />
+              </div>
+            </div>
+          )}
         </div>
-        {total > 0 && (
-          <div className="mc-section__score-col">
-            <span className={`mc-section__score${allDone ? ' done' : ''}`}>{progPct}%</span>
-            <div className="mc-prog-bar">
-              <div className="mc-prog-fill" style={{ width: `${progPct}%`, background: allDone ? '#34D399' : '#A78BFA' }} />
+
+        {/* Sélecteur de modes */}
+        <div className="dj-modes">
+          {(Object.keys(MODE_LABELS) as MenageMode[]).map(m => (
+            <button
+              key={m}
+              className={`dj-mode-pill${mode === m ? ' active' : ''}`}
+              onClick={() => setMode(m)}
+            >
+              {MODE_LABELS[m]}
+            </button>
+          ))}
+        </div>
+
+        {/* Liste moteur */}
+        {total === 0 && !isLoading ? (
+          <div className="mc-empty">
+            <span>🌿</span>
+            <p>Maison à jour, rien à faire aujourd'hui</p>
+          </div>
+        ) : (
+          <div className="mc-cards">
+            {tasks.map(t => (
+              <TaskRowEngine
+                key={t.id}
+                task={t}
+                onToggle={() => handleToggle(t)}
+                onEdit={() => store.openDrawerTache({ editId: t.id })}
+                onDelete={() => TacheService.deleteTache(t.id)}
+                onLongPress={() => setSkippingTask(t)}
+              />
+            ))}
+          </div>
+        )}
+
+        {allDone && total > 0 && (
+          <div className="dj-bravo"><span>✨</span><p>Maison impeccable — tout est fait</p></div>
+        )}
+
+        {!allDone && total > 0 && (
+          <button className="sprint-cta" onClick={lancerExpress}>
+            <span className="sprint-cta__icon" />
+            <div className="sprint-cta__text">
+              <span className="sprint-cta__title">Sprint express</span>
+              <span className="sprint-cta__sub">5 tâches · impact maximum · 20 min</span>
+            </div>
+            <span className="sprint-cta__arrow">→</span>
+          </button>
+        )}
+
+        {/* Tâches saisonnières */}
+        {saisons.length > 0 && (
+          <div className="dj-group">
+            <span className="dj-group__label dj-group__label--saison">🍂 Ce mois-ci</span>
+            <div className="mc-cards">
+              {saisons.map(item => (
+                <div
+                  key={item.def.titre}
+                  className={`mc-card${item.faiteAnnee ? ' mc-card--done' : ''}`}
+                  onClick={() => handleToggleSaisonniere(item)}
+                  role="button"
+                  tabIndex={0}
+                  onKeyDown={e => e.key === 'Enter' && handleToggleSaisonniere(item)}
+                >
+                  <div className="mc-card__accent" style={{ background: item.faiteAnnee ? '#34D399' : '#F59E0B' }} />
+                  <div className={`mc-card__check${item.faiteAnnee ? ' done' : ''}`}
+                    style={item.faiteAnnee ? {} : { borderColor: '#F59E0BAA' }}
+                    aria-hidden="true"
+                  >{item.faiteAnnee && '✓'}</div>
+                  <div className="mc-card__body">
+                    <span className={`mc-card__titre${item.faiteAnnee ? ' done' : ''}`}>
+                      {item.def.emoji} {item.def.titre}
+                    </span>
+                    {item.def.description && (
+                      <div className="mc-card__meta">
+                        <span className="mc-card__badge">{item.def.description}</span>
+                      </div>
+                    )}
+                  </div>
+                  <span className="dj-freq">🍂</span>
+                </div>
+              ))}
             </div>
           </div>
         )}
       </div>
 
-      {total > 0 && !allDone && (
-        <button className="sprint-cta" onClick={lancerExpress}>
-          <span className="sprint-cta__icon">⚡</span>
-          <div className="sprint-cta__text">
-            <span className="sprint-cta__title">Coup de propre express</span>
-            <span className="sprint-cta__sub">5 tâches · impact maximum · 20 min</span>
-          </div>
-          <span className="sprint-cta__arrow">→</span>
-        </button>
-      )}
-
-      {allDone && total > 0 && (
-        <div className="dj-bravo">
-          <span>✨</span>
-          <p>Toutes les tâches du jour sont faites</p>
-        </div>
-      )}
-
-      {!isLoading && total === 0 && (
-        <div className="mc-empty">
-          <span>🌿</span>
-          <p>Rien à faire aujourd'hui, la maison est à jour</p>
-        </div>
-      )}
-
-      {/* ─ Tâches quotidiennes ─ */}
-      {quotidiennes.length > 0 && (
-        <div className="dj-group">
-          <span className="dj-group__label">☀️ Quotidien</span>
-          <div className="mc-cards">
-            {quotidiennes.map(t => (
-              <TacheCard key={t.id} tache={t}
-                done={isCompletedToday(t)}
-                color="#A78BFA"
-                onToggle={() => handleToggle(t)}
-                onEdit={() => store.openDrawerTache({ editId: t.id })}
-                onDelete={() => TacheService.deleteTache(t.id)}
-              />
-            ))}
+      {/* Overlay "Pas aujourd'hui" */}
+      {skippingTask && (
+        <div className="dj-skip-overlay" onClick={() => setSkippingTask(null)}>
+          <div className="dj-skip-sheet" onClick={e => e.stopPropagation()}>
+            <p className="dj-skip-task-name">{skippingTask.titre}</p>
+            <button className="dj-skip-btn" onClick={handleSkip}>
+              Pas aujourd'hui
+            </button>
+            <button className="dj-skip-cancel" onClick={() => setSkippingTask(null)}>
+              Annuler
+            </button>
           </div>
         </div>
       )}
-
-      {/* ─ Tâches périodiques dues aujourd'hui ou en retard ─ */}
-      {Object.entries(periodiquesByFreq).map(([freq, taches]) => {
-        const color = FREQ_COLORS[freq as FrequenceTache] ?? '#9B8DB5';
-        const label = FREQ_LABELS[freq as FrequenceTache] ?? freq;
-        const hasOverdue = taches.some(t => isOverdue(t));
-        return (
-          <div key={freq} className="dj-group">
-            <span className="dj-group__label" style={{ color }}>
-              {hasOverdue ? '🔴' : '📅'} {label}
-              {hasOverdue && <span className="dj-badge-retard">En retard</span>}
-            </span>
-            <div className="mc-cards">
-              {taches.map(t => (
-                <TacheCard key={t.id} tache={t}
-                  done={isCompletedToday(t)}
-                  color={color}
-                  onToggle={() => handleToggle(t)}
-                  onEdit={() => store.openDrawerTache({ editId: t.id })}
-                  onDelete={() => TacheService.deleteTache(t.id)}
-                />
-              ))}
-            </div>
-          </div>
-        );
-      })}
-
-      {/* ─ Tâches saisonnières ─ */}
-      {saisonnieres.length > 0 && (
-        <div className="dj-group">
-          <span className="dj-group__label dj-group__label--saison">🍂 Ce mois-ci</span>
-          <div className="mc-cards">
-            {saisonnieres.map(item => (
-              <div
-                key={item.def.titre}
-                className={`mc-card${item.faiteAnnee ? ' mc-card--done' : ''}`}
-                onClick={() => handleToggleSaisonniere(item)}
-                role="button"
-                tabIndex={0}
-                onKeyDown={e => e.key === 'Enter' && handleToggleSaisonniere(item)}
-              >
-                <div className="mc-card__accent" style={{ background: item.faiteAnnee ? '#34D399' : '#F59E0B' }} />
-                <div className={`mc-card__check${item.faiteAnnee ? ' done' : ''}`}
-                  style={item.faiteAnnee ? {} : { borderColor: '#F59E0BAA' }}
-                  aria-hidden="true"
-                >
-                  {item.faiteAnnee && '✓'}
-                </div>
-                <div className="mc-card__body">
-                  <span className={`mc-card__titre${item.faiteAnnee ? ' done' : ''}`}>
-                    {item.def.emoji} {item.def.titre}
-                  </span>
-                  <div className="mc-card__meta">
-                    <span className="mc-card__badge saison-badge">🍂 Saisonnier</span>
-                    {item.def.description && (
-                      <span className="mc-card__badge">{item.def.description}</span>
-                    )}
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-    </div>
+    </>
   );
 }
 
@@ -776,11 +778,6 @@ function SectionQuotidiennes() {
   const [showSugg, setShowSugg] = useState(false);
   const [ajoutMsg, setAjoutMsg] = useState<string | null>(null);
 
-  const faites = taches.filter(isCompletedToday).length;
-  const total = taches.length;
-  const allDone = total > 0 && faites === total;
-  const progPct = total > 0 ? (faites / total) * 100 : 0;
-
   const addSugg = async (titre: string) => {
     await db.taches.add(newEntity<Tache>({
       titre, statut: 'a_faire', moduleOrigine: 'maison',
@@ -800,32 +797,22 @@ function SectionQuotidiennes() {
     <div className="mc-section">
       <div className="mc-section__header">
         <div className="mc-section__title-row">
-          <span className="mc-section__icon">☀️</span>
           <div>
-            <h3 className="mc-section__title">Tâches quotidiennes</h3>
-            <p className="mc-section__sub">À faire chaque jour, automatiquement récurrentes</p>
+            <h3 className="mc-section__title">Quotidien</h3>
+            <p className="mc-section__sub">Tâches récurrentes chaque jour</p>
           </div>
         </div>
-        {total > 0 && (
-          <div className="mc-section__score-col">
-            <span className={`mc-section__score${allDone ? ' done' : ''}`}>{faites}/{total}</span>
-            <div className="mc-prog-bar">
-              <div className="mc-prog-fill" style={{ width: `${progPct}%`, background: allDone ? '#34D399' : '#A78BFA' }} />
-            </div>
-          </div>
-        )}
+        <span className="mc-section__score">{taches.length}</span>
       </div>
 
       {taches.length === 0 ? (
         <div className="mc-empty">
-          <span>✨</span><p>Ajoutez vos tâches du quotidien</p>
+          <p>Ajoutez vos tâches du quotidien</p>
         </div>
       ) : (
         <div className="mc-cards">
           {taches.map(t => (
-            <TacheCard key={t.id} tache={t} color="#A78BFA"
-              done={isCompletedToday(t)}
-              onToggle={() => isCompletedToday(t) ? TacheService.rouvrir(t.id) : TacheService.completerTache(t.id)}
+            <TacheCard key={t.id} tache={t} hideCheck
               onEdit={() => store.openDrawerTache({ editId: t.id })}
               onDelete={() => TacheService.deleteTache(t.id)}
             />
@@ -836,11 +823,11 @@ function SectionQuotidiennes() {
       {showSugg && (
         <div className="mc-suggestions">
           <button className="mc-sugg-btn mc-sugg-btn--all" onClick={addAll}>
-            ✨ Tout ajouter ({SUGGESTIONS_QUOTIDIENNES.length} tâches)
+            Tout ajouter ({SUGGESTIONS_QUOTIDIENNES.length} tâches)
           </button>
           {SUGGESTIONS_QUOTIDIENNES.map(s => (
             <button key={s.titre} className="mc-sugg-btn" onClick={() => addSugg(s.titre)}>
-              {s.emoji} {s.titre}
+              {s.titre}
             </button>
           ))}
         </div>
@@ -848,9 +835,7 @@ function SectionQuotidiennes() {
 
       <div className="mc-actions">
         <button className="mc-btn mc-btn--primary" onClick={() => store.openDrawerTache({ frequence: 'quotidienne' })}>+ Ajouter</button>
-        <button className="mc-btn mc-btn--ghost" onClick={() => setShowSugg(s => !s)}>
-          💡 Suggestions
-        </button>
+        <button className="mc-btn mc-btn--ghost" onClick={() => setShowSugg(s => !s)}>Suggestions</button>
         {ajoutMsg && <span className="mc-ajout-msg">{ajoutMsg}</span>}
       </div>
     </div>
@@ -866,8 +851,6 @@ function SectionPeriodique({ cfg }: { cfg: FreqConfig }) {
   const [showSugg, setShowSugg] = useState(false);
   const [ajoutMsg, setAjoutMsg] = useState<string | null>(null);
 
-  const faites = taches.filter(t => t.statut === 'fait').length;
-  const total = taches.length;
   const suggestions = SUGGESTIONS_PERIODIQUES[cfg.value] ?? [];
 
   const addSugg = async (titre: string) => {
@@ -888,15 +871,15 @@ function SectionPeriodique({ cfg }: { cfg: FreqConfig }) {
   return (
     <div className="mc-periodik">
       <button className="mc-periodik__header" onClick={() => setOpen(o => !o)}>
-        <span className="mc-periodik__icon" style={{ background: cfg.color + '20', color: cfg.color }}>{cfg.emoji}</span>
+        <span className="mc-periodik__icon" style={{ background: cfg.color, borderRadius: '50%', width: 10, height: 10, display: 'inline-block', flexShrink: 0 }} />
         <div className="mc-periodik__titles">
           <span className="mc-periodik__label">{cfg.label}</span>
           <span className="mc-periodik__desc">{cfg.description}</span>
         </div>
         <div className="mc-periodik__right">
-          {total > 0 && (
+          {taches.length > 0 && (
             <span className="mc-periodik__badge" style={{ background: cfg.color + '18', color: cfg.color }}>
-              {faites}/{total}
+              {taches.length}
             </span>
           )}
           <span className="mc-periodik__chevron">{open ? '▲' : '▼'}</span>
@@ -910,8 +893,7 @@ function SectionPeriodique({ cfg }: { cfg: FreqConfig }) {
           ) : (
             <div className="mc-cards">
               {taches.map(t => (
-                <TacheCard key={t.id} tache={t} color={cfg.color}
-                  onToggle={() => t.statut === 'fait' ? TacheService.rouvrir(t.id) : TacheService.completerTache(t.id)}
+                <TacheCard key={t.id} tache={t} color={cfg.color} hideCheck
                   onEdit={() => store.openDrawerTache({ editId: t.id })}
                   onDelete={() => TacheService.deleteTache(t.id)}
                 />
@@ -922,11 +904,11 @@ function SectionPeriodique({ cfg }: { cfg: FreqConfig }) {
           {showSugg && suggestions.length > 0 && (
             <div className="mc-suggestions">
               <button className="mc-sugg-btn mc-sugg-btn--all" onClick={addAll}>
-                ✨ Tout ajouter ({suggestions.length} tâches)
+                Tout ajouter ({suggestions.length} tâches)
               </button>
               {suggestions.map(s => (
                 <button key={s.titre} className="mc-sugg-btn" onClick={() => addSugg(s.titre)}>
-                  {s.emoji} {s.titre}
+                  {s.titre}
                 </button>
               ))}
             </div>
@@ -938,12 +920,25 @@ function SectionPeriodique({ cfg }: { cfg: FreqConfig }) {
               onClick={() => store.openDrawerTache({ frequence: cfg.value })}
             >+ Ajouter</button>
             {suggestions.length > 0 && (
-              <button className="mc-btn mc-btn--ghost" onClick={() => setShowSugg(s => !s)}>💡</button>
+              <button className="mc-btn mc-btn--ghost" onClick={() => setShowSugg(s => !s)}>Suggestions</button>
             )}
             {ajoutMsg && <span className="mc-ajout-msg">{ajoutMsg}</span>}
           </div>
         </div>
       )}
+    </div>
+  );
+}
+
+// ─── Section Mes Tâches (fusion Quotidien + Périodique) ──────────────────────
+
+function SectionMesTaches() {
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+      <SectionQuotidiennes />
+      <div className="mc-periodiques">
+        {FREQUENCES_PERIODIQUES.map(cfg => <SectionPeriodique key={cfg.value} cfg={cfg} />)}
+      </div>
     </div>
   );
 }
@@ -1164,12 +1159,56 @@ function SectionGrandMenage() {
         </div>
       )}
 
+      {/* Remise à zéro du moteur ménage */}
+      <ResetMenageBlock />
+
       <TacheForm
         isOpen={store.drawerTacheOpen}
         onClose={store.closeDrawerTache}
         editId={store.drawerTacheEditId}
         piecePrefill={store.drawerTachePiecePrefill}
       />
+    </div>
+  );
+}
+
+function ResetMenageBlock() {
+  const [confirm, setConfirm] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [done, setDone] = useState(false);
+
+  const handleReset = async () => {
+    setLoading(true);
+    await TacheService.resetMenageTasks();
+    setLoading(false);
+    setConfirm(false);
+    setDone(true);
+    setTimeout(() => setDone(false), 3000);
+  };
+
+  return (
+    <div className="gm-reset-block">
+      <div className="gm-reset-block__info">
+        <span className="gm-reset-block__title">Remise à zéro</span>
+        <span className="gm-reset-block__sub">Marque toutes les tâches comme faites aujourd'hui — utile après un déménagement ou un grand nettoyage complet.</span>
+      </div>
+      {done ? (
+        <span className="gm-reset-block__ok">✓ Fait</span>
+      ) : confirm ? (
+        <div className="gm-banner__confirm">
+          <span className="gm-banner__confirm-label">Remettre toutes les tâches à aujourd'hui ?</span>
+          <div className="gm-banner__confirm-btns">
+            <button className="gm-btn gm-btn--danger" onClick={handleReset} disabled={loading}>
+              {loading ? '…' : 'Confirmer'}
+            </button>
+            <button className="gm-btn gm-btn--ghost" onClick={() => setConfirm(false)}>Annuler</button>
+          </div>
+        </div>
+      ) : (
+        <button className="gm-btn gm-btn--ghost" onClick={() => setConfirm(true)}>
+          Remettre à zéro
+        </button>
+      )}
     </div>
   );
 }
@@ -1186,27 +1225,19 @@ export default function MenageModule() {
     <div className="mc-module">
       <nav className="mc-tabs">
         <button className={`mc-tab${onglet === 'du_jour' ? ' active' : ''}`} onClick={() => setOnglet('du_jour')}>
-          📋 Du jour
+          Du jour
         </button>
-        <button className={`mc-tab${onglet === 'quotidien' ? ' active' : ''}`} onClick={() => setOnglet('quotidien')}>
-          ☀️ Routine
-        </button>
-        <button className={`mc-tab${onglet === 'periodique' ? ' active' : ''}`} onClick={() => setOnglet('periodique')}>
-          📆 Périodique
+        <button className={`mc-tab${onglet === 'mes_taches' ? ' active' : ''}`} onClick={() => setOnglet('mes_taches')}>
+          Mes tâches
         </button>
         <button className={`mc-tab${onglet === 'grand_menage' ? ' active' : ''}`} onClick={() => setOnglet('grand_menage')}>
-          🏠 Pièces
+          Pièces
         </button>
       </nav>
 
       <div className="mc-content">
         {onglet === 'du_jour' && <SectionDuJour />}
-        {onglet === 'quotidien' && <SectionQuotidiennes />}
-        {onglet === 'periodique' && (
-          <div className="mc-periodiques">
-            {FREQUENCES_PERIODIQUES.map(cfg => <SectionPeriodique key={cfg.value} cfg={cfg} />)}
-          </div>
-        )}
+        {onglet === 'mes_taches' && <SectionMesTaches />}
         {onglet === 'grand_menage' && <SectionGrandMenage />}
       </div>
 

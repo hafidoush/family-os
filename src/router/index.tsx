@@ -33,7 +33,7 @@ const Receptions       = lazy(() => import('../modules/receptions'))
 // Dashboard pages dédiées
 const ActivitesDuJour  = lazy(() => import('../modules/dashboard/pages/ActivitesPlanifieesPage'))
 const ProgrammeDuJour  = lazy(() => import('../modules/dashboard/pages/ProgrammeDuJourPage'))
-const MenageDuJour     = lazy(() => import('../modules/dashboard/pages/MenageDuJourPage'))
+// MenageDuJourPage supprimé — remplacé par /menage (onglet Du jour)
 const PagePartage      = lazy(() => import('../modules/partage/PagePartage'))
 
 function ModuleFallback() {
@@ -121,7 +121,7 @@ export function AppRouter() {
         <Route path="receptions/*"      element={S(Receptions)}      />
         <Route path="activites-du-jour" element={S(ActivitesDuJour)} />
         <Route path="programme-du-jour" element={S(ProgrammeDuJour)} />
-        <Route path="menage-du-jour"    element={S(MenageDuJour)}    />
+        <Route path="menage-du-jour"    element={<Navigate to="/menage" replace />} />
 
         <Route path="*" element={<Navigate to="/dashboard" replace />} />
       </Route>

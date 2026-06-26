@@ -53,6 +53,12 @@ export interface Tache extends AuditFields, DeviceField {
   completeeLe?: Date;
   dateReference?: Date; // date de départ pour le calcul de la prochaine échéance
   archive: boolean;
+  // ── Moteur Ménage (moduleOrigine === 'maison' uniquement) ──────────────────
+  missedCount?: number           // oublis consécutifs non cochés
+  skippedUntil?: Date | null     // "Pas aujourd'hui" — réapparaît après cette date
+  menageDifficulty?: 1 | 2 | 3  // 1=léger, 2=moyen, 3=intensif
+  menageVisualImpact?: 1 | 2 | 3      // 1=invisible, 3=très visible
+  menageHealthImportance?: 1 | 2 | 3  // 1=esthétique, 3=sanitaire
 }
 
 // ─── ÉVÉNEMENT ────────────────────────────────────────────────────────────────

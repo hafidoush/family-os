@@ -69,6 +69,11 @@ function useDbInit() {
       await searchService.buildIndex(db)
       // Purge physique des enregistrements soft-deleted > 30 jours
       await purgeSoftDeletes()
+      // Traitement silencieux des tâches ménage non réalisées la veille (1×/jour)
+      try {
+        const { TacheService } = await import('./modules/maison/services/TacheService')
+        await TacheService.processMissedTasks()
+      } catch (e) { console.warn('[Menage] processMissedTasks non-fatal:', e) }
 
         setReady(true)
       } catch (err) {

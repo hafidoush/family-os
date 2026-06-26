@@ -14,7 +14,7 @@ import type {
 } from '@shared/types'
 
 // ─── Version du schéma — incrémenter à chaque migration ──────────────────────
-export const SCHEMA_VERSION = 13
+export const SCHEMA_VERSION = 14
 
 // ─── Définition de la base ────────────────────────────────────────────────────
 class FamilyOSDatabase extends Dexie {
@@ -576,6 +576,28 @@ class FamilyOSDatabase extends Dexie {
     // ─── Version 13 — suppression croissanceMesures (fonctionnalité abandonnée) ──
     this.version(13).stores({
       croissanceMesures: null,
+    })
+
+    // ─── Version 14 — champs moteur Ménage ────────────────────────────────────
+    // Nouveaux champs optionnels sur Tache (pas d'index → stores vide).
+    // L'upgrade initialise les valeurs par défaut sur toutes les tâches maison
+    // existantes pour éviter les undefined dans le moteur de décision.
+    this.version(14).stores({}).upgrade(async tx => {
+      const taches = await tx.table('taches')
+        .filter((t: { moduleOrigine?: string }) => t.moduleOrigine === 'maison')
+        .toArray()
+
+      for (const t of taches) {
+        const patch: Record<string, unknown> = {}
+        if (t.missedCount            === undefined) patch.missedCount            = 0
+        if (t.skippedUntil           === undefined) patch.skippedUntil           = null
+        if (t.menageDifficulty       === undefined) patch.menageDifficulty       = 2
+        if (t.menageVisualImpact     === undefined) patch.menageVisualImpact     = 2
+        if (t.menageHealthImportance === undefined) patch.menageHealthImportance = 1
+        if (Object.keys(patch).length > 0) {
+          await tx.table('taches').update(t.id, patch)
+        }
+      }
     })
 
     // ─── Version 11 — migration avatars Blob → base64 string ────────────────
