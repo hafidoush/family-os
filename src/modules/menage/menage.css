@@ -575,7 +575,7 @@
   transition: background 0.15s, color 0.15s;
 }
 .dj-mode-pill.active {
-  background: #2A2A32;
+  background: #4B4660;
   color: #fff;
   font-weight: 600;
 }

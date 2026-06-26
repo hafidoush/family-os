@@ -775,8 +775,11 @@ async function ajouterToutesLesSuggestions(
 function SectionQuotidiennes() {
   const taches = useTachesParFrequence('quotidienne') ?? [];
   const store = useMaisonStore();
+  const [open, setOpen] = useState(true);
   const [showSugg, setShowSugg] = useState(false);
   const [ajoutMsg, setAjoutMsg] = useState<string | null>(null);
+
+  const COLOR = '#1D9E75';
 
   const addSugg = async (titre: string) => {
     await db.taches.add(newEntity<Tache>({
@@ -794,50 +797,61 @@ function SectionQuotidiennes() {
   };
 
   return (
-    <div className="mc-section">
-      <div className="mc-section__header">
-        <div className="mc-section__title-row">
-          <div>
-            <h3 className="mc-section__title">Quotidien</h3>
-            <p className="mc-section__sub">Tâches récurrentes chaque jour</p>
+    <div className="mc-periodik">
+      <button className="mc-periodik__header" onClick={() => setOpen(o => !o)}>
+        <span className="mc-periodik__icon" style={{ background: COLOR, borderRadius: '50%', width: 10, height: 10, display: 'inline-block', flexShrink: 0 }} />
+        <div className="mc-periodik__titles">
+          <span className="mc-periodik__label">Quotidien</span>
+          <span className="mc-periodik__desc">Chaque jour</span>
+        </div>
+        <div className="mc-periodik__right">
+          {taches.length > 0 && (
+            <span className="mc-periodik__badge" style={{ background: COLOR + '18', color: COLOR }}>
+              {taches.length}
+            </span>
+          )}
+          <span className="mc-periodik__chevron">{open ? '▲' : '▼'}</span>
+        </div>
+      </button>
+
+      {open && (
+        <div className="mc-periodik__body">
+          {taches.length === 0 ? (
+            <p className="mc-periodik__empty">Aucune tâche. Ajoutez-en ci-dessous.</p>
+          ) : (
+            <div className="mc-cards">
+              {taches.map(t => (
+                <TacheCard key={t.id} tache={t} color={COLOR} hideCheck
+                  onEdit={() => store.openDrawerTache({ editId: t.id })}
+                  onDelete={() => TacheService.deleteTache(t.id)}
+                />
+              ))}
+            </div>
+          )}
+
+          {showSugg && (
+            <div className="mc-suggestions">
+              <button className="mc-sugg-btn mc-sugg-btn--all" onClick={addAll}>
+                Tout ajouter ({SUGGESTIONS_QUOTIDIENNES.length} tâches)
+              </button>
+              {SUGGESTIONS_QUOTIDIENNES.map(s => (
+                <button key={s.titre} className="mc-sugg-btn" onClick={() => addSugg(s.titre)}>
+                  {s.titre}
+                </button>
+              ))}
+            </div>
+          )}
+
+          <div className="mc-actions" style={{ marginTop: 8 }}>
+            <button className="mc-btn mc-btn--primary"
+              style={{ background: COLOR + '20', color: COLOR, borderColor: COLOR + '44' }}
+              onClick={() => store.openDrawerTache({ frequence: 'quotidienne' })}
+            >+ Ajouter</button>
+            <button className="mc-btn mc-btn--ghost" onClick={() => setShowSugg(s => !s)}>Suggestions</button>
+            {ajoutMsg && <span className="mc-ajout-msg">{ajoutMsg}</span>}
           </div>
         </div>
-        <span className="mc-section__score">{taches.length}</span>
-      </div>
-
-      {taches.length === 0 ? (
-        <div className="mc-empty">
-          <p>Ajoutez vos tâches du quotidien</p>
-        </div>
-      ) : (
-        <div className="mc-cards">
-          {taches.map(t => (
-            <TacheCard key={t.id} tache={t} hideCheck
-              onEdit={() => store.openDrawerTache({ editId: t.id })}
-              onDelete={() => TacheService.deleteTache(t.id)}
-            />
-          ))}
-        </div>
       )}
-
-      {showSugg && (
-        <div className="mc-suggestions">
-          <button className="mc-sugg-btn mc-sugg-btn--all" onClick={addAll}>
-            Tout ajouter ({SUGGESTIONS_QUOTIDIENNES.length} tâches)
-          </button>
-          {SUGGESTIONS_QUOTIDIENNES.map(s => (
-            <button key={s.titre} className="mc-sugg-btn" onClick={() => addSugg(s.titre)}>
-              {s.titre}
-            </button>
-          ))}
-        </div>
-      )}
-
-      <div className="mc-actions">
-        <button className="mc-btn mc-btn--primary" onClick={() => store.openDrawerTache({ frequence: 'quotidienne' })}>+ Ajouter</button>
-        <button className="mc-btn mc-btn--ghost" onClick={() => setShowSugg(s => !s)}>Suggestions</button>
-        {ajoutMsg && <span className="mc-ajout-msg">{ajoutMsg}</span>}
-      </div>
     </div>
   );
 }
@@ -1248,6 +1262,7 @@ export default function MenageModule() {
           editId={store.drawerTacheEditId}
           piecePrefill={store.drawerTachePiecePrefill}
           frequencePrefill={store.drawerTacheFrequencePrefill as import('@shared/types/entities').FrequenceTache | null}
+          showMenageParams
         />
       )}
     </div>

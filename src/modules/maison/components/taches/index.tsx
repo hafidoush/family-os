@@ -192,13 +192,17 @@ function toInputDate(d: Date | undefined): string {
   return new Date(d).toISOString().split('T')[0];
 }
 
-export function TacheForm({ isOpen, onClose, editId, piecePrefill, projetPrefill, frequencePrefill }: TacheFormProps) {
+export function TacheForm({ isOpen, onClose, editId, piecePrefill, projetPrefill, frequencePrefill, showMenageParams }: TacheFormProps & { showMenageParams?: boolean }) {
   const [titre, setTitre] = useState('');
   const [pieceId, setPieceId] = useState('');
   const [frequence, setFrequence] = useState<FrequenceTache>('trimestrielle');
   const [duree, setDuree] = useState('');
   const [dateReference, setDateReference] = useState('');
   const [derniereRealisation, setDerniereRealisation] = useState('');
+  const [difficulty, setDifficulty] = useState<1|2|3>(2);
+  const [visualImpact, setVisualImpact] = useState<1|2|3>(2);
+  const [healthImportance, setHealthImportance] = useState<1|2|3>(2);
+  const [menageOpen, setMenageOpen] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState('');
 
@@ -218,6 +222,9 @@ export function TacheForm({ isOpen, onClose, editId, piecePrefill, projetPrefill
         setDuree(t.dureeEstimee?.toString() ?? '');
         setDateReference(toInputDate(t.dateReference));
         setDerniereRealisation(toInputDate(t.completeeLe));
+        setDifficulty((t.menageDifficulty ?? 2) as 1|2|3);
+        setVisualImpact((t.menageVisualImpact ?? 2) as 1|2|3);
+        setHealthImportance((t.menageHealthImportance ?? 2) as 1|2|3);
       });
     } else {
       setTitre('');
@@ -226,6 +233,10 @@ export function TacheForm({ isOpen, onClose, editId, piecePrefill, projetPrefill
       setDuree('');
       setDateReference('');
       setDerniereRealisation('');
+      setDifficulty(2);
+      setVisualImpact(2);
+      setHealthImportance(2);
+      setMenageOpen(false);
     }
     setError('');
   }, [isOpen, editId, piecePrefill, projetPrefill, frequencePrefill]);
@@ -242,6 +253,7 @@ export function TacheForm({ isOpen, onClose, editId, piecePrefill, projetPrefill
         dureeEstimee: duree ? parseInt(duree) : undefined,
         dateReference: dateReference ? new Date(dateReference) : undefined,
         completeeLe: derniereRealisation ? new Date(derniereRealisation) : undefined,
+        ...(showMenageParams && { menageDifficulty: difficulty, menageVisualImpact: visualImpact, menageHealthImportance: healthImportance }),
       };
       if (editId) await TacheService.updateTache(editId, input);
       else await TacheService.addTache(input);
@@ -315,6 +327,67 @@ export function TacheForm({ isOpen, onClose, editId, piecePrefill, projetPrefill
               />
               <span className="tache-form__hint">Remplace la date de départ si renseignée</span>
             </div>
+          </div>
+        )}
+
+        {showMenageParams && (
+          <div className="tache-form__menage-section">
+            <button
+              type="button"
+              className="tache-form__menage-toggle"
+              onClick={() => setMenageOpen(o => !o)}
+            >
+              <span>Paramètres ménage</span>
+              <span className="tache-form__menage-chevron">{menageOpen ? '▲' : '▼'}</span>
+            </button>
+
+            {menageOpen && (
+              <div className="tache-form__menage-body">
+
+                <div className="tache-form__field">
+                  <label className="tache-form__label">Difficulté</label>
+                  <div className="tache-form__pills">
+                    {([1,2,3] as const).map((v, i) => (
+                      <button key={v} type="button"
+                        className={`tache-form__pill${difficulty === v ? ' active' : ''}`}
+                        onClick={() => setDifficulty(v)}
+                      >
+                        {['🟢 Légère','🟡 Moyenne','🔴 Intense'][i]}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="tache-form__field">
+                  <label className="tache-form__label">Impact visuel</label>
+                  <div className="tache-form__pills">
+                    {([1,2,3] as const).map((v, i) => (
+                      <button key={v} type="button"
+                        className={`tache-form__pill${visualImpact === v ? ' active' : ''}`}
+                        onClick={() => setVisualImpact(v)}
+                      >
+                        {['Invisible','Visible','Très visible'][i]}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="tache-form__field">
+                  <label className="tache-form__label">Importance sanitaire</label>
+                  <div className="tache-form__pills">
+                    {([1,2,3] as const).map((v, i) => (
+                      <button key={v} type="button"
+                        className={`tache-form__pill${healthImportance === v ? ' active' : ''}`}
+                        onClick={() => setHealthImportance(v)}
+                      >
+                        {['Esthétique','Important','Critique'][i]}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+              </div>
+            )}
           </div>
         )}
 

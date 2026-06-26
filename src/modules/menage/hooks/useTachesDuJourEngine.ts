@@ -14,6 +14,17 @@ import type { MenageMode, MenageTask } from '../engine/menageEngine'
 
 export type { MenageMode, MenageTask }
 
+const FREQ_ORDER: Record<string, number> = {
+  quotidienne:    0,
+  hebdomadaire:   1,
+  bihebdomadaire: 2,
+  mensuelle:      3,
+  trimestrielle:  4,
+  semestrielle:   5,
+  annuelle:       6,
+  ponctuelle:     7,
+}
+
 interface DailySnapshot {
   date: string        // 'YYYY-MM-DD'
   taskIds: string[]
@@ -69,6 +80,8 @@ export function useTachesDuJourEngine(mode: MenageMode): MenageTask[] | undefine
       .map(id => taskMap.get(id))
       .filter(Boolean as unknown as <T>(x: T | undefined) => x is T)
 
-    return tasks.map(t => enrichTask(t, today))
+    return tasks
+      .sort((a, b) => (FREQ_ORDER[a.frequence ?? 'ponctuelle'] ?? 7) - (FREQ_ORDER[b.frequence ?? 'ponctuelle'] ?? 7))
+      .map(t => enrichTask(t, today))
   }, [mode])
 }

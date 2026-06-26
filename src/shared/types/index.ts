@@ -62,6 +62,12 @@ export interface Tache extends AuditWithDevice {
   completeeLe?: Date
   dateReference?: Date
   archive: boolean
+  // ── Moteur Ménage ──────────────────────────────────────────────────────────
+  missedCount?: number
+  skippedUntil?: Date | null
+  menageDifficulty?: 1 | 2 | 3
+  menageVisualImpact?: 1 | 2 | 3
+  menageHealthImportance?: 1 | 2 | 3
 }
 
 export type TypeEvenement =
