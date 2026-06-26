@@ -4,7 +4,7 @@ import { db } from '../../../core/db/database'
 import { newEntity, softDeleteFields } from '../../../core/db/helpers'
 import { ConfirmModal } from '../../../shared/components/ui/ConfirmModal'
 import { genererFicheActivite } from '../../../core/ai/preparationActiviteService'
-import { hasClaudeKey } from '../../../core/ai/claudeService'
+import { hasOpenAIKey } from '../../../core/ai/openaiService'
 import type { Activite, DifficulteActivite } from '../../../shared/types'
 
 interface ActiviteFormProps {
@@ -50,8 +50,8 @@ export function ActiviteForm({ editItem, onClose }: ActiviteFormProps) {
   const showAiBtn = nom.trim().length > 0
 
   async function handleIA() {
-    if (!hasClaudeKey()) {
-      setAiError('Clé Claude manquante — configure-la dans Paramètres → Intelligence artificielle.')
+    if (!hasOpenAIKey()) {
+      setAiError('Clé OpenAI manquante — configure-la dans Paramètres → Intelligence artificielle.')
       return
     }
     setAiLoading(true)

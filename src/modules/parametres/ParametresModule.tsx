@@ -15,7 +15,6 @@ import { pushAllLocalData } from '../../core/sync/useSyncOnMount';
 import { supabase } from '../../core/supabase/client';
 import { getGeminiKey, setGeminiKey } from '../../core/ai/geminiService';
 import { getOpenAIKey, setOpenAIKey } from '../../core/ai/openaiService';
-import { getClaudeKey, setClaudeKey } from '../../core/ai/claudeService';
 import { MigrationPreparationActivites } from '../enfants/components/MigrationPreparationActivites';
 import { ConfirmModal } from '../../shared/components/ui/ConfirmModal';
 import { useHabitudesEditable } from '../../shared/hooks/useHabitudes';
@@ -767,48 +766,19 @@ function CleAPIField({
 function SectionIA() {
   const [geminiKey,  setGeminiKeyState]  = useState(getGeminiKey);
   const [openaiKey,  setOpenAIKeyState]  = useState(getOpenAIKey);
-  const [claudeKey,  setClaudeKeyState]  = useState(getClaudeKey);
   const [savedGemini, setSavedGemini]    = useState(false);
   const [savedOpenAI, setSavedOpenAI]    = useState(false);
-  const [savedClaude, setSavedClaude]    = useState(false);
 
   const saveGemini = () => { setGeminiKey(geminiKey); setSavedGemini(true); setTimeout(() => setSavedGemini(false), 2500); };
   const saveOpenAI = () => { setOpenAIKey(openaiKey).then(() => { setSavedOpenAI(true); setTimeout(() => setSavedOpenAI(false), 2500); }); };
-  const saveClaude = () => { setClaudeKey(claudeKey).then(() => { setSavedClaude(true); setTimeout(() => setSavedClaude(false), 2500); }); };
 
   return (
     <div className="param-section">
       <h2 className="param-section-title">Intelligence artificielle</h2>
 
-      {/* ── Claude — préparation activités ── */}
+      {/* ── OpenAI — menus + activités ── */}
       <p className="param-section-desc">
-        La clé <strong>Claude</strong> (Anthropic) active l'analyse de préparation des activités Montessori
-        (Haiku — moins de 0,01 € par analyse).
-      </p>
-      <CleAPIField
-        label="Clé API Claude (Anthropic)"
-        hint="Obtiens ta clé sur"
-        hintUrl="https://console.anthropic.com/settings/keys"
-        hintUrlLabel="console.anthropic.com"
-        placeholder="sk-ant-…"
-        value={claudeKey}
-        onChange={setClaudeKeyState}
-        onSave={saveClaude}
-        saved={savedClaude}
-      />
-
-      <div style={{ marginTop: 16 }}>
-        <p className="param-section-desc" style={{ marginBottom: 8 }}>
-          Migration en lot — analyse toutes les activités existantes sans données de préparation.
-        </p>
-        <MigrationPreparationActivites />
-      </div>
-
-      <hr style={{ margin: '24px 0', border: 'none', borderTop: '1px solid rgba(167,139,250,0.15)' }} />
-
-      {/* ── OpenAI — génération de menus ── */}
-      <p className="param-section-desc">
-        La clé <strong>OpenAI</strong> active la génération automatique de menus (GPT-4o-mini).
+        La clé <strong>OpenAI</strong> active la génération automatique de menus et la fiche complète des activités (GPT-4o-mini).
         Coût estimé : moins de 0,10 € par mois.
       </p>
       <CleAPIField
@@ -822,6 +792,13 @@ function SectionIA() {
         onSave={saveOpenAI}
         saved={savedOpenAI}
       />
+
+      <div style={{ marginTop: 16 }}>
+        <p className="param-section-desc" style={{ marginBottom: 8 }}>
+          Migration en lot — analyse toutes les activités existantes sans données de préparation.
+        </p>
+        <MigrationPreparationActivites />
+      </div>
 
       <hr style={{ margin: '24px 0', border: 'none', borderTop: '1px solid rgba(167,139,250,0.15)' }} />
 

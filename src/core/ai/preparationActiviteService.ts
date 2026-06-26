@@ -1,9 +1,4 @@
-/**
- * FAMILY OS — Service de génération de fiche activité complète
- * Appelle Claude Haiku pour générer tous les champs à partir du nom.
- */
-
-import { appelClaude } from './claudeService'
+import { appelOpenAI } from './openaiService'
 
 export interface FicheActiviteResult {
   objectifPedagogique: string
@@ -49,7 +44,7 @@ const VALID_URGENCE = ['immediate', 'veille', 'plusieurs_jours']
 const VALID_DIFF    = ['Facile', 'Moyen', 'Difficile']
 
 export async function genererFicheActivite(nom: string): Promise<FicheActiviteResult> {
-  const raw   = await appelClaude(buildPrompt(nom), { maxTokens: 1024, temperature: 0 })
+  const raw   = await appelOpenAI(buildPrompt(nom), { model: 'gpt-4o-mini', temperature: 0, maxTokens: 1024, jsonMode: true })
   const clean = raw.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim()
 
   let parsed: Partial<FicheActiviteResult>

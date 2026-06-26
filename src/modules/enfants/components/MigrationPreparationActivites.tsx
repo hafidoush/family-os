@@ -1,13 +1,7 @@
-/**
- * FAMILY OS — Migration Préparation Activités
- * Script one-shot : analyse toutes les activités sans preparationDelaiJours
- * via Claude Haiku et stocke les résultats. Rate-limit : 1 req/s.
- */
-
 import { useState } from 'react'
 import { db } from '../../../core/db/database'
-import { analyserPreparation } from '../../../core/ai/preparationActiviteService'
-import { hasClaudeKey } from '../../../core/ai/claudeService'
+import { genererFicheActivite } from '../../../core/ai/preparationActiviteService'
+import { hasOpenAIKey } from '../../../core/ai/openaiService'
 
 interface MigrationState {
   status: 'idle' | 'running' | 'done' | 'error'
@@ -28,13 +22,10 @@ export function MigrationPreparationActivites() {
   })
 
   async function runMigration() {
-    if (!hasClaudeKey()) return
+    if (!hasOpenAIKey()) return
 
-    // Activités sans preparationDelaiJours, avec du matériel, non archivées
     const activites = await db.activites
-      .filter(a => !a.archive && !a.deletedAt
-        && a.preparationDelaiJours === undefined
-        && Array.isArray(a.materiel) && (a.materiel as string[]).length > 0)
+      .filter(a => !a.archive && !a.deletedAt && a.preparationDelaiJours === undefined)
       .toArray()
 
     setState({ status: 'running', total: activites.length, processed: 0, updated: 0, currentNom: '', errors: [] })
@@ -47,7 +38,7 @@ export function MigrationPreparationActivites() {
       setState(s => ({ ...s, processed: i + 1, currentNom: act.nom }))
 
       try {
-        const result = await analyserPreparation(act.materiel as string[])
+        const result = await genererFicheActivite(act.nom)
         await db.activites.update(act.id, {
           preparationDelaiJours: result.preparationDelaiJours,
           preparationTexte:      result.preparationTexte || undefined,
@@ -62,7 +53,6 @@ export function MigrationPreparationActivites() {
         setState(s => ({ ...s, errors: [...s.errors, `${act.nom} : ${msg}`] }))
       }
 
-      // Rate-limit : 1 requête par seconde
       if (i < activites.length - 1) await sleep(1000)
     }
 
@@ -74,10 +64,10 @@ export function MigrationPreparationActivites() {
     }))
   }
 
-  if (!hasClaudeKey()) {
+  if (!hasOpenAIKey()) {
     return (
       <p style={{ fontSize: 13, color: '#9B8DB5', margin: 0 }}>
-        Ajoute ta clé Claude ci-dessus pour activer la migration.
+        Ajoute ta clé OpenAI ci-dessus pour activer la migration.
       </p>
     )
   }
@@ -125,7 +115,7 @@ export function MigrationPreparationActivites() {
 
       {state.status === 'error' && (
         <p style={{ fontSize: 13, color: '#B71C1C', margin: 0 }}>
-          Toutes les requêtes ont échoué. Vérifiez votre clé Claude.
+          Toutes les requêtes ont échoué. Vérifiez votre clé OpenAI.
         </p>
       )}
     </div>
