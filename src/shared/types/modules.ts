@@ -51,6 +51,10 @@ export interface Activite extends AuditFields, DeviceField {
   photo?: Blob;
   tags?: string[];
   archive: boolean;
+  // Préparation en amont (calculée par IA)
+  preparationDelaiJours?: number;       // 0 = immédiat, 1 = veille, 2-3 = plusieurs jours
+  preparationTexte?: string;            // Description de la préparation
+  preparationUrgence?: 'immediate' | 'veille' | 'plusieurs_jours';
 }
 
 // ─── PLANIFICATION ACTIVITÉ ───────────────────────────────────────────────────

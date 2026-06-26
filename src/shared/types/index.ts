@@ -266,6 +266,10 @@ export interface Activite extends AuditWithDevice {
   photo?: Blob
   tags?: string[]
   archive: boolean
+  // Préparation en amont (calculée par IA)
+  preparationDelaiJours?: number
+  preparationTexte?: string
+  preparationUrgence?: 'immediate' | 'veille' | 'plusieurs_jours'
 }
 
 export interface SortiePersonnelle extends AuditWithDevice {

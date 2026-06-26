@@ -433,6 +433,84 @@
   font-weight: 600;
 }
 
+/* ── Bouton IA ──────────────────────────────────────────────────────────── */
+
+.enfants-form__btn-ia {
+  margin-top: 8px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 14px;
+  border-radius: 999px;
+  border: 1.5px solid rgba(111, 126, 214, 0.4);
+  background: rgba(111, 126, 214, 0.07);
+  color: #3949AB;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s, opacity 0.15s;
+}
+.enfants-form__btn-ia:hover:not(:disabled) {
+  background: rgba(111, 126, 214, 0.14);
+}
+.enfants-form__btn-ia:disabled {
+  opacity: 0.55;
+  cursor: default;
+}
+
+.enfants-form__ia-hint {
+  margin: 5px 0 0;
+  font-size: 11px;
+  color: #9B8DB5;
+}
+
+.enfants-form__ia-error {
+  margin: 5px 0 0;
+  font-size: 11px;
+  color: #B71C1C;
+}
+
+/* ── Résultat préparation IA ─────────────────────────────────────────────── */
+
+.enfants-form__prep-result {
+  background: rgba(46, 125, 50, 0.06);
+  border: 1px solid rgba(46, 125, 50, 0.2);
+  border-radius: 14px;
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.enfants-form__prep-result__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.enfants-form__prep-result__label {
+  font-size: 11px;
+  font-weight: 700;
+  color: #2E7D32;
+  letter-spacing: 0.02em;
+}
+
+.enfants-form__prep-result__clear {
+  background: none;
+  border: none;
+  font-size: 11px;
+  color: #9B8DB5;
+  cursor: pointer;
+  padding: 0 2px;
+}
+
+.enfants-form__prep-result__text {
+  margin: 0;
+  font-size: 13px;
+  color: #2D3B2D;
+  line-height: 1.5;
+}
+
 .enfants-form__btn-delete {
   padding: 11px 16px;
   border-radius: 12px;

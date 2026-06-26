@@ -28,7 +28,7 @@ export default function Dashboard() {
       {/* ── Hero + capture ── */}
       <WidgetCapturePensee />
 
-      {/* ── Activités du jour ── */}
+      {/* ── Programme du jour ── */}
       <WidgetProgrammeDuJour />
 
       {/* ── Dans ma tête / À acheter ── */}

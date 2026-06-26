@@ -516,3 +516,58 @@
   margin: 0;
   line-height: 1.4;
 }
+
+/* ── Migration IA ─────────────────────────────────────────────────────────── */
+
+.param-ia-migrate-btn {
+  padding: 9px 18px;
+  border-radius: 999px;
+  border: 1.5px solid rgba(111,126,214,0.4);
+  background: rgba(111,126,214,0.07);
+  color: #3949AB;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.param-ia-migrate-btn:hover:not(:disabled) {
+  background: rgba(111,126,214,0.14);
+}
+
+.param-ia-migrate-progress {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.param-ia-migrate-progress__bar-wrap {
+  height: 5px;
+  border-radius: 3px;
+  background: rgba(111,126,214,0.15);
+  overflow: hidden;
+}
+
+.param-ia-migrate-progress__bar {
+  height: 100%;
+  border-radius: 3px;
+  background: #6F7ED6;
+  transition: width 0.3s ease;
+}
+
+.param-ia-migrate-progress__label {
+  font-size: 12px;
+  color: #7C6FA0;
+  margin: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.param-ia-migrate-done {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #2E7D32;
+}

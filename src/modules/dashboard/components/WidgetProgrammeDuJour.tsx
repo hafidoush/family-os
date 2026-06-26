@@ -6,9 +6,16 @@ import { useTodayEvents, useWeekEvents } from '../hooks/useTodayEvents';
 import { toISODate }         from '../../../shared/utils/formatDate';
 import { db }                from '../../../core/db/database';
 import { MenageModal }        from './WidgetMenage';
+import { ActivitesModal }     from './WidgetActivites';
 import { useTachesDuJourEngine } from '../../menage/hooks/useTachesDuJourEngine';
 import type { FrequenceTache } from '@shared/types/entities';
 import './WidgetProgrammeDuJour.css';
+
+function todayPretKey() {
+  const d = new Date();
+  const ymd = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+  return `activites_materiel_pret_${ymd}`;
+}
 
 // ─── Modal générique pour aperçu card dashboard ───────────────────────────────
 
@@ -127,6 +134,7 @@ export function WidgetProgrammeDuJour() {
   const [activitesModalOpen, setActivitesModalOpen] = useState(false);
   const [planningModalOpen,  setPlanningModalOpen]  = useState(false);
   const [prochainModalOpen,  setProchainModalOpen]  = useState(false);
+  const [pretActivites,      setPretActivites]      = useState(() => !!localStorage.getItem(todayPretKey()));
 
   const today      = toISODate(new Date());
   const activites  = useTodayActivites() ?? [];
@@ -182,6 +190,15 @@ export function WidgetProgrammeDuJour() {
   });
   const JOURS = ['Dim','Lun','Mar','Mer','Jeu','Ven','Sam'];
 
+  // Données enrichies pour la card Activités
+  const activCats = [...new Set(
+    activites.map(a => (a.activite as { categorie?: string } | undefined)?.categorie).filter(Boolean) as string[]
+  )];
+  const activRestantes = totalActiv - faitesActiv;
+  const activDureeMin = activites
+    .filter(a => a.statut !== 'realisee')
+    .reduce((s, a) => s + ((a.activite as { dureeEstimee?: number } | undefined)?.dureeEstimee ?? 15), 0);
+
   // Items pour les modals
   const activitesItems: PreviewItem[] = [
     ...activites.map(a => ({ id: String(a.id), label: (a.activite as { nom?: string } | undefined)?.nom ?? '–', done: a.statut === 'realisee' })),
@@ -210,15 +227,36 @@ export function WidgetProgrammeDuJour() {
       <div className="programme-grid">
 
         {/* ── Carte ACTIVITÉS ── */}
-        <div className="programme-card programme-card--enfants" onClick={() => setActivitesModalOpen(true)} role="button" tabIndex={0}>
+        <div
+          className={`programme-card programme-card--enfants${pretActivites ? ' programme-card--pret' : ''}`}
+          onClick={() => setActivitesModalOpen(true)}
+          role="button"
+          tabIndex={0}
+        >
           <div className="programme-card__deco" aria-hidden="true" />
           <div className="programme-card__glass" />
-          <span className="programme-card__badge programme-card__badge--activite">Activité</span>
-          <h3 className="programme-card__title">Activités<br />du jour</h3>
-          <div className="programme-card__progress-bar">
-            <div className="programme-card__progress-fill programme-card__progress-fill--activite" style={{ width: `${pctActivites}%` }} />
+          <span className="programme-card__badge programme-card__badge--activite">ACTIVITÉ</span>
+
+          {/* Tags catégories + compteur */}
+          <div className="pm-act__tags-row">
+            {activCats.slice(0, 2).map(cat => (
+              <span key={cat} className="pm-act__cat-tag">{cat}</span>
+            ))}
+            {activCats.length > 2 && <span className="pm-act__cat-tag">+{activCats.length - 2}</span>}
+            <span className="pm-act__count">{faitesActiv}/{totalActiv}</span>
+            {pretActivites && <span className="pm-act__pret-badge">Prêt</span>}
           </div>
-          <span className="programme-card__progress-label">{pctActivites}% effectuées</span>
+
+          <h3 className="programme-card__title">Activités du jour</h3>
+          <div className="programme-card__progress-bar">
+            <div
+              className="programme-card__progress-fill programme-card__progress-fill--activite"
+              style={{ width: `${pctActivites}%` }}
+            />
+          </div>
+          <span className="programme-card__progress-label">
+            ~{activDureeMin} min · {activRestantes} restante{activRestantes !== 1 ? 's' : ''}
+          </span>
         </div>
 
         {/* ── Carte PLANNING ── */}
@@ -306,17 +344,9 @@ export function WidgetProgrammeDuJour() {
     )}
 
     {activitesModalOpen && (
-      <PreviewModal
-        color="#6F7ED6"
-        modalBg="#E8EAF6"
-        title="Activités du jour"
-        meta={totalActiv === 0 ? 'Rien de prévu' : `${faitesActiv}/${totalActiv} réalisées`}
-        progPct={pctActivites}
-        items={activitesItems}
-        ctaLabel="Voir les activités"
-        emptyText="Aucune activité aujourd'hui"
-        onCta={() => { setActivitesModalOpen(false); navigate('/activites-du-jour'); }}
-        onClose={() => setActivitesModalOpen(false)}
+      <ActivitesModal
+        onClose={() => { setActivitesModalOpen(false); setPretActivites(!!localStorage.getItem(todayPretKey())); }}
+        onPret={() => setPretActivites(true)}
       />
     )}
 

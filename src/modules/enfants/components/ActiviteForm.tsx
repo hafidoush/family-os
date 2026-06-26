@@ -3,6 +3,8 @@ import { useLiveQuery } from 'dexie-react-hooks'
 import { db } from '../../../core/db/database'
 import { newEntity, softDeleteFields } from '../../../core/db/helpers'
 import { ConfirmModal } from '../../../shared/components/ui/ConfirmModal'
+import { genererFicheActivite } from '../../../core/ai/preparationActiviteService'
+import { hasClaudeKey } from '../../../core/ai/claudeService'
 import type { Activite, DifficulteActivite } from '../../../shared/types'
 
 interface ActiviteFormProps {
@@ -15,6 +17,11 @@ const DIFFICULTES: { key: DifficulteActivite; label: string }[] = [
   { key: 'moyen',     label: 'Moyen'     },
   { key: 'difficile', label: 'Difficile' },
 ]
+
+// Map label IA → clé interne
+const DIFF_MAP: Record<string, DifficulteActivite> = {
+  Facile: 'facile', Moyen: 'moyen', Difficile: 'difficile',
+}
 
 export function ActiviteForm({ editItem, onClose }: ActiviteFormProps) {
   const categories = useLiveQuery(() => db.categoriesActivites.toArray(), []) ?? []
@@ -31,10 +38,50 @@ export function ActiviteForm({ editItem, onClose }: ActiviteFormProps) {
   const [saving,        setSaving]        = useState(false)
   const [confirmDelete, setConfirmDelete] = useState(false)
 
+  // ─── Préparation IA ────────────────────────────────────────────────────────
+  const [prepTexte,   setPrepTexte]   = useState(editItem?.preparationTexte ?? '')
+  const [prepDelai,   setPrepDelai]   = useState<number>(editItem?.preparationDelaiJours ?? 0)
+  const [prepUrgence, setPrepUrgence] = useState<'immediate' | 'veille' | 'plusieurs_jours'>(
+    editItem?.preparationUrgence ?? 'immediate'
+  )
+  const [aiLoading, setAiLoading] = useState(false)
+  const [aiError,   setAiError]   = useState<string | null>(null)
+
+  const showAiBtn = nom.trim().length > 0
+
+  async function handleIA() {
+    if (!hasClaudeKey()) {
+      setAiError('Clé Claude manquante — configure-la dans Paramètres → Intelligence artificielle.')
+      return
+    }
+    setAiLoading(true)
+    setAiError(null)
+    try {
+      const result = await genererFicheActivite(nom.trim())
+
+      // Auto-remplissage de tous les champs
+      setObjectif(result.objectifPedagogique)
+      setMaterielTxt(result.materiel)
+      setInstructions(result.instructions)
+      setDuree(result.dureeEstimee.toString())
+      setAgeMin(result.ageMin.toString())
+      setAgeMax(result.ageMax.toString())
+      if (DIFF_MAP[result.difficulte]) setDifficulte(DIFF_MAP[result.difficulte])
+      setPrepTexte(result.preparationTexte)
+      setPrepDelai(result.preparationDelaiJours)
+      setPrepUrgence(result.preparationUrgence)
+    } catch {
+      setAiError('Erreur lors de la génération. Vérifiez votre clé Claude dans les paramètres.')
+    } finally {
+      setAiLoading(false)
+    }
+  }
+
   async function handleSave() {
     if (!nom.trim() || !categorie) return
     setSaving(true)
     try {
+      const materielItems = materielTxt.split('\n').map(l => l.trim()).filter(Boolean)
       const data: Partial<Activite> = {
         nom:                  nom.trim(),
         categorie,
@@ -42,9 +89,12 @@ export function ActiviteForm({ editItem, onClose }: ActiviteFormProps) {
         ageMin:               ageMin ? parseInt(ageMin) : undefined,
         ageMax:               ageMax ? parseInt(ageMax) : undefined,
         dureeEstimee:         duree  ? parseInt(duree)  : undefined,
-        materiel:             materielTxt.split('\n').map(l => l.trim()).filter(Boolean),
+        materiel:             materielItems,
         objectifPedagogique:  objectif.trim() || undefined,
         instructions:         instructions.trim() || undefined,
+        preparationTexte:     prepTexte.trim() || undefined,
+        preparationDelaiJours: prepDelai,
+        preparationUrgence:   prepDelai > 0 ? prepUrgence : undefined,
         statutBibliotheque:   editItem?.statutBibliotheque ?? 'a_faire',
         archive:              false,
       }
@@ -75,7 +125,7 @@ export function ActiviteForm({ editItem, onClose }: ActiviteFormProps) {
           </p>
 
           <div className="enfants-form-body">
-            {/* Nom */}
+            {/* Nom + bouton IA */}
             <div className="enfants-form__field">
               <label className="enfants-form__label">Nom *</label>
               <input
@@ -85,6 +135,17 @@ export function ActiviteForm({ editItem, onClose }: ActiviteFormProps) {
                 placeholder="Ex : Bac sensoriel riz coloré"
                 autoFocus
               />
+              {showAiBtn && (
+                <button
+                  type="button"
+                  className="enfants-form__btn-ia"
+                  onClick={handleIA}
+                  disabled={aiLoading}
+                >
+                  {aiLoading ? 'Génération en cours…' : '✨ Compléter avec l\'IA'}
+                </button>
+              )}
+              {aiError && <p className="enfants-form__ia-error">{aiError}</p>}
             </div>
 
             {/* Catégorie */}
@@ -160,7 +221,9 @@ export function ActiviteForm({ editItem, onClose }: ActiviteFormProps) {
 
             {/* Matériel */}
             <div className="enfants-form__field">
-              <label className="enfants-form__label">Matériel <span className="enfants-form__hint">(un élément par ligne)</span></label>
+              <label className="enfants-form__label">
+                Matériel <span className="enfants-form__hint">(un élément par ligne)</span>
+              </label>
               <textarea
                 className="enfants-form__textarea"
                 rows={3}
@@ -169,6 +232,25 @@ export function ActiviteForm({ editItem, onClose }: ActiviteFormProps) {
                 placeholder={"Bac en plastique\nRiz coloré\nPetits objets"}
               />
             </div>
+
+            {/* Résultat préparation IA */}
+            {prepDelai > 0 && prepTexte && (
+              <div className="enfants-form__prep-result">
+                <div className="enfants-form__prep-result__header">
+                  <span className="enfants-form__prep-result__label">
+                    Préparation — {prepDelai === 1 ? 'la veille' : `${prepDelai} jours avant`}
+                  </span>
+                  <button
+                    type="button"
+                    className="enfants-form__prep-result__clear"
+                    onClick={() => { setPrepTexte(''); setPrepDelai(0); }}
+                  >
+                    ✕
+                  </button>
+                </div>
+                <p className="enfants-form__prep-result__text">{prepTexte}</p>
+              </div>
+            )}
 
             {/* Objectif pédagogique */}
             <div className="enfants-form__field">
