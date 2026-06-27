@@ -14,7 +14,7 @@ function norm(s: string): string {
 
 // Incrémenter à chaque fois que le catalogue produits est mis à jour
 // → force tous les appareils existants à recevoir les nouveaux produits
-const CATALOG_VERSION = '5'
+const CATALOG_VERSION = '6'
 const CATALOG_VERSION_KEY = 'family_os_catalog_version'
 
 // ID stable déterministe pour les activités seedées — identique sur tous les appareils
@@ -139,27 +139,54 @@ async function _seedDatabase(): Promise<void> {
   }
 }
 
+// IDs stables déterministes — identiques sur tous les appareils et reseed
+const CAT_IDS: Record<string, string> = {
+  'Fruits':              'cat-prod-fruits',
+  'Légumes':             'cat-prod-legumes',
+  'Viande & Charcuterie':'cat-prod-viande',
+  'Poissons':            'cat-prod-poissons',
+  'Produits Laitiers':   'cat-prod-laitiers',
+  'Fromages':            'cat-prod-fromages',
+  'Épicerie salée':      'cat-prod-epicerie-salee',
+  'Épicerie sucrée':     'cat-prod-epicerie-sucree',
+  'Conserves':           'cat-prod-conserves',
+  'Surgelés':            'cat-prod-surgeles',
+  'Boulangerie':         'cat-prod-boulangerie',
+  'Boissons':            'cat-prod-boissons',
+  'Épices':              'cat-prod-epices',
+  'Herbes & Aromates':   'cat-prod-herbes',
+  'Asiatique':           'cat-prod-asiatique',
+  'Bio':                 'cat-prod-bio',
+  'Hygiène':             'cat-prod-hygiene',
+  'Entretien':           'cat-prod-entretien',
+}
+
 async function seedCategoriesProduits(): Promise<void> {
-  const existing = await db.categoriesProduits.count()
-  if (existing > 0) return
-  const cats: { nom: string; icone: string }[] = [
-    { nom: 'Fruits & Légumes',     icone: '🥬' },
-    { nom: 'Viande & Charcuterie', icone: '🥩' },
-    { nom: 'Poissons',             icone: '🐟' },
-    { nom: 'Épicerie salée',       icone: '🫙' },
-    { nom: 'Épicerie sucrée',      icone: '🍫' },
-    { nom: 'Conserves',            icone: '🥫' },
-    { nom: 'Surgelés',             icone: '🧊' },
-    { nom: 'Épices',               icone: '🌿' },
-    { nom: 'Asiatique',            icone: '🥢' },
-    { nom: 'Bio',                  icone: '🌱' },
-    { nom: 'Hygiène',              icone: '🧼' },
-    { nom: 'Entretien',            icone: '🧹' },
+  const cats: { id: string; nom: string; icone: string; ordre: number }[] = [
+    { id: CAT_IDS['Fruits'],               nom: 'Fruits',               icone: '🍎', ordre: 1 },
+    { id: CAT_IDS['Légumes'],              nom: 'Légumes',              icone: '🥦', ordre: 2 },
+    { id: CAT_IDS['Viande & Charcuterie'],nom: 'Viande & Charcuterie', icone: '🥩', ordre: 3 },
+    { id: CAT_IDS['Poissons'],             nom: 'Poissons',             icone: '🐟', ordre: 4 },
+    { id: CAT_IDS['Produits Laitiers'],    nom: 'Produits Laitiers',    icone: '🥛', ordre: 5 },
+    { id: CAT_IDS['Fromages'],             nom: 'Fromages',             icone: '🧀', ordre: 6 },
+    { id: CAT_IDS['Épicerie salée'],       nom: 'Épicerie salée',       icone: '🫙', ordre: 7 },
+    { id: CAT_IDS['Épicerie sucrée'],      nom: 'Épicerie sucrée',      icone: '🍫', ordre: 8 },
+    { id: CAT_IDS['Conserves'],            nom: 'Conserves',            icone: '🥫', ordre: 9 },
+    { id: CAT_IDS['Surgelés'],             nom: 'Surgelés',             icone: '🧊', ordre: 10 },
+    { id: CAT_IDS['Boulangerie'],          nom: 'Boulangerie',          icone: '🍞', ordre: 11 },
+    { id: CAT_IDS['Boissons'],             nom: 'Boissons',             icone: '🧃', ordre: 12 },
+    { id: CAT_IDS['Épices'],               nom: 'Épices',               icone: '🌿', ordre: 13 },
+    { id: CAT_IDS['Herbes & Aromates'],    nom: 'Herbes & Aromates',    icone: '🌿', ordre: 14 },
+    { id: CAT_IDS['Asiatique'],            nom: 'Asiatique',            icone: '🥢', ordre: 15 },
+    { id: CAT_IDS['Bio'],                  nom: 'Bio',                  icone: '🌱', ordre: 16 },
+    { id: CAT_IDS['Hygiène'],              nom: 'Hygiène',              icone: '🧼', ordre: 17 },
+    { id: CAT_IDS['Entretien'],            nom: 'Entretien',            icone: '🧹', ordre: 18 },
   ]
-  await db.categoriesProduits.bulkAdd(
-    cats.map((c, i) => ({
-      id: uuid(), nom: c.nom, icone: c.icone,
-      typeProduit: 'consommable' as const, ordre: i + 1, personnalisee: false,
+  await db.categoriesProduits.bulkPut(
+    cats.map(c => ({
+      ...c,
+      typeProduit: 'consommable' as const,
+      personnalisee: false,
       ...withAudit({}),
     }))
   )
@@ -184,12 +211,24 @@ async function migrerCategoriesProduits(): Promise<void> {
     let legumesId = byNom.get('Légumes')?.id
 
     if (!fruitsId) {
-      fruitsId = uuid()
-      await db.categoriesProduits.add({ id: fruitsId, nom: 'Fruits', icone: '🍎', typeProduit: 'consommable', ordre: 0.5, personnalisee: false, ...withAudit({}) })
+      fruitsId = CAT_IDS['Fruits']
+      await db.categoriesProduits.put({ id: fruitsId, nom: 'Fruits', icone: '🍎', typeProduit: 'consommable', ordre: 0.5, personnalisee: false, ...withAudit({}) })
+    } else if (fruitsId !== CAT_IDS['Fruits']) {
+      // Migrate vers ID stable
+      await db.categoriesProduits.put({ id: CAT_IDS['Fruits'], nom: 'Fruits', icone: '🍎', typeProduit: 'consommable', ordre: 0.5, personnalisee: false, ...withAudit({}) })
+      await db.produits.filter(p => p.categorie === fruitsId || (p.categorieIds ?? []).includes(fruitsId!)).modify({ categorie: CAT_IDS['Fruits'], categorieIds: [CAT_IDS['Fruits']] })
+      await db.categoriesProduits.delete(fruitsId)
+      fruitsId = CAT_IDS['Fruits']
     }
     if (!legumesId) {
-      legumesId = uuid()
-      await db.categoriesProduits.add({ id: legumesId, nom: 'Légumes', icone: '🥦', typeProduit: 'consommable', ordre: 0.7, personnalisee: false, ...withAudit({}) })
+      legumesId = CAT_IDS['Légumes']
+      await db.categoriesProduits.put({ id: legumesId, nom: 'Légumes', icone: '🥦', typeProduit: 'consommable', ordre: 0.7, personnalisee: false, ...withAudit({}) })
+    } else if (legumesId !== CAT_IDS['Légumes']) {
+      // Migrate vers ID stable
+      await db.categoriesProduits.put({ id: CAT_IDS['Légumes'], nom: 'Légumes', icone: '🥦', typeProduit: 'consommable', ordre: 0.7, personnalisee: false, ...withAudit({}) })
+      await db.produits.filter(p => p.categorie === legumesId || (p.categorieIds ?? []).includes(legumesId!)).modify({ categorie: CAT_IDS['Légumes'], categorieIds: [CAT_IDS['Légumes']] })
+      await db.categoriesProduits.delete(legumesId)
+      legumesId = CAT_IDS['Légumes']
     }
 
     // Réaffecter les produits
@@ -207,24 +246,42 @@ async function migrerCategoriesProduits(): Promise<void> {
     await db.categoriesProduits.delete(ancienne.id)
   }
 
-  // ── 2. Ajouter les catégories manquantes ──
+  // ── 2. S'assurer que toutes les catégories standard ont des IDs stables ──
+  // Recharge après les modifications Fruits/Légumes
   const catsActuelles = await db.categoriesProduits.toArray()
-  const nomsExistants = new Set(catsActuelles.map(c => c.nom))
-  const maxOrdre = Math.max(...catsActuelles.map(c => c.ordre ?? 0), 12)
+  const byNomActuel = new Map(catsActuelles.map(c => [c.nom, c]))
 
-  const nouvelles: Array<{ nom: string; icone: string }> = [
-    { nom: 'Produits Laitiers',  icone: '🥛' },
-    { nom: 'Fromages',           icone: '🧀' },
-    { nom: 'Herbes & Aromates',  icone: '🌿' },
-    { nom: 'Boulangerie',        icone: '🍞' },
-    { nom: 'Boissons',           icone: '🧃' },
-    { nom: 'Entretien',          icone: '🧹' },
+  const catsStandard: Array<{ nom: string; icone: string; ordre: number }> = [
+    { nom: 'Viande & Charcuterie', icone: '🥩', ordre: 3 },
+    { nom: 'Poissons',             icone: '🐟', ordre: 4 },
+    { nom: 'Produits Laitiers',    icone: '🥛', ordre: 5 },
+    { nom: 'Fromages',             icone: '🧀', ordre: 6 },
+    { nom: 'Épicerie salée',       icone: '🫙', ordre: 7 },
+    { nom: 'Épicerie sucrée',      icone: '🍫', ordre: 8 },
+    { nom: 'Conserves',            icone: '🥫', ordre: 9 },
+    { nom: 'Surgelés',             icone: '🧊', ordre: 10 },
+    { nom: 'Boulangerie',          icone: '🍞', ordre: 11 },
+    { nom: 'Boissons',             icone: '🧃', ordre: 12 },
+    { nom: 'Épices',               icone: '🌿', ordre: 13 },
+    { nom: 'Herbes & Aromates',    icone: '🌿', ordre: 14 },
+    { nom: 'Asiatique',            icone: '🥢', ordre: 15 },
+    { nom: 'Bio',                  icone: '🌱', ordre: 16 },
+    { nom: 'Hygiène',              icone: '🧼', ordre: 17 },
+    { nom: 'Entretien',            icone: '🧹', ordre: 18 },
   ]
-  let offset = 1
-  for (const cat of nouvelles) {
-    if (!nomsExistants.has(cat.nom)) {
-      await db.categoriesProduits.add({ id: uuid(), nom: cat.nom, icone: cat.icone, typeProduit: 'consommable', ordre: maxOrdre + offset, personnalisee: false, ...withAudit({}) })
-      offset++
+
+  for (const c of catsStandard) {
+    const stableId = CAT_IDS[c.nom]
+    if (!stableId) continue
+    const existing = byNomActuel.get(c.nom)
+    if (!existing) {
+      // Catégorie absente → créer avec ID stable
+      await db.categoriesProduits.put({ id: stableId, nom: c.nom, icone: c.icone, typeProduit: 'consommable', ordre: c.ordre, personnalisee: false, ...withAudit({}) })
+    } else if (existing.id !== stableId) {
+      // Catégorie avec UUID aléatoire → migrer vers ID stable
+      await db.categoriesProduits.put({ id: stableId, nom: c.nom, icone: c.icone, typeProduit: 'consommable', ordre: existing.ordre ?? c.ordre, personnalisee: false, ...withAudit({}) })
+      await db.produits.filter(p => p.categorie === existing.id || (p.categorieIds ?? []).includes(existing.id)).modify({ categorie: stableId, categorieIds: [stableId] })
+      await db.categoriesProduits.delete(existing.id)
     }
   }
 
@@ -821,8 +878,10 @@ async function seedSuiviManel(): Promise<void> {
 
 // ── Catalogue produits complet ────────────────────────────────────────────────
 async function seedProduitsCatalog(): Promise<void> {
+  // Utilise les IDs stables en priorité, fallback lookup par nom pour les catégories perso
   const categories = await db.categoriesProduits.toArray()
-  const cat = (nom: string): string => categories.find(c => c.nom === nom)?.id ?? ''
+  const cat = (nom: string): string =>
+    CAT_IDS[nom] ?? categories.find(c => c.nom === nom)?.id ?? ''
 
   type P = { nom: string; unite?: string }
   const PAR_CAT: Array<{ cat: string; produits: P[] }> = [
