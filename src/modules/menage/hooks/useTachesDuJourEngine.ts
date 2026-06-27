@@ -66,12 +66,14 @@ export function useTachesDuJourEngine(mode: MenageMode): MenageTask[] | undefine
       .filter(t => !t.archive && !t.deletedAt && t.moduleOrigine === 'maison')
       .toArray()
 
-    // Charger ou calculer la liste du jour (figée jusqu'à minuit)
+    // Charger ou calculer la liste du jour (figée jusqu'à minuit).
+    // Un snapshot vide n'est jamais gelé : si des tâches arrivent après
+    // (ajout manuel ou sync Supabase), on recalcule jusqu'à en trouver.
     let taskIds = loadSnapshot(mode)
-    if (!taskIds) {
+    if (!taskIds || taskIds.length === 0) {
       const engineTasks = selectTasksForToday(all, today, mode)
       taskIds = engineTasks.map(t => t.id)
-      saveSnapshot(mode, taskIds)
+      if (taskIds.length > 0) saveSnapshot(mode, taskIds)
     }
 
     // Récupérer l'état actuel (done/pas done) des tâches de la liste figée
