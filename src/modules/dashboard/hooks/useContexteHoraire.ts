@@ -220,7 +220,7 @@ export function useContexteHoraire(): ContexteHoraire {
       parts.push(nbRepas > 0 ? `${nbRepas} repas prévus cette semaine` : 'Aucun repas planifié')
       const sousTitre = parts.join(' · ')
       const chips: ChipContextuel[] = nbRepas > 0
-        ? repasDisponibles.slice(0, 4).map(r => ({ label: r.nom, route: '/cuisine' }))
+        ? repasDisponibles.map(r => ({ label: r.nom, route: '/cuisine' }))
         : [{ label: 'Planifier les repas', route: '/cuisine' }]
       const titreSoir = heure < 18 ? "L'après-midi continue" : 'La soirée commence'
       const sousTitreSoirDefaut = heure < 18 ? 'Ce soir se prépare doucement' : 'Le reste attendra demain'
