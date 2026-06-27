@@ -14,7 +14,7 @@ function norm(s: string): string {
 
 // Incrémenter à chaque fois que le catalogue produits est mis à jour
 // → force tous les appareils existants à recevoir les nouveaux produits
-const CATALOG_VERSION = '4'
+const CATALOG_VERSION = '5'
 const CATALOG_VERSION_KEY = 'family_os_catalog_version'
 
 // ID stable déterministe pour les activités seedées — identique sur tous les appareils
