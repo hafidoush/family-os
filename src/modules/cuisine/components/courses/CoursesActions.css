@@ -5,7 +5,7 @@
   left: 0;
   right: 0;
   padding: 12px 16px 20px;
-  background: linear-gradient(to bottom, transparent, hsl(40, 28%, 96%) 30%);
+  background: linear-gradient(to bottom, transparent, #F7F6F4 30%);
   pointer-events: none;
   z-index: 10;
 }
@@ -22,18 +22,19 @@
   display: flex;
   align-items: center;
   gap: 6px;
-  padding: 0 20px;
-  height: 44px;
-  background: #7C6AF7;
+  padding: 0 22px;
+  height: 46px;
+  background: linear-gradient(135deg, #C69CE2, #9B7DCC);
   color: white;
   border: none;
-  border-radius: 22px;
+  border-radius: 999px;
   font-size: 15px;
-  font-weight: 600;
+  font-weight: 700;
   cursor: pointer;
   white-space: nowrap;
   transition: transform 0.15s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.15s ease;
   letter-spacing: -0.01em;
+  box-shadow: 0 4px 14px rgba(198, 156, 226, 0.4);
 }
 
 .courses-actions__btn-primary:active {

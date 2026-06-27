@@ -80,26 +80,40 @@ export function CoursesList() {
 
   return (
     <div className="courses-list">
-      {/* Compteur global */}
-      {nbTotal > 0 && (
-        <div className="courses-list__compteur">
-          <span className="courses-list__compteur-val">{nbCochés}</span>
-          <span className="courses-list__compteur-sep">/</span>
-          <span className="courses-list__compteur-total">{nbTotal}</span>
-          <span className="courses-list__compteur-label"> article{nbTotal > 1 ? 's' : ''}</span>
-
+      {/* Header */}
+      <div className="courses-list__header">
+        <div className="courses-list__title-row">
+          <h2 className="courses-list__title">Courses</h2>
           {nbTotal > 0 && (
+            <button
+              className="courses-list__share-btn"
+              onClick={() => setPartageOpen(true)}
+              title="Partager la liste"
+            >
+              <IconInboxOut size={18} />
+            </button>
+          )}
+        </div>
+
+        {nbTotal > 0 && (
+          <div className="courses-list__progress-card">
+            <div className="courses-list__progress-text">
+              <span className="courses-list__compteur-val">{nbCochés}</span>
+              <span className="courses-list__compteur-sep">/</span>
+              <span className="courses-list__compteur-total">{nbTotal}</span>
+              <span className="courses-list__compteur-label"> article{nbTotal > 1 ? 's' : ''}</span>
+            </div>
             <div className="courses-list__progress">
               <div
                 className="courses-list__progress-bar"
                 style={{ width: `${(nbCochés / nbTotal) * 100}%` }}
               />
             </div>
-          )}
-        </div>
-      )}
+          </div>
+        )}
+      </div>
 
-      {/* Bandeau génération depuis menus + bouton partage */}
+      {/* Bandeau génération depuis menus */}
       <div className="courses-list__gen-bar">
         <button
           className="courses-list__gen-btn"
@@ -108,15 +122,6 @@ export function CoursesList() {
         >
           {isGenerating ? '…' : <><IconStarShine size={14} style={{ marginRight: 4, verticalAlign: 'middle' }} /> Générer depuis les menus</>}
         </button>
-        {nbTotal > 0 && (
-          <button
-            className="courses-list__share-btn"
-            onClick={() => setPartageOpen(true)}
-            title="Partager avec Élies"
-          >
-            <IconInboxOut size={18} />
-          </button>
-        )}
         {genMessage && (
           <span className="courses-list__gen-msg">{genMessage}</span>
         )}
