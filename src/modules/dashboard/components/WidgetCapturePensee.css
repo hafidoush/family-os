@@ -156,62 +156,86 @@
   line-height: 1.4;
 }
 
-/* ── Suggestions : colonne unique sur mobile, 2 col sur tablette+ ── */
+/* ── Suggestions : ligne horizontale compacte ── */
 .widget-hero__suggestions {
   display: flex;
-  flex-direction: column;
-  gap: 10px;
+  flex-direction: row;
+  flex-wrap: wrap;
+  gap: 7px;
   width: 100%;
-  margin: 16px 0;
-}
-
-.widget-hero__chip {
-  width: 100%;
-  text-align: center;
-}
-
-@media (min-width: 768px) {
-  .widget-hero__suggestions {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-  }
-  .widget-hero__chip:last-child {
-    grid-column: 1 / -1;
-    justify-self: center;
-    width: auto;
-  }
+  margin: 12px 0 4px;
+  justify-content: center;
 }
 
 .widget-hero__chip {
   font-family: var(--font-body, system-ui);
-  font-size: 14px;
-  font-weight: 400;
-  color: var(--text-primary, hsl(240, 7%, 11%));
-  background: #FFFFFF;
-  border: none;
+  font-size: 12px;
+  font-weight: 500;
+  color: hsl(240, 7%, 30%);
+  background: rgba(255, 255, 255, 0.88);
+  border: 1px solid rgba(200, 192, 220, 0.30);
   border-radius: 999px;
-  padding: 8px 18px;
+  padding: 6px 13px;
   cursor: pointer;
-  transition: opacity 0.15s ease, transform 0.12s ease;
+  transition: background 0.15s ease, border-color 0.15s ease, transform 0.12s ease, color 0.15s ease;
   -webkit-tap-highlight-color: transparent;
-  white-space: normal;
-  text-align: center;
+  white-space: nowrap;
+  max-width: 160px;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  flex-shrink: 0;
+}
+
+.widget-hero__chip-label {
   overflow: hidden;
-  word-break: break-word;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
 }
 
 .widget-hero__chip:hover {
-  opacity: 0.85;
+  background: rgba(255, 255, 255, 0.98);
+  border-color: rgba(198, 156, 226, 0.45);
 }
 
 .widget-hero__chip:active {
-  transform: scale(0.96);
+  transform: scale(0.95);
+}
+
+/* Chip sélectionné */
+.widget-hero__chip--selected {
+  background: linear-gradient(135deg, #C69CE2, #9B7DCC);
+  color: white;
+  border-color: transparent;
+  box-shadow: 0 2px 8px rgba(155, 125, 204, 0.35);
+}
+
+.widget-hero__chip--selected .widget-hero__chip-badge {
+  background: rgba(255, 255, 255, 0.25);
+  color: white;
+}
+
+/* Chip "+N" */
+.widget-hero__chip--more {
+  max-width: none;
+  padding: 6px 11px;
+  font-weight: 600;
+  color: hsl(262, 35%, 55%);
+  background: rgba(198, 156, 226, 0.10);
+  border-color: rgba(198, 156, 226, 0.35);
+}
+
+.widget-hero__chip--more:hover {
+  background: rgba(198, 156, 226, 0.18);
+  border-color: rgba(198, 156, 226, 0.55);
 }
 
 /* Chip urgent — léger contour ambré */
 .widget-hero__chip--urgent {
   background: #FFF8EE;
-  outline: 1.5px solid rgba(245, 158, 11, 0.35);
+  border-color: rgba(245, 158, 11, 0.35);
+  color: hsl(38, 70%, 28%);
 }
 
 /* Badge compteur dans le chip */

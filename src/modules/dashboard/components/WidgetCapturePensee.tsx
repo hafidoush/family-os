@@ -557,6 +557,8 @@ export function WidgetCapturePensee() {
   const [processing,   setProcessing]   = useState(false)
   const [confirmation, setConfirmation] = useState<string | null>(null)
   const [showDetail,   setShowDetail]   = useState(false)
+  const [selectedChip, setSelectedChip] = useState<string | null>(null)
+  const [chipsExpanded, setChipsExpanded] = useState(false)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
 
   const handleCapture = useCallback(async () => {
@@ -620,16 +622,37 @@ export function WidgetCapturePensee() {
         </div>
 
         <div className="widget-hero__suggestions">
-          {contexte.chips.map(({ label, route, badge }) => (
-            <button
-              key={label}
-              className="widget-hero__chip"
-              onClick={() => route && navigate(route)}
-            >
-              {label}
-              {badge && <span className="widget-hero__chip-badge">{badge}</span>}
-            </button>
-          ))}
+          {(() => {
+            const MAX_VISIBLE = 3
+            const chips = contexte.chips
+            const visible = chipsExpanded ? chips : chips.slice(0, MAX_VISIBLE)
+            const hiddenCount = chips.length - MAX_VISIBLE
+            return (
+              <>
+                {visible.map(({ label, route, badge }) => (
+                  <button
+                    key={label}
+                    className={`widget-hero__chip${selectedChip === label ? ' widget-hero__chip--selected' : ''}`}
+                    onClick={() => {
+                      setSelectedChip(selectedChip === label ? null : label)
+                      if (route) navigate(route)
+                    }}
+                  >
+                    <span className="widget-hero__chip-label">{label}</span>
+                    {badge && <span className="widget-hero__chip-badge">{badge}</span>}
+                  </button>
+                ))}
+                {!chipsExpanded && hiddenCount > 0 && (
+                  <button
+                    className="widget-hero__chip widget-hero__chip--more"
+                    onClick={() => setChipsExpanded(true)}
+                  >
+                    +{hiddenCount}
+                  </button>
+                )}
+              </>
+            )
+          })()}
         </div>
       </div>
 
