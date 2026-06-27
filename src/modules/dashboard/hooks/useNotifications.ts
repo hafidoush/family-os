@@ -2,15 +2,17 @@
  * FAMILY OS — useNotifications
  *
  * Produit la notification la plus prioritaire à afficher sur le dashboard.
- * - Entièrement hors ligne (Dexie + localStorage)
+ * - Entièrement hors ligne (Dexie + Supabase sync)
  * - Une seule notification visible à la fois (la plus urgente)
- * - Dismissal persisté 24h dans localStorage
+ * - Dismissal persisté 24h dans parametresSync → synchronisé entre appareils
  * - Différent des suggestions : c'est une alerte proactive, pas un raccourci
  */
 
 import { useLiveQuery } from 'dexie-react-hooks'
 import { useMemo, useCallback } from 'react'
 import { db } from '../../../core/db/database'
+import { newEntity, withUpdate } from '../../../core/db/helpers'
+import type { ParametreSync } from '../../../shared/types'
 import { useHabitudes } from '../../../shared/hooks/useHabitudes'
 import { useHabituesRetard } from '../../../shared/hooks/useHabituesRetard'
 import { isDueToday, isOverdue } from '../../menage/utils/nextDueDate'
@@ -29,31 +31,36 @@ export interface AppNotification {
   actionState?: Record<string, string>
 }
 
-// ─── Persistance dismiss (localStorage, TTL 24h) ─────────────────────────────
+// ─── Persistance dismiss (parametresSync Dexie → syncé Supabase, TTL 24h) ───
 
-const LS_KEY = 'family_os_notif_dismissed'
+const CLE_DISMISS = 'notifs_dismissed'
+const TTL = 24 * 60 * 60 * 1000  // 24h en ms
 
-function getDismissed(): Record<string, number> {
-  try { return JSON.parse(localStorage.getItem(LS_KEY) ?? '{}') }
-  catch { return {} }
-}
-
-function isDismissed(id: string): boolean {
-  const map = getDismissed()
-  const ts  = map[id]
-  if (!ts) return false
-  return Date.now() - ts < 24 * 60 * 60 * 1000 // 24h
-}
-
-export function dismissNotification(id: string): void {
-  const map = getDismissed()
-  map[id]   = Date.now()
+async function dismissNotification(id: string): Promise<void> {
+  const existing = await db.parametresSync.where('cle').equals(CLE_DISMISS).first()
+  const map: Record<string, number> = (() => {
+    try { return JSON.parse(existing?.valeur ?? '{}') }
+    catch { return {} }
+  })()
+  map[id] = Date.now()
   // Nettoyer les entrées expirées
   const now = Date.now()
   for (const k of Object.keys(map)) {
-    if (now - map[k] >= 24 * 60 * 60 * 1000) delete map[k]
+    if (now - map[k] >= TTL) delete map[k]
   }
-  localStorage.setItem(LS_KEY, JSON.stringify(map))
+  const valeur = JSON.stringify(map)
+  if (existing) {
+    await db.parametresSync.update(existing.id, withUpdate<ParametreSync>({
+      valeur,
+      derniereModification: new Date(),
+    }))
+  } else {
+    await db.parametresSync.add(newEntity<ParametreSync>({
+      cle: CLE_DISMISS,
+      valeur,
+      derniereModification: new Date(),
+    }))
+  }
 }
 
 // ─── Helpers temporels ────────────────────────────────────────────────────────
@@ -398,12 +405,25 @@ export function useNotifications(): {
     todayISO, tomorrowISO,
   ])
 
+  // ── Carte des dismissals (Dexie réactif → sync Supabase) ─────────────────
+
+  const dismissedMap = useLiveQuery(async () => {
+    const row = await db.parametresSync.where('cle').equals(CLE_DISMISS).first()
+    if (!row?.valeur) return {}
+    try {
+      const map: Record<string, number> = JSON.parse(row.valeur)
+      const now = Date.now()
+      // Filtrer les entrées expirées à la lecture
+      return Object.fromEntries(Object.entries(map).filter(([, ts]) => now - ts < TTL))
+    } catch { return {} }
+  }, []) ?? {}
+
   // ── Sélection : plus haute priorité non dismissée ─────────────────────────
 
   const notification = useMemo(() => {
     const sorted = [...candidates].sort((a, b) => b.prio - a.prio)
-    return sorted.find(({ notif }) => !isDismissed(notif.id))?.notif ?? null
-  }, [candidates])
+    return sorted.find(({ notif }) => !dismissedMap[notif.id])?.notif ?? null
+  }, [candidates, dismissedMap])
 
   const dismiss = useCallback(() => {
     if (notification) dismissNotification(notification.id)

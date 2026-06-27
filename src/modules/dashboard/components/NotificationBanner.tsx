@@ -8,7 +8,6 @@
  * - 3 variantes : info (lavande), warning (ambre), urgent (rouge doux)
  */
 
-import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useNotifications } from '../hooks/useNotifications'
 import './NotificationBanner.css'
@@ -17,20 +16,11 @@ export function NotificationBanner() {
   const navigate = useNavigate()
   const { notification, dismiss } = useNotifications()
 
-  // Force re-render après dismiss (localStorage ne trigger pas React)
-  const [dismissed, setDismissed] = useState(false)
-
-  // Reset dismissed state quand une nouvelle notification arrive
-  useEffect(() => {
-    setDismissed(false)
-  }, [notification?.id])
-
-  if (!notification || dismissed) return null
+  if (!notification) return null
 
   function handleAction() {
     if (!notification) return
     dismiss()
-    setDismissed(true)
     navigate(
       notification.actionRoute,
       notification.actionState ? { state: notification.actionState } : undefined
@@ -39,7 +29,6 @@ export function NotificationBanner() {
 
   function handleDismiss() {
     dismiss()
-    setDismissed(true)
   }
 
   return (
