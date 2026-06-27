@@ -252,6 +252,9 @@ export function MenuDetail({ menuId, onBack }: MenuDetailProps) {
         <MenuSlotForm
           menuId={menuId}
           onClose={() => setShowForm(false)}
+          recettesDejaUtilisees={new Set(
+            data.tousLesSlots.filter((s) => s.recette).map((s) => s.recette as string)
+          )}
         />
       )}
 

@@ -8,6 +8,7 @@ import { v4 as uuid } from 'uuid';
 import { db } from '@core/db/database';
 import { newEntity } from '@core/db/helpers';
 import { emit } from '@core/automation/engine';
+import { toISODate } from '@shared/utils/formatDate';
 import type { Menu, MenuSlot, JourMenu, RepasMenu } from '@shared/types';
 
 // ─── Helpers internes ─────────────────────────────────────────────────────────
@@ -213,6 +214,55 @@ export const MenuService = {
       .filter((m) => !m.archive && !m.deletedAt)
       .toArray()
       .then((list) => list.sort((a, b) => b.dateDebut.localeCompare(a.dateDebut)));
+  },
+
+  /**
+   * Retourne le menu (validé ou non) couvrant aujourd'hui.
+   * Si aucun n'existe, en crée un automatiquement pour la semaine courante.
+   */
+  async getMenuActifOuCreer(): Promise<Menu> {
+    const today = toISODate(new Date());
+    const menu = await db.menus
+      .filter(
+        (m) =>
+          !m.archive &&
+          !m.deletedAt &&
+          m.dateDebut <= today &&
+          (m.dateFin == null || m.dateFin >= today)
+      )
+      .first();
+    if (menu) return menu;
+    return this.createMenu();
+  },
+
+  /**
+   * Crée ou met à jour le slot identifié par (menuId, jour, repas).
+   * Si un slot existant correspond, il est mis à jour ; sinon, un nouveau slot est créé.
+   */
+  async upsertSlot(input: AddSlotInput): Promise<MenuSlot> {
+    if (input.jour && input.repas) {
+      const existing = await db.menuSlots
+        .filter(
+          (s) =>
+            s.menu === input.menuId &&
+            s.jour === input.jour &&
+            s.repas === input.repas &&
+            !s.archive &&
+            !s.deletedAt
+        )
+        .first();
+      if (existing) {
+        const changes: Partial<MenuSlot> & { updatedAt: Date } = {
+          updatedAt: new Date(),
+          recette: input.recetteId,
+          descriptionLibre: input.descriptionLibre,
+          statut: 'prevue' as const,
+        };
+        await db.menuSlots.update(existing.id, changes);
+        return { ...existing, ...changes };
+      }
+    }
+    return this.addSlot(input);
   },
 
   /**

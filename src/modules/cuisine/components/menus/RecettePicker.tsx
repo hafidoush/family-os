@@ -13,9 +13,10 @@ import './RecettePicker.css';
 interface RecettePickerProps {
   onSelect: (recetteId: string, nom: string) => void;
   onClose: () => void;
+  recettesDejaUtilisees?: Set<string>;
 }
 
-export function RecettePicker({ onSelect, onClose }: RecettePickerProps) {
+export function RecettePicker({ onSelect, onClose, recettesDejaUtilisees }: RecettePickerProps) {
   const [query, setQuery] = useState('');
   const debouncedQuery = useDebounce(query, 250);
 
@@ -58,32 +59,40 @@ export function RecettePicker({ onSelect, onClose }: RecettePickerProps) {
           </div>
         ) : (
           <ul className="recette-picker__list">
-            {recettes.map((r) => (
-              <li key={r.id}>
-                <button
-                  className="recette-picker__item"
-                  onClick={() => onSelect(r.id, r.nom)}
-                >
-                  {r.image && (
-                    <div className="recette-picker__thumb">
-                      <img
-                        src={URL.createObjectURL(r.image)}
-                        alt={r.nom}
-                      />
-                    </div>
-                  )}
-                  <div className="recette-picker__info">
-                    <span className="recette-picker__nom">{r.nom}</span>
-                    {r.tempsPreparation && (
-                      <span className="recette-picker__temps">
-                        ⏱ {r.tempsPreparation} min
-                      </span>
+            {recettes.map((r) => {
+              const dejaUtilisee = recettesDejaUtilisees?.has(r.id) ?? false;
+              return (
+                <li key={r.id}>
+                  <button
+                    className={`recette-picker__item ${dejaUtilisee ? 'recette-picker__item--used' : ''}`}
+                    onClick={() => onSelect(r.id, r.nom)}
+                    disabled={dejaUtilisee}
+                    title={dejaUtilisee ? 'Déjà utilisée cette semaine' : undefined}
+                  >
+                    {r.image && (
+                      <div className="recette-picker__thumb">
+                        <img
+                          src={URL.createObjectURL(r.image)}
+                          alt={r.nom}
+                        />
+                      </div>
                     )}
-                  </div>
-                  {r.favori && <span className="recette-picker__favori"><IconHeart size={14} /></span>}
-                </button>
-              </li>
-            ))}
+                    <div className="recette-picker__info">
+                      <span className="recette-picker__nom">{r.nom}</span>
+                      {r.tempsPreparation && (
+                        <span className="recette-picker__temps">
+                          ⏱ {r.tempsPreparation} min
+                        </span>
+                      )}
+                      {dejaUtilisee && (
+                        <span className="recette-picker__used-label">Déjà au menu</span>
+                      )}
+                    </div>
+                    {r.favori && <span className="recette-picker__favori"><IconHeart size={14} /></span>}
+                  </button>
+                </li>
+              );
+            })}
           </ul>
         )}
       </div>

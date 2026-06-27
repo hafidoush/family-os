@@ -31,9 +31,10 @@ const REPAS: { value: RepasMenu; label: string; icon: string }[] = [
 interface MenuSlotFormProps {
   menuId: string;
   onClose: () => void;
+  recettesDejaUtilisees?: Set<string>;
 }
 
-export function MenuSlotForm({ menuId, onClose }: MenuSlotFormProps) {
+export function MenuSlotForm({ menuId, onClose, recettesDejaUtilisees }: MenuSlotFormProps) {
   const [recetteId, setRecetteId] = useState<string | undefined>();
   const [recetteNom, setRecetteNom] = useState<string>('');
   const [descriptionLibre, setDescriptionLibre] = useState('');
@@ -169,6 +170,7 @@ export function MenuSlotForm({ menuId, onClose }: MenuSlotFormProps) {
             setShowPicker(false);
           }}
           onClose={() => setShowPicker(false)}
+          recettesDejaUtilisees={recettesDejaUtilisees}
         />
       )}
     </>

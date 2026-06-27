@@ -136,6 +136,18 @@
   flex-shrink: 0;
 }
 
+.recette-picker__item--used {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.recette-picker__used-label {
+  display: block;
+  font-size: var(--text-xs);
+  color: var(--color-text-secondary);
+  font-style: italic;
+}
+
 .recette-picker__loading,
 .recette-picker__empty {
   text-align: center;

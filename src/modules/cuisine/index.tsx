@@ -6,7 +6,9 @@ import { RecetteDetail } from './components/recettes/RecetteDetail'
 import { RecetteForm } from './components/recettes/RecetteForm'
 import { MenusModule } from './components/menus/MenusModule'
 import { SweetBatch } from './components/preparation/SweetBatch'
+import { DinerHeader } from './components/DinerHeader'
 import './Cuisine.css'
+import './components/DinerHeader.css'
 
 type CuisineTab = 'recettes' | 'menus' | 'batch'
 
@@ -98,6 +100,9 @@ export default function Cuisine() {
     <div
       className="cuisine-module"
     >
+      {view.type !== 'form' && (
+        <DinerHeader onVoirRecette={(id) => { setActiveTab('recettes' as CuisineTab); goToDetail(id) }} />
+      )}
       {view.type !== 'form' && (
         <nav className="cuisine-module__tabs">
           {TABS.map((tab) => (
