@@ -107,9 +107,12 @@ export function useContexteHoraire(): ContexteHoraire {
     // Priorité au menu le plus récent
     menus.sort((a, b) => (b.dateDebut ?? '').localeCompare(a.dateDebut ?? ''))
     const menu = menus[0]
+    // Inclure dîners ET slots sans repas spécifié (ajoutés sans sélectionner "Dîner")
     const slots = await db.menuSlots
       .where('menu').equals(menu.id)
-      .filter(s => !s.deletedAt && s.repas === 'diner' && (!!s.recette || !!s.descriptionLibre))
+      .filter(s => !s.deletedAt && !s.archive &&
+        (s.repas === 'diner' || s.repas === 'dejeuner' || !s.repas) &&
+        (!!s.recette || !!s.descriptionLibre))
       .toArray()
     if (!slots.length) return []
     const ids = [...new Set(slots.map(s => s.recette).filter(Boolean) as string[])]
