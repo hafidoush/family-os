@@ -14,7 +14,7 @@ function norm(s: string): string {
 
 // Incrémenter à chaque fois que le catalogue produits est mis à jour
 // → force tous les appareils existants à recevoir les nouveaux produits
-const CATALOG_VERSION = '7'
+const CATALOG_VERSION = '8'
 const CATALOG_VERSION_KEY = 'family_os_catalog_version'
 
 // ID stable déterministe pour les activités seedées — identique sur tous les appareils
@@ -192,50 +192,56 @@ async function seedCategoriesProduits(): Promise<void> {
 
 // ─── Migration catégories produits ─────────────────────────────────────────────
 // RÈGLE : additive uniquement — on ne supprime JAMAIS une catégorie existante.
-// On ne déplace des produits que si leur catégorie source DISPARAÎT ("Fruits & Légumes").
+// Migration v8 — supprime les doublons cat-prod-* créés par erreur, conserve les UUID originaux
 async function migrerCategoriesProduits(): Promise<void> {
   const cats = await db.categoriesProduits.toArray()
-  const byNom = new Map(cats.map(c => [c.nom, c]))
 
-  // ── 1. Créer les catégories manquantes avec IDs stables ──
-  const catsRequises: Array<{ nom: string; icone: string; ordre: number }> = [
-    { nom: 'Fruits',               icone: '🍎', ordre: 1 },
-    { nom: 'Légumes',              icone: '🥦', ordre: 2 },
-    { nom: 'Viande & Charcuterie', icone: '🥩', ordre: 3 },
-    { nom: 'Poissons',             icone: '🐟', ordre: 4 },
-    { nom: 'Produits Laitiers',    icone: '🥛', ordre: 5 },
-    { nom: 'Épicerie salée',       icone: '🫙', ordre: 6 },
-    { nom: 'Épicerie sucrée',      icone: '🍫', ordre: 7 },
-    { nom: 'Conserves',            icone: '🥫', ordre: 8 },
-    { nom: 'Surgelés',             icone: '🧊', ordre: 9 },
-    { nom: 'Boulangerie',          icone: '🍞', ordre: 10 },
-    { nom: 'Boissons',             icone: '🧃', ordre: 11 },
-    { nom: 'Épices',               icone: '🌿', ordre: 12 },
-    { nom: 'Asiatique',            icone: '🥢', ordre: 13 },
-    { nom: 'Bio',                  icone: '🌱', ordre: 14 },
-    { nom: 'Hygiène',              icone: '🧼', ordre: 15 },
-    { nom: 'Entretien',            icone: '🧹', ordre: 16 },
-  ]
+  // Sépare les catégories stables (cat-prod-*) des originales (UUID)
+  const stableCats = cats.filter(c => c.id.startsWith('cat-prod-'))
+  const uuidCats   = cats.filter(c => !c.id.startsWith('cat-prod-'))
+  const byNomUUID  = new Map(uuidCats.map(c => [c.nom, c]))
 
-  for (const c of catsRequises) {
-    if (!byNom.has(c.nom)) {
-      const stableId = CAT_IDS[c.nom] ?? uuid()
-      await db.categoriesProduits.put({
-        id: stableId, nom: c.nom, icone: c.icone,
-        typeProduit: 'consommable' as const, ordre: c.ordre,
-        personnalisee: false, ...withAudit({}),
-      })
+  // ── 1. Pour chaque cat-prod-* qui a un doublon UUID du même nom :
+  //       déplacer ses produits vers l'UUID, puis la supprimer ──
+  for (const stable of stableCats) {
+    const uuid_cat = byNomUUID.get(stable.nom)
+    if (!uuid_cat) continue // pas de doublon → on garde (ex: Fruits, Légumes)
+
+    // Réaffecter les produits qui référencent l'ID stable vers l'ID UUID
+    const produits = await db.produits
+      .filter(p => p.categorie === stable.id || (p.categorieIds ?? []).includes(stable.id))
+      .toArray()
+    for (const p of produits) {
+      await db.produits.update(p.id, { categorie: uuid_cat.id, categorieIds: [uuid_cat.id] })
     }
+    await db.categoriesProduits.delete(stable.id)
   }
 
-  // ── 2. Réaffecter les produits orphelins de "Fruits & Légumes" ──
-  // On ne supprime PAS l'ancienne catégorie — on déplace seulement les produits.
+  // ── 2. Recharger après nettoyage ──
+  const catsApres = await db.categoriesProduits.toArray()
+  const byNom = new Map(catsApres.map(c => [c.nom, c]))
+
+  // ── 3. Créer Fruits et Légumes s'ils n'existent pas encore ──
+  if (!byNom.has('Fruits')) {
+    await db.categoriesProduits.put({
+      id: CAT_IDS['Fruits'], nom: 'Fruits', icone: '🍎',
+      typeProduit: 'consommable' as const, ordre: 1, personnalisee: false, ...withAudit({}),
+    })
+  }
+  if (!byNom.has('Légumes')) {
+    await db.categoriesProduits.put({
+      id: CAT_IDS['Légumes'], nom: 'Légumes', icone: '🥦',
+      typeProduit: 'consommable' as const, ordre: 2, personnalisee: false, ...withAudit({}),
+    })
+  }
+
+  // ── 4. Scinder "Fruits & Légumes" → Fruits + Légumes ──
   const ancienne = byNom.get('Fruits & Légumes')
   if (ancienne) {
-    const catsApres = await db.categoriesProduits.toArray()
-    const byNomApres = new Map(catsApres.map(c => [c.nom, c]))
-    const fruitsId  = byNomApres.get('Fruits')?.id
-    const legumesId = byNomApres.get('Légumes')?.id
+    const catsNow = await db.categoriesProduits.toArray()
+    const byNomNow = new Map(catsNow.map(c => [c.nom, c]))
+    const fruitsId  = byNomNow.get('Fruits')?.id
+    const legumesId = byNomNow.get('Légumes')?.id
     if (fruitsId && legumesId) {
       const LEGUMES = ['tomate','courgette','poivron','carotte','salade','epinard','brocoli','pomme de terre','patate','oignon','ail','poireau','champignon','concombre','aubergine','radis','celeri','persil','menthe','coriandre','basilic','fenouil','navet','artichaut','asperge','endive','mache','roquette','betterave','mais','haricot vert','chou','courge','potiron','butternut','echalote']
       const n = (s: string) => s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '')
@@ -247,15 +253,16 @@ async function migrerCategoriesProduits(): Promise<void> {
         const newId = isLegume ? legumesId : fruitsId
         await db.produits.update(p.id, { categorie: newId, categorieIds: [newId] })
       }
-      // Supprimer "Fruits & Légumes" uniquement si tous ses produits ont été déplacés
-      const restants = await db.produits.filter(p => !p.archive && (p.categorie === ancienne.id || (p.categorieIds ?? []).includes(ancienne.id))).count()
+      const restants = await db.produits
+        .filter(p => !p.archive && (p.categorie === ancienne.id || (p.categorieIds ?? []).includes(ancienne.id)))
+        .count()
       if (restants === 0) await db.categoriesProduits.delete(ancienne.id)
     }
   }
 
-  // ── 3. Fusionner Fromages → Produits Laitiers (supprimer la catégorie Fromages) ──
-  const catsApresAll = await db.categoriesProduits.toArray()
-  const byNomFinal = new Map(catsApresAll.map(c => [c.nom, c]))
+  // ── 5. Fusionner Fromages → Produits Laitiers ──
+  const catsFinales = await db.categoriesProduits.toArray()
+  const byNomFinal = new Map(catsFinales.map(c => [c.nom, c]))
   const fromagesCat = byNomFinal.get('Fromages')
   const laitiersCat = byNomFinal.get('Produits Laitiers')
   if (fromagesCat && laitiersCat) {
@@ -265,7 +272,7 @@ async function migrerCategoriesProduits(): Promise<void> {
     await db.categoriesProduits.delete(fromagesCat.id)
   }
 
-  // ── 4. Fusionner Herbes & Aromates → Épices ──
+  // ── 6. Fusionner Herbes & Aromates → Épices ──
   const herbesCat = byNomFinal.get('Herbes & Aromates')
   const epicesCat = byNomFinal.get('Épices')
   if (herbesCat && epicesCat) {
@@ -273,6 +280,24 @@ async function migrerCategoriesProduits(): Promise<void> {
       .filter(p => p.categorie === herbesCat.id || (p.categorieIds ?? []).includes(herbesCat.id))
       .modify({ categorie: epicesCat.id, categorieIds: [epicesCat.id] })
     await db.categoriesProduits.delete(herbesCat.id)
+  }
+
+  // ── 7. Ajouter les catégories manquantes (Boulangerie, Boissons, Produits Laitiers) ──
+  const catsPost = await db.categoriesProduits.toArray()
+  const nomsPost = new Set(catsPost.map(c => c.nom))
+  const aAjouter = [
+    { nom: 'Produits Laitiers', icone: '🥛', ordre: 5 },
+    { nom: 'Boulangerie',       icone: '🍞', ordre: 11 },
+    { nom: 'Boissons',          icone: '🧃', ordre: 12 },
+  ]
+  for (const c of aAjouter) {
+    if (!nomsPost.has(c.nom)) {
+      await db.categoriesProduits.put({
+        id: CAT_IDS[c.nom] ?? uuid(), nom: c.nom, icone: c.icone,
+        typeProduit: 'consommable' as const, ordre: c.ordre,
+        personnalisee: false, ...withAudit({}),
+      })
+    }
   }
 }
 
