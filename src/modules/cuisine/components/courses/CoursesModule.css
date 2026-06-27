@@ -3,4 +3,6 @@
   flex-direction: column;
   height: 100%;
   overflow: hidden;
+  /* Laisse de l'espace pour la pill nav fixe en bas */
+  padding-bottom: calc(80px + env(safe-area-inset-bottom, 0px));
 }

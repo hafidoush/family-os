@@ -208,7 +208,8 @@ export function WidgetProgrammeDuJour() {
   const planningItems: PreviewItem[] = evenements.map(e => {
     const d = new Date(e.dateDebut);
     const heure = e.journeeEntiere ? 'Journée' : `${String(d.getHours()).padStart(2,'0')}h${String(d.getMinutes()).padStart(2,'0')}`;
-    return { id: String(e.id), label: e.titre ?? '', sublabel: heure, done: d < now };
+    // Le Planning affiche des événements, pas des tâches — pas de notion de "fait"
+    return { id: String(e.id), label: e.titre ?? '', sublabel: heure, done: false };
   });
 
   const prochainItems: PreviewItem[] = prochains.map(e => {

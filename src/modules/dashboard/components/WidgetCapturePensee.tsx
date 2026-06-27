@@ -93,6 +93,9 @@ function resolverDate(texte: string): Date | null {
   if (t.includes('demain')) {
     const d = new Date(auj); d.setDate(d.getDate() + 1); return d
   }
+  if (t.includes("aujourd'hui") || t.includes('aujord\'hui') || t.includes('ce jour')) {
+    return new Date(auj)
+  }
   if (t.includes('ce soir')) {
     const d = new Date(); d.setHours(19, 0, 0, 0); return d
   }
@@ -171,8 +174,8 @@ const MOTS_TACHE = [
   'ramener les ', 'rapporter le ', 'rapporter les ',
 ]
 
-const MOTS_EVT  = ['rendez-vous', 'rdv', 'réunion', 'anniversaire', 'fête', 'sortie', 'vacances', 'voyage', 'concert', 'spectacle', 'match', 'pique-nique', 'mariage', 'baptême', 'bapteme', 'examen']
-const MOTS_DATE = ['lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi', 'samedi', 'dimanche', 'demain', 'après-demain', 'ce soir', 'ce week-end', 'semaine prochaine']
+const MOTS_EVT  = ['rendez-vous', 'rdv', 'réunion', 'anniversaire', 'fête', 'sortie', 'parc', 'promenade', 'balade', 'piscine', 'musée', 'cinema', 'restaurant', 'vacances', 'voyage', 'concert', 'spectacle', 'match', 'pique-nique', 'mariage', 'baptême', 'bapteme', 'examen', 'visite']
+const MOTS_DATE = ['lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi', 'samedi', 'dimanche', "aujourd'hui", 'demain', 'après-demain', 'ce soir', 'ce week-end', 'semaine prochaine']
 
 // Mots qui déclenchent "manque" comme achat seulement si le produit est alimentaire/physique
 const MOTS_MANQUE = ['manque', 'il manque', 'on manque de', 'plus de', 'fini le', 'fini la', 'finis les']
@@ -225,60 +228,13 @@ function extraireArticles(texte: string): string[] {
 
 // ─── Catégorisation automatique des produits ──────────────────────────────────
 
-// Mapping produit → catégorie (ordre = priorité de détection)
-const CAT_MOTS: Array<{ nom: string; icone: string; mots: string[] }> = [
-  // Catégories existantes dans le seed
-  { nom: 'Fruits',               icone: '🍎', mots: ['pomme', 'poire', 'banane', 'orange', 'citron', 'citron vert', 'fraise', 'framboise', 'myrtille', 'raisin', 'melon', 'pasteque', 'mangue', 'kiwi', 'ananas', 'peche', 'abricot', 'prune', 'cerise', 'avocat', 'clementine', 'mandarine', 'pamplemousse', 'figue', 'grenade', 'litchi', 'noix', 'amande', 'noisette', 'datte', 'pruneaux', 'raisin sec', 'abricot sec', 'fruit'] },
-  { nom: 'Légumes',              icone: '🥦', mots: ['tomate', 'courgette', 'poivron', 'carotte', 'salade', 'epinard', 'brocoli', 'pomme de terre', 'patate', 'oignon', 'ail', 'poireau', 'champignon', 'concombre', 'aubergine', 'radis', 'celeri', 'persil', 'menthe', 'coriandre', 'basilic', 'fenouil', 'navet', 'artichaut', 'asperge', 'endive', 'mache', 'roquette', 'betterave', 'mais frais', 'petit pois', 'haricot vert', 'chou', 'courge', 'potiron', 'butternut', 'echalote', 'legume'] },
-  { nom: 'Viande & Charcuterie', icone: '🥩', mots: ['poulet', 'boeuf', 'porc', 'agneau', 'veau', 'dinde', 'lapin', 'saucisse', 'jambon', 'bacon', 'lardons', 'merguez', 'steak', 'cotelette', 'escalope', 'filet de poulet', 'filet de boeuf', 'viande', 'charcuterie', 'saucisson', 'pate de campagne', 'roti', 'cuisse de poulet', 'blanc de poulet', 'aile de poulet', 'kebab', 'chipolata', 'boudin', 'chorizo', 'nuggets'] },
-  { nom: 'Poissons',             icone: '🐟', mots: ['saumon', 'thon frais', 'cabillaud', 'truite', 'dorade', 'bar', 'crevette', 'moule', 'huitre', 'calamar', 'poulpe', 'anchois frais', 'sardine fraiche', 'maquereau', 'sole', 'merlan', 'lieu', 'colin', 'saint-jacques', 'homard', 'langouste', 'poisson frais', 'fruits de mer'] },
-  { nom: 'Épicerie salée',       icone: '🫙', mots: ['pates', 'riz', 'farine', 'huile', 'vinaigre', 'moutarde', 'mayonnaise', 'ketchup', 'bouillon', 'levure boulangere', 'lentilles', 'pois chiches', 'haricots secs', 'sel', 'poivre', 'crackers', 'biscottes', 'semoule', 'quinoa', 'boulgour', 'polenta', 'chips', 'olives', 'cornichon', 'capres', 'pesto', 'tahin', 'harissa', 'concentre de tomate', 'tomates sechees', 'lait de coco', 'creme de coco', 'fecule', 'maizena', 'chapelure', 'lasagnes', 'spaghetti', 'tagliatelles'] },
-  { nom: 'Épicerie sucrée',      icone: '🍫', mots: ['sucre', 'confiture', 'miel', 'chocolat', 'biscuit', 'gateau', 'compote', 'cereales', 'granola', 'nutella', 'pate a tartiner', 'bonbon', 'caramel', 'vermicelles', 'gelatine', 'vanille', 'cacao', 'levure chimique', 'flan', 'confiserie', 'marshmallow', 'speculoos'] },
-  { nom: 'Conserves',            icone: '🥫', mots: ['conserve', 'tomates pelees', 'mais en boite', 'thon en boite', 'sardines en boite', 'haricots verts en boite', 'petits pois en boite', 'champignons en boite', 'cassoulet', 'ratatouille en boite', 'ravioli en boite', 'soupe en boite'] },
-  { nom: 'Surgelés',             icone: '🧊', mots: ['surgele', 'congele', 'pizza surgelee', 'frites surgelees', 'glace', 'sorbet', 'epinards surgeles', 'poisson pane', 'nuggets surgeles', 'wok surgele'] },
-  { nom: 'Épices',               icone: '🌿', mots: ['cumin', 'curry', 'paprika', 'cannelle', 'gingembre en poudre', 'curcuma', 'thym', 'laurier', 'origan', 'romarin', 'estragon', 'piment', 'muscade', 'cardamome', 'anis', 'clou de girofle', 'ras el hanout', 'fenugrec', 'sumac', 'epice', 'herbes de provence'] },
-  { nom: 'Asiatique',            icone: '🥢', mots: ['sauce soja', 'miso', 'sake', 'mirin', 'nouilles chinoises', 'ramen', 'udon', 'soba', 'nori', 'wasabi', 'tofu', 'edamame', 'shiitake', 'dashi', 'sriracha', 'sauce hoisin', 'sauce huitre', 'sauce poisson', 'citronnelle', 'sambal'] },
-  { nom: 'Hygiène',              icone: '🧼', mots: ['savon', 'shampoing', 'gel douche', 'dentifrice', 'brosse a dents', 'deodorant', 'rasoir', 'coton', 'lingette', 'lotion', 'bain de bouche', 'fil dentaire', 'coton-tige', 'serviette hygienique', 'tampon', 'couche', 'baume', 'after-shave', 'hygiene'] },
-  { nom: 'Entretien',            icone: '🧹', mots: ['lessive', 'liquide vaisselle', 'eponge', 'produit menager', 'nettoyant', 'desinfectant', 'javel', 'detartrant', 'assouplissant', 'pastille lave-vaisselle', 'torchon', 'serpillere', 'sac poubelle', 'film etirable', 'aluminium', 'papier cuisson', 'sopalin', 'essuie-tout', 'papier toilette', 'entretien'] },
-  // Catégories à créer si absentes
-  { nom: 'Produits Laitiers',    icone: '🥛', mots: ['lait', 'beurre', 'creme fraiche', 'creme liquide', 'creme entiere', 'creme allegee', 'fromage', 'camembert', 'brie', 'emmental', 'gruyere', 'mozzarella', 'feta', 'ricotta', 'mascarpone', 'kefir', 'yaourt', 'yogourt', 'fromage blanc', 'fromage frais', 'lait vegetal', "lait d'amande", 'lait de soja', "lait d'avoine", 'lait entier', 'lait demi', 'petit suisse', 'creme dessert'] },
-  { nom: 'Boulangerie',          icone: '🍞', mots: ['pain', 'baguette', 'croissant', 'brioche', 'pain de mie', 'pain complet', 'pain aux cereales', 'pain de seigle', 'pain burger', 'viennoiserie', 'pain au chocolat', 'chausson', 'madeleine', 'financier', 'pain pita', 'naan', 'tortilla', 'wrap'] },
-  { nom: 'Boissons',             icone: '🧃', mots: ['eau', 'jus de fruit', 'jus d\'orange', 'jus de pomme', 'nectar', 'sirop', 'soda', 'coca', 'limonade', 'cafe', 'the', 'tisane', 'infusion', 'chocolat chaud', 'lait aromatise', 'smoothie', 'boisson', 'biere', 'vin', 'cidre', 'kombucha'] },
-]
+import { CAT_MOTS, resolverCategorieProduitId } from '../../cuisine/utils/categorieDetection'
 
 function n(s: string) { return s.toLowerCase().normalize('NFD').replace(/[̀-ͯ ]/g, '') }
 
 function estAlimentaire(texte: string): boolean {
   const t = n(texte)
   return CAT_MOTS.some(cat => cat.mots.some(m => t.includes(n(m))))
-}
-
-function detecterNomCategorie(nomProduit: string): { nom: string; icone: string } | null {
-  const t = n(nomProduit)
-  for (const { nom, icone, mots } of CAT_MOTS) {
-    if (mots.some(m => t.includes(n(m)))) return { nom, icone }
-  }
-  return null
-}
-
-async function resolverCategorieProduitId(nomProduit: string): Promise<string | undefined> {
-  const cat = detecterNomCategorie(nomProduit)
-  if (!cat) return undefined
-  // Chercher la catégorie existante
-  const existing = await db.categoriesProduits
-    .filter(c => !c.deletedAt && c.nom === cat.nom)
-    .toArray()
-  if (existing[0]) return existing[0].id
-  // Créer la catégorie si elle n'existe pas encore
-  const { v4: uuid } = await import('uuid')
-  const { newEntity: ne } = await import('../../../core/db/helpers')
-  const ordre = await db.categoriesProduits.count() + 1
-  const id = uuid()
-  await db.categoriesProduits.add({
-    ...ne({ nom: cat.nom, icone: cat.icone, typeProduit: 'consommable', ordre, personnalisee: false }),
-    id,
-  })
-  return id
 }
 
 function detecterIntentionLocale(texte: string): IntentionLocale {
@@ -496,13 +452,8 @@ function formatConfirm(result: { type: string; titre: string; date?: string | nu
   return `${label} · ${result.titre}${date ? ` · ${date}` : ''}`
 }
 
-// ─── Score charge mentale ─────────────────────────────────────────────────────
+// ─── Score charge du jour ─────────────────────────────────────────────────────
 
-// Tâche "actionnable maintenant" :
-//  — fréquence courte (quotidienne / hebdo / bi-hebdo)
-//  — OU échéance définie dans les 7 prochains jours (ou en retard)
-// On exclut volontairement les tâches sans fréquence ET sans date
-// (vieilles tâches flottantes jamais traitées qui pollueraient le compteur).
 const FREQ_COURTES = new Set(['quotidienne', 'hebdomadaire', 'bihebdomadaire'])
 
 function estActionnable(t: Tache, finSemaine: Date): boolean {
@@ -512,27 +463,46 @@ function estActionnable(t: Tache, finSemaine: Date): boolean {
 }
 
 function useChargeScore() {
-  const taches = useLiveQuery(async () => {
-    const finSemaine = new Date()
-    finSemaine.setDate(finSemaine.getDate() + 7)
-    finSemaine.setHours(23, 59, 59, 999)
-    const all = await db.taches.filter(t =>
-      !t.deletedAt && !t.archive && t.statut === 'a_faire'
-    ).toArray()
-    return all.filter(t => estActionnable(t, finSemaine)).length
+  const count = useLiveQuery(async () => {
+    const now = new Date()
+    const y = now.getFullYear(), mo = now.getMonth(), d = now.getDate()
+    const todayMidnight = new Date(now); todayMidnight.setHours(0, 0, 0, 0)
+    const finSemaine = new Date(todayMidnight); finSemaine.setDate(finSemaine.getDate() + 7); finSemaine.setHours(23, 59, 59, 999)
+
+    // Événements du jour
+    const allEvts = await db.evenements.filter(e => !e.deletedAt && !e.archive).toArray()
+    const evts = allEvts.filter(e => {
+      const eb = new Date(e.dateDebut)
+      return eb.getFullYear() === y && eb.getMonth() === mo && eb.getDate() === d
+    }).length
+
+    // Activités planifiées aujourd'hui
+    const allPlanifs = await db.planificationsActivites
+      .filter(p => !p.deletedAt && (p.statut === 'planifiee' || p.statut === 'realisee'))
+      .toArray()
+    const activites = allPlanifs.filter(p => {
+      const dp = new Date(p.datePrevue)
+      return dp.getFullYear() === y && dp.getMonth() === mo && dp.getDate() === d
+    }).length
+
+    // Tâches du jour (quotidiennes ou échéance aujourd'hui)
+    const allTaches = await db.taches.filter(t => !t.deletedAt && !t.archive && t.statut === 'a_faire').toArray()
+    const taches = allTaches.filter(t => {
+      if (t.frequence === 'quotidienne') return true
+      if (t.dateEcheance) {
+        const de = new Date(t.dateEcheance)
+        return de.getFullYear() === y && de.getMonth() === mo && de.getDate() === d
+      }
+      return false
+    }).length
+
+    return evts + activites + taches
   }, []) ?? 0
 
-  const pensees = useLiveQuery(
-    () => db.pensees.filter(p => !p.deletedAt && !p.archive && p.statut === 'active').count(),
-    []
-  ) ?? 0
-
-  const total = taches + pensees
-
-  if (total === 0) return { total, label: 'Journée sereine', variant: 'green' as const }
-  if (total <= 4)  return { total, label: 'Journée légère',  variant: 'green' as const }
-  if (total <= 9)  return { total, label: 'Charge modérée',  variant: 'amber' as const }
-  return             { total, label: 'Semaine chargée', variant: 'red'   as const }
+  if (count === 0) return { total: 0,     label: 'Journée sereine', variant: 'green' as const }
+  if (count <= 4)  return { total: count, label: 'Journée légère',  variant: 'green' as const }
+  if (count <= 9)  return { total: count, label: 'Charge modérée',  variant: 'amber' as const }
+  return             { total: count, label: 'Journée chargée', variant: 'red'   as const }
 }
 
 // ─── Détail ventilation ───────────────────────────────────────────────────────

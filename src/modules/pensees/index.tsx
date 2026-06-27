@@ -10,6 +10,7 @@ import { db } from '../../core/db/database'
 import { newEntity, withUpdate, softDeleteFields } from '../../core/db/helpers'
 import { IconCalendar } from '@shared/components/ui/Icon/Icon'
 import { ConfirmModal } from '../../shared/components/ui/ConfirmModal'
+import { resolverCategorieProduitId } from '../cuisine/utils/categorieDetection'
 
 import type { Pensee, CategoriePensee, StatutPensee, Tache, CoursesItem, Evenement } from '../../shared/types'
 import './pensees.css'
@@ -306,8 +307,10 @@ export default function Pensees() {
       await db.pensees.update(p.id, withUpdate<Pensee>({ aFaire: !p.aFaire }))
     } else if (vers === 'achat') {
       if (estAlimentaire(p.contenu)) {
+        const categorieProduitId = await resolverCategorieProduitId(p.contenu)
         await db.coursesItems.add(newEntity<CoursesItem>({
           produit: '', nom: p.contenu, coche: false, source: 'manuel', dateAjout: new Date(),
+          ...(categorieProduitId ? { categorieProduitId } : {}),
         }))
       } else {
         await db.taches.add(newEntity<Tache>({

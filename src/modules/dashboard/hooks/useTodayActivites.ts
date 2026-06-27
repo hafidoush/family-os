@@ -1,19 +1,21 @@
 import { useLiveQuery } from 'dexie-react-hooks';
 import { db } from '../../../core/db/database';
-import { toISODate } from '../../../shared/utils/formatDate';
 
 export function useTodayActivites() {
   return useLiveQuery(async () => {
-    const today = toISODate(new Date());
+    const now = new Date();
+    const y = now.getFullYear(), m = now.getMonth(), d = now.getDate();
 
-    // datePrevue est stocké comme ISO string complète ex: "2026-06-09T00:00:00.000Z"
-    // → on utilise startsWith pour matcher le préfixe "YYYY-MM-DD"
-    // On récupère planifiées ET réalisées — le widget gère l'affichage différencié
-    const planifs = await db.planificationsActivites
-      .where('datePrevue')
-      .startsWith(today)
-      .and((p) => (p.statut === 'planifiee' || p.statut === 'realisee') && !p.deletedAt)
-      .toArray();
+    // datePrevue peut être stocké en UTC (ex: "2026-06-26T22:00:00.000Z" = minuit Paris).
+    // On filtre côté JS en comparant les composantes locales de la date pour éviter
+    // tout décalage de fuseau horaire.
+    const planifs = (await db.planificationsActivites
+      .filter((p) => (p.statut === 'planifiee' || p.statut === 'realisee') && !p.deletedAt)
+      .toArray())
+      .filter((p) => {
+        const dp = new Date(p.datePrevue);
+        return dp.getFullYear() === y && dp.getMonth() === m && dp.getDate() === d;
+      });
 
     // Fix : champs corrects = p.activite (FK) et p.enfant (FK)
     const activiteIds = [...new Set(planifs.map((p) => p.activite).filter(Boolean))];
