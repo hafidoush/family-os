@@ -40,7 +40,7 @@ export function CoursesForm({ isOpen, onClose }: Props) {
   const [produitSelectionne, setProduitSelectionne] = useState<Produit | null>(null);
   const searchTimeout = useRef<ReturnType<typeof setTimeout>>();
 
-  // N'afficher que les catégories qui ont au moins un produit ou un article en cours
+  // Afficher : catégories standard (personnalisee=false) + catégories custom qui ont au moins un produit ou article actif
   const categories = useLiveQuery(async () => {
     const [allCats, activeItems] = await Promise.all([
       db.categoriesProduits.filter(c => !c.deletedAt).toArray(),
@@ -52,7 +52,11 @@ export function CoursesForm({ isOpen, onClose }: Props) {
     const produits = await db.produits.filter(p => !p.deletedAt).toArray();
     const catsWithProducts = new Set(produits.map(p => p.categorie).filter(Boolean) as string[]);
     return allCats
-      .filter(c => usedCatIds.has(c.id) || catsWithProducts.has(c.id))
+      .filter(c =>
+        !c.personnalisee ||           // toujours afficher les catégories du seed
+        usedCatIds.has(c.id) ||       // ou si un article actif l'utilise
+        catsWithProducts.has(c.id)    // ou si un produit du catalogue l'utilise
+      )
       .sort((a, b) => a.nom.localeCompare(b.nom, 'fr'));
   }, [], []);
 
