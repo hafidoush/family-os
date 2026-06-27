@@ -40,11 +40,21 @@ export function CoursesForm({ isOpen, onClose }: Props) {
   const [produitSelectionne, setProduitSelectionne] = useState<Produit | null>(null);
   const searchTimeout = useRef<ReturnType<typeof setTimeout>>();
 
-  const categories = useLiveQuery(
-    () => db.categoriesProduits.filter(c => !c.deletedAt).sortBy('nom'),
-    [],
-    []
-  );
+  // N'afficher que les catégories qui ont au moins un produit ou un article en cours
+  const categories = useLiveQuery(async () => {
+    const [allCats, activeItems] = await Promise.all([
+      db.categoriesProduits.filter(c => !c.deletedAt).toArray(),
+      db.coursesItems.filter(i => !i.archive && !i.deletedAt).toArray(),
+    ]);
+    const usedCatIds = new Set(
+      activeItems.map(i => i.categorieProduitId).filter(Boolean) as string[]
+    );
+    const produits = await db.produits.filter(p => !p.deletedAt).toArray();
+    const catsWithProducts = new Set(produits.map(p => p.categorie).filter(Boolean) as string[]);
+    return allCats
+      .filter(c => usedCatIds.has(c.id) || catsWithProducts.has(c.id))
+      .sort((a, b) => a.nom.localeCompare(b.nom, 'fr'));
+  }, [], []);
 
   // Reset à l'ouverture
   useEffect(() => {
