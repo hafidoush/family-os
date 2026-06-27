@@ -58,8 +58,14 @@ export function useContexteHoraire(): ContexteHoraire {
   // Matin : activités + tâches ménagères du jour
   const activitesAujourdhui = useLiveQuery(async () => {
     if (moment !== 'matin' && moment !== 'midi') return []
+    const now2 = new Date()
+    const y = now2.getFullYear(), mo = now2.getMonth(), d2 = now2.getDate()
     const plans = await db.planificationsActivites
-      .filter(p => !p.deletedAt && !p.archive && p.datePrevue === todayISO)
+      .filter(p => {
+        if (p.deletedAt || p.archive) return false
+        const dp = new Date(p.datePrevue)
+        return dp.getFullYear() === y && dp.getMonth() === mo && dp.getDate() === d2
+      })
       .toArray()
     if (!plans.length) return []
     const ids = [...new Set(plans.map(p => p.activite))]
@@ -86,10 +92,20 @@ export function useContexteHoraire(): ContexteHoraire {
   // Aprem/Soir : dîners de la semaine (pool à choisir)
   const repasDisponibles = useLiveQuery(async () => {
     if (moment !== 'aprem_soir') return []
+    // Fenêtre élargie : menu actif aujourd'hui OU dont la fin remonte à max 2 jours
+    // (couvre le week-end après un menu lun-ven)
+    const cutoff = new Date(today()); cutoff.setDate(cutoff.getDate() - 2)
+    const cutoffISO = toISO(cutoff)
     const menus = await db.menus
-      .filter(m => !m.deletedAt && !m.archive && m.dateDebut <= todayISO && (m.dateFin == null || m.dateFin >= todayISO))
+      .filter(m =>
+        !m.deletedAt && !m.archive &&
+        m.dateDebut <= todayISO &&
+        (m.dateFin == null || m.dateFin >= cutoffISO)
+      )
       .toArray()
     if (!menus.length) return []
+    // Priorité au menu le plus récent
+    menus.sort((a, b) => (b.dateDebut ?? '').localeCompare(a.dateDebut ?? ''))
     const menu = menus[0]
     const slots = await db.menuSlots
       .where('menu').equals(menu.id)
@@ -108,8 +124,14 @@ export function useContexteHoraire(): ContexteHoraire {
   // Nuit : aperçu de demain
   const activitesDemain = useLiveQuery(async () => {
     if (moment !== 'nuit') return []
+    const dem = new Date(); dem.setDate(dem.getDate() + 1)
+    const dy = dem.getFullYear(), dmo = dem.getMonth(), dd = dem.getDate()
     const plans = await db.planificationsActivites
-      .filter(p => !p.deletedAt && !p.archive && p.datePrevue === tomorrowISO)
+      .filter(p => {
+        if (p.deletedAt || p.archive) return false
+        const dp = new Date(p.datePrevue)
+        return dp.getFullYear() === dy && dp.getMonth() === dmo && dp.getDate() === dd
+      })
       .toArray()
     if (!plans.length) return []
     const ids = [...new Set(plans.map(p => p.activite))]
