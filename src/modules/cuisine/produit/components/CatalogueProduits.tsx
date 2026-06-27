@@ -65,7 +65,7 @@ export function CatalogueProduits() {
       {!isLoading && (
         <p className="catalogue-produits__count">
           {produits.length} produit{produits.length !== 1 ? 's' : ''}
-          {activeCatId ? ` · ${categories.find((c) => c.id === activeCatId)?.nom}` : ''}
+          {activeCatId ? ` · ${categories.find((c) => c.id === activeCatId)?.nom ?? ''}` : ''}
         </p>
       )}
 
