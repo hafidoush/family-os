@@ -14,7 +14,7 @@ function norm(s: string): string {
 
 // Incrémenter à chaque fois que le catalogue produits est mis à jour
 // → force tous les appareils existants à recevoir les nouveaux produits
-const CATALOG_VERSION = '6'
+const CATALOG_VERSION = '7'
 const CATALOG_VERSION_KEY = 'family_os_catalog_version'
 
 // ID stable déterministe pour les activités seedées — identique sur tous les appareils
@@ -168,19 +168,17 @@ async function seedCategoriesProduits(): Promise<void> {
     { id: CAT_IDS['Viande & Charcuterie'],nom: 'Viande & Charcuterie', icone: '🥩', ordre: 3 },
     { id: CAT_IDS['Poissons'],             nom: 'Poissons',             icone: '🐟', ordre: 4 },
     { id: CAT_IDS['Produits Laitiers'],    nom: 'Produits Laitiers',    icone: '🥛', ordre: 5 },
-    { id: CAT_IDS['Fromages'],             nom: 'Fromages',             icone: '🧀', ordre: 6 },
-    { id: CAT_IDS['Épicerie salée'],       nom: 'Épicerie salée',       icone: '🫙', ordre: 7 },
-    { id: CAT_IDS['Épicerie sucrée'],      nom: 'Épicerie sucrée',      icone: '🍫', ordre: 8 },
-    { id: CAT_IDS['Conserves'],            nom: 'Conserves',            icone: '🥫', ordre: 9 },
-    { id: CAT_IDS['Surgelés'],             nom: 'Surgelés',             icone: '🧊', ordre: 10 },
-    { id: CAT_IDS['Boulangerie'],          nom: 'Boulangerie',          icone: '🍞', ordre: 11 },
-    { id: CAT_IDS['Boissons'],             nom: 'Boissons',             icone: '🧃', ordre: 12 },
-    { id: CAT_IDS['Épices'],               nom: 'Épices',               icone: '🌿', ordre: 13 },
-    { id: CAT_IDS['Herbes & Aromates'],    nom: 'Herbes & Aromates',    icone: '🌿', ordre: 14 },
-    { id: CAT_IDS['Asiatique'],            nom: 'Asiatique',            icone: '🥢', ordre: 15 },
-    { id: CAT_IDS['Bio'],                  nom: 'Bio',                  icone: '🌱', ordre: 16 },
-    { id: CAT_IDS['Hygiène'],              nom: 'Hygiène',              icone: '🧼', ordre: 17 },
-    { id: CAT_IDS['Entretien'],            nom: 'Entretien',            icone: '🧹', ordre: 18 },
+    { id: CAT_IDS['Épicerie salée'],       nom: 'Épicerie salée',       icone: '🫙', ordre: 6 },
+    { id: CAT_IDS['Épicerie sucrée'],      nom: 'Épicerie sucrée',      icone: '🍫', ordre: 7 },
+    { id: CAT_IDS['Conserves'],            nom: 'Conserves',            icone: '🥫', ordre: 8 },
+    { id: CAT_IDS['Surgelés'],             nom: 'Surgelés',             icone: '🧊', ordre: 9 },
+    { id: CAT_IDS['Boulangerie'],          nom: 'Boulangerie',          icone: '🍞', ordre: 10 },
+    { id: CAT_IDS['Boissons'],             nom: 'Boissons',             icone: '🧃', ordre: 11 },
+    { id: CAT_IDS['Épices'],               nom: 'Épices',               icone: '🌿', ordre: 12 },
+    { id: CAT_IDS['Asiatique'],            nom: 'Asiatique',            icone: '🥢', ordre: 13 },
+    { id: CAT_IDS['Bio'],                  nom: 'Bio',                  icone: '🌱', ordre: 14 },
+    { id: CAT_IDS['Hygiène'],              nom: 'Hygiène',              icone: '🧼', ordre: 15 },
+    { id: CAT_IDS['Entretien'],            nom: 'Entretien',            icone: '🧹', ordre: 16 },
   ]
   await db.categoriesProduits.bulkPut(
     cats.map(c => ({
@@ -206,19 +204,17 @@ async function migrerCategoriesProduits(): Promise<void> {
     { nom: 'Viande & Charcuterie', icone: '🥩', ordre: 3 },
     { nom: 'Poissons',             icone: '🐟', ordre: 4 },
     { nom: 'Produits Laitiers',    icone: '🥛', ordre: 5 },
-    { nom: 'Fromages',             icone: '🧀', ordre: 6 },
-    { nom: 'Épicerie salée',       icone: '🫙', ordre: 7 },
-    { nom: 'Épicerie sucrée',      icone: '🍫', ordre: 8 },
-    { nom: 'Conserves',            icone: '🥫', ordre: 9 },
-    { nom: 'Surgelés',             icone: '🧊', ordre: 10 },
-    { nom: 'Boulangerie',          icone: '🍞', ordre: 11 },
-    { nom: 'Boissons',             icone: '🧃', ordre: 12 },
-    { nom: 'Épices',               icone: '🌿', ordre: 13 },
-    { nom: 'Herbes & Aromates',    icone: '🌿', ordre: 14 },
-    { nom: 'Asiatique',            icone: '🥢', ordre: 15 },
-    { nom: 'Bio',                  icone: '🌱', ordre: 16 },
-    { nom: 'Hygiène',              icone: '🧼', ordre: 17 },
-    { nom: 'Entretien',            icone: '🧹', ordre: 18 },
+    { nom: 'Épicerie salée',       icone: '🫙', ordre: 6 },
+    { nom: 'Épicerie sucrée',      icone: '🍫', ordre: 7 },
+    { nom: 'Conserves',            icone: '🥫', ordre: 8 },
+    { nom: 'Surgelés',             icone: '🧊', ordre: 9 },
+    { nom: 'Boulangerie',          icone: '🍞', ordre: 10 },
+    { nom: 'Boissons',             icone: '🧃', ordre: 11 },
+    { nom: 'Épices',               icone: '🌿', ordre: 12 },
+    { nom: 'Asiatique',            icone: '🥢', ordre: 13 },
+    { nom: 'Bio',                  icone: '🌱', ordre: 14 },
+    { nom: 'Hygiène',              icone: '🧼', ordre: 15 },
+    { nom: 'Entretien',            icone: '🧹', ordre: 16 },
   ]
 
   for (const c of catsRequises) {
@@ -255,6 +251,28 @@ async function migrerCategoriesProduits(): Promise<void> {
       const restants = await db.produits.filter(p => !p.archive && (p.categorie === ancienne.id || (p.categorieIds ?? []).includes(ancienne.id))).count()
       if (restants === 0) await db.categoriesProduits.delete(ancienne.id)
     }
+  }
+
+  // ── 3. Fusionner Fromages → Produits Laitiers (supprimer la catégorie Fromages) ──
+  const catsApresAll = await db.categoriesProduits.toArray()
+  const byNomFinal = new Map(catsApresAll.map(c => [c.nom, c]))
+  const fromagesCat = byNomFinal.get('Fromages')
+  const laitiersCat = byNomFinal.get('Produits Laitiers')
+  if (fromagesCat && laitiersCat) {
+    await db.produits
+      .filter(p => p.categorie === fromagesCat.id || (p.categorieIds ?? []).includes(fromagesCat.id))
+      .modify({ categorie: laitiersCat.id, categorieIds: [laitiersCat.id] })
+    await db.categoriesProduits.delete(fromagesCat.id)
+  }
+
+  // ── 4. Fusionner Herbes & Aromates → Épices ──
+  const herbesCat = byNomFinal.get('Herbes & Aromates')
+  const epicesCat = byNomFinal.get('Épices')
+  if (herbesCat && epicesCat) {
+    await db.produits
+      .filter(p => p.categorie === herbesCat.id || (p.categorieIds ?? []).includes(herbesCat.id))
+      .modify({ categorie: epicesCat.id, categorieIds: [epicesCat.id] })
+    await db.categoriesProduits.delete(herbesCat.id)
   }
 }
 
@@ -824,10 +842,10 @@ async function seedSuiviManel(): Promise<void> {
 
 // ── Catalogue produits complet ────────────────────────────────────────────────
 async function seedProduitsCatalog(): Promise<void> {
-  // Utilise les IDs stables en priorité, fallback lookup par nom pour les catégories perso
+  // Cherche l'ID dans la DB par nom (respecte les UUIDs existants), fallback sur ID stable
   const categories = await db.categoriesProduits.toArray()
   const cat = (nom: string): string =>
-    CAT_IDS[nom] ?? categories.find(c => c.nom === nom)?.id ?? ''
+    categories.find(c => c.nom === nom)?.id ?? CAT_IDS[nom] ?? ''
 
   type P = { nom: string; unite?: string }
   const PAR_CAT: Array<{ cat: string; produits: P[] }> = [
@@ -1304,7 +1322,7 @@ async function seedProduitsCatalog(): Promise<void> {
       ],
     },
     {
-      cat: 'Fromages',
+      cat: 'Produits Laitiers',
       produits: [
         // — Frais & à tartiner —
         { nom: 'Ricotta',                        unite: 'g' },
@@ -1819,7 +1837,7 @@ async function seedProduitsCatalog(): Promise<void> {
       ],
     },
     {
-      cat: 'Herbes & Aromates',
+      cat: 'Épices',
       produits: [
         // — Herbes fraîches & séchées —
         { nom: 'Persil',                    unite: 'bouquet' },
