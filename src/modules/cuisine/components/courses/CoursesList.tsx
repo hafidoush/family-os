@@ -11,6 +11,8 @@ import { IconStarShine, IconInboxOut } from '@shared/components/ui/Icon/Icon';
 import './CoursesList.css';
 
 const CATEGORIE_CONFIG: Record<string, { icon: string; color: string; bg: string }> = {
+  'Fruits':           { icon: '🍎', color: '#E85D04', bg: 'rgba(232, 93, 4, 0.1)' },
+  'Légumes':          { icon: '🥦', color: '#16A34A', bg: 'rgba(22, 163, 74, 0.1)' },
   'Fruits & Légumes': { icon: '🥦', color: '#16A34A', bg: 'rgba(22, 163, 74, 0.1)' },
   'Viande & Charcuterie': { icon: '🥩', color: '#DC2626', bg: 'rgba(220, 38, 38, 0.1)' },
   'Poissons': { icon: '🐟', color: '#0284C7', bg: 'rgba(2, 132, 199, 0.1)' },
