@@ -192,66 +192,17 @@ async function seedCategoriesProduits(): Promise<void> {
   )
 }
 
-// ─── Migration catégories produits ────────────────────────────────────────────
-// Tourne à chaque démarrage. Idempotente.
+// ─── Migration catégories produits ─────────────────────────────────────────────
+// RÈGLE : additive uniquement — on ne supprime JAMAIS une catégorie existante.
+// On ne déplace des produits que si leur catégorie source DISPARAÎT ("Fruits & Légumes").
 async function migrerCategoriesProduits(): Promise<void> {
-  const now = new Date()
   const cats = await db.categoriesProduits.toArray()
   const byNom = new Map(cats.map(c => [c.nom, c]))
 
-  // ── 1. Séparer "Fruits & Légumes" en "Fruits" + "Légumes" ──
-  const ancienne = byNom.get('Fruits & Légumes')
-  if (ancienne) {
-    // Légumes en premier — priorité sur les fruits pour éviter les faux positifs (poireau, pomme de terre)
-    const LEGUMES_EXACTS = ['tomate','courgette','poivron','carotte','salade','epinard','brocoli','pomme de terre','patate','oignon','ail','poireau','poireaux','champignon','concombre','aubergine','radis','celeri','persil','menthe','coriandre','basilic','fenouil','navet','artichaut','asperge','endive','mache','roquette','betterave','mais','petit pois','haricot vert','chou','chou-fleur','courge','potiron','butternut','echalote','legume','courgettes','carottes','tomates','oignons','champignons','epinards','aubergines']
-    const FRUITS_EXACTS  = ['banane','orange','citron','fraise','framboise','myrtille','raisin','melon','pasteque','mangue','kiwi','ananas','peche','abricot','prune','cerise','avocat','clementine','mandarine','pamplemousse','figue','grenade','litchi','noix','amande','noisette','datte','pruneaux','pommes','pomme grenadille','pomme gala','pomme golden','pomme fuji','poires','bananes','oranges','citrons','fraises']
-    const n = (s: string) => s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '')
-
-    let fruitsId = byNom.get('Fruits')?.id
-    let legumesId = byNom.get('Légumes')?.id
-
-    if (!fruitsId) {
-      fruitsId = CAT_IDS['Fruits']
-      await db.categoriesProduits.put({ id: fruitsId, nom: 'Fruits', icone: '🍎', typeProduit: 'consommable', ordre: 0.5, personnalisee: false, ...withAudit({}) })
-    } else if (fruitsId !== CAT_IDS['Fruits']) {
-      // Migrate vers ID stable
-      await db.categoriesProduits.put({ id: CAT_IDS['Fruits'], nom: 'Fruits', icone: '🍎', typeProduit: 'consommable', ordre: 0.5, personnalisee: false, ...withAudit({}) })
-      await db.produits.filter(p => p.categorie === fruitsId || (p.categorieIds ?? []).includes(fruitsId!)).modify({ categorie: CAT_IDS['Fruits'], categorieIds: [CAT_IDS['Fruits']] })
-      await db.categoriesProduits.delete(fruitsId)
-      fruitsId = CAT_IDS['Fruits']
-    }
-    if (!legumesId) {
-      legumesId = CAT_IDS['Légumes']
-      await db.categoriesProduits.put({ id: legumesId, nom: 'Légumes', icone: '🥦', typeProduit: 'consommable', ordre: 0.7, personnalisee: false, ...withAudit({}) })
-    } else if (legumesId !== CAT_IDS['Légumes']) {
-      // Migrate vers ID stable
-      await db.categoriesProduits.put({ id: CAT_IDS['Légumes'], nom: 'Légumes', icone: '🥦', typeProduit: 'consommable', ordre: 0.7, personnalisee: false, ...withAudit({}) })
-      await db.produits.filter(p => p.categorie === legumesId || (p.categorieIds ?? []).includes(legumesId!)).modify({ categorie: CAT_IDS['Légumes'], categorieIds: [CAT_IDS['Légumes']] })
-      await db.categoriesProduits.delete(legumesId)
-      legumesId = CAT_IDS['Légumes']
-    }
-
-    // Réaffecter les produits
-    const produits = await db.produits.filter(p => !p.archive && (p.categorie === ancienne.id || (p.categorieIds ?? []).includes(ancienne.id))).toArray()
-    for (const p of produits) {
-      const t = n(p.nom)
-      // Légumes d'abord pour éviter les faux positifs
-      const isLegume = LEGUMES_EXACTS.some(m => t === n(m) || t.startsWith(n(m) + ' '))
-      const isFruit  = !isLegume && FRUITS_EXACTS.some(m => t === n(m) || t.startsWith(n(m) + ' '))
-      const newId = isLegume ? legumesId : isFruit ? fruitsId : legumesId
-      await db.produits.update(p.id, { categorie: newId, categorieIds: [newId], updatedAt: now })
-    }
-
-    // Supprimer l'ancienne catégorie
-    await db.categoriesProduits.delete(ancienne.id)
-  }
-
-  // ── 2. S'assurer que toutes les catégories standard ont des IDs stables ──
-  // Recharge après les modifications Fruits/Légumes
-  const catsActuelles = await db.categoriesProduits.toArray()
-  const byNomActuel = new Map(catsActuelles.map(c => [c.nom, c]))
-
-  const catsStandard: Array<{ nom: string; icone: string; ordre: number }> = [
+  // ── 1. Créer les catégories manquantes avec IDs stables ──
+  const catsRequises: Array<{ nom: string; icone: string; ordre: number }> = [
+    { nom: 'Fruits',               icone: '🍎', ordre: 1 },
+    { nom: 'Légumes',              icone: '🥦', ordre: 2 },
     { nom: 'Viande & Charcuterie', icone: '🥩', ordre: 3 },
     { nom: 'Poissons',             icone: '🐟', ordre: 4 },
     { nom: 'Produits Laitiers',    icone: '🥛', ordre: 5 },
@@ -270,44 +221,39 @@ async function migrerCategoriesProduits(): Promise<void> {
     { nom: 'Entretien',            icone: '🧹', ordre: 18 },
   ]
 
-  for (const c of catsStandard) {
-    const stableId = CAT_IDS[c.nom]
-    if (!stableId) continue
-    const existing = byNomActuel.get(c.nom)
-    if (!existing) {
-      // Catégorie absente → créer avec ID stable
-      await db.categoriesProduits.put({ id: stableId, nom: c.nom, icone: c.icone, typeProduit: 'consommable', ordre: c.ordre, personnalisee: false, ...withAudit({}) })
-    } else if (existing.id !== stableId) {
-      // Catégorie avec UUID aléatoire → migrer vers ID stable
-      await db.categoriesProduits.put({ id: stableId, nom: c.nom, icone: c.icone, typeProduit: 'consommable', ordre: existing.ordre ?? c.ordre, personnalisee: false, ...withAudit({}) })
-      await db.produits.filter(p => p.categorie === existing.id || (p.categorieIds ?? []).includes(existing.id)).modify({ categorie: stableId, categorieIds: [stableId] })
-      await db.categoriesProduits.delete(existing.id)
+  for (const c of catsRequises) {
+    if (!byNom.has(c.nom)) {
+      const stableId = CAT_IDS[c.nom] ?? uuid()
+      await db.categoriesProduits.put({
+        id: stableId, nom: c.nom, icone: c.icone,
+        typeProduit: 'consommable' as const, ordre: c.ordre,
+        personnalisee: false, ...withAudit({}),
+      })
     }
   }
 
-  // ── 3. Seeder les produits laitiers ──
-  const catsFinales = await db.categoriesProduits.toArray()
-  const laitierCat = catsFinales.find(c => c.nom === 'Produits Laitiers')
-  if (laitierCat) {
-    const existing = await db.produits.filter(p => !p.archive && !!p.nom).toArray()
-    const existingNoms = new Set(existing.map(p => p.nom.toLowerCase()))
-    const produits = [
-      'Lait entier','Lait demi-écrémé','Beurre salé','Beurre doux',
-      'Crème fraîche épaisse','Crème liquide entière',
-      'Fromage râpé','Emmental','Parmesan','Comté','Feta','Camembert',
-      'Brie','Roquefort','Mozzarella fraîche','Mozzarella râpée',
-      'Burrata','Ricotta','Mascarpone','Fromage blanc','Fromage en tranches',
-      'Babybel','Saint-Maure de Touraine','Yaourt nature','Yaourt grec',
-      'Petit-suisse','Kéfir','Œufs',
-    ]
-    for (const nom of produits) {
-      if (existingNoms.has(nom.toLowerCase())) continue
-      await db.produits.add({
-        id: uuid(), nom,
-        nomNormalise: nom.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, ''),
-        type: 'consommable', categorie: laitierCat.id, categorieIds: [laitierCat.id],
-        archive: false, deviceId: 'seed', ...withAudit({}),
-      })
+  // ── 2. Réaffecter les produits orphelins de "Fruits & Légumes" ──
+  // On ne supprime PAS l'ancienne catégorie — on déplace seulement les produits.
+  const ancienne = byNom.get('Fruits & Légumes')
+  if (ancienne) {
+    const catsApres = await db.categoriesProduits.toArray()
+    const byNomApres = new Map(catsApres.map(c => [c.nom, c]))
+    const fruitsId  = byNomApres.get('Fruits')?.id
+    const legumesId = byNomApres.get('Légumes')?.id
+    if (fruitsId && legumesId) {
+      const LEGUMES = ['tomate','courgette','poivron','carotte','salade','epinard','brocoli','pomme de terre','patate','oignon','ail','poireau','champignon','concombre','aubergine','radis','celeri','persil','menthe','coriandre','basilic','fenouil','navet','artichaut','asperge','endive','mache','roquette','betterave','mais','haricot vert','chou','courge','potiron','butternut','echalote']
+      const n = (s: string) => s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '')
+      const produits = await db.produits
+        .filter(p => !p.archive && (p.categorie === ancienne.id || (p.categorieIds ?? []).includes(ancienne.id)))
+        .toArray()
+      for (const p of produits) {
+        const isLegume = LEGUMES.some(m => n(p.nom).startsWith(n(m)))
+        const newId = isLegume ? legumesId : fruitsId
+        await db.produits.update(p.id, { categorie: newId, categorieIds: [newId] })
+      }
+      // Supprimer "Fruits & Légumes" uniquement si tous ses produits ont été déplacés
+      const restants = await db.produits.filter(p => !p.archive && (p.categorie === ancienne.id || (p.categorieIds ?? []).includes(ancienne.id))).count()
+      if (restants === 0) await db.categoriesProduits.delete(ancienne.id)
     }
   }
 }
