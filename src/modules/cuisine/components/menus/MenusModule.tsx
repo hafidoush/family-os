@@ -12,7 +12,11 @@ type MenusView =
   | { type: 'list' }
   | { type: 'detail'; menuId: string };
 
-export function MenusModule() {
+interface MenusModuleProps {
+  onAjouterRecettes?: (menuId: string) => void;
+}
+
+export function MenusModule({ onAjouterRecettes }: MenusModuleProps) {
   const [view, setView] = useState<MenusView>({ type: 'list' });
   const goToList = () => setView({ type: 'list' });
   useBackToList(view.type === 'detail', goToList);
@@ -22,6 +26,7 @@ export function MenusModule() {
       <MenuDetail
         menuId={view.menuId}
         onBack={() => window.history.back()}
+        onAjouterRecettes={onAjouterRecettes}
       />
     );
   }

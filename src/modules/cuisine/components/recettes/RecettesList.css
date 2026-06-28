@@ -5,6 +5,33 @@
   padding: 0 0 160px; /* FAB (52px) + fos-pill nav (80px) + marge */
 }
 
+/* Bannière mode sélection menu */
+.recettes-list__select-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 16px;
+  background: rgba(139, 92, 246, 0.1);
+  border: 1.5px solid rgba(139, 92, 246, 0.3);
+  border-radius: 14px;
+  font-size: 13px;
+  color: #5B21B6;
+  font-weight: 500;
+}
+
+.recettes-list__select-done {
+  flex-shrink: 0;
+  padding: 7px 14px;
+  border-radius: 20px;
+  border: none;
+  background: #7C3AED;
+  color: white;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
 /* Toolbar */
 .recettes-list__toolbar {
   display: flex;
