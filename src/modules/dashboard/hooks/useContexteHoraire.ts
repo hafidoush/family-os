@@ -268,7 +268,7 @@ export function useContexteHoraire(): ContexteHoraire {
 
       const chips: ChipContextuel[] = hasDiner && dinerCeSoir
         ? [{ label: `🍽️ Ce soir : ${dinerCeSoir.nom}`, recetteId: dinerCeSoir.recetteId }]
-        : [{ id: 'diner-non-choisi', label: '🍽️ Dîner non choisi' }]
+        : []
 
       return { moment, titre: titreSoir, sousTitre, chips, repasDisponibles, dinerCeSoir }
     }

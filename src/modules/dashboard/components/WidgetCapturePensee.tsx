@@ -562,13 +562,11 @@ export function WidgetCapturePensee() {
   const [showDetail,   setShowDetail]   = useState(false)
   const [selectedChip, setSelectedChip] = useState<string | null>(null)
   const [chipsExpanded, setChipsExpanded] = useState(false)
-  const [showRepasButtons, setShowRepasButtons] = useState(false)
   const [repasExpanded, setRepasExpanded] = useState(false)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
 
-  // Reset boutons repas quand on change de moment
+  // Reset expansion quand on change de moment
   useEffect(() => {
-    setShowRepasButtons(false)
     setRepasExpanded(false)
   }, [contexte.moment])
 
@@ -577,7 +575,6 @@ export function WidgetCapturePensee() {
       const menuActif = await MenuService.getMenuActifOuCreer()
       const jourAuj = JOURS_MENU[new Date().getDay()] as JourMenu
       await MenuService.upsertSlot({ menuId: menuActif.id, jour: jourAuj, repas: 'diner', recetteId })
-      setShowRepasButtons(false)
       setRepasExpanded(false)
     } catch { /* silencieux */ }
   }, [])
@@ -642,11 +639,11 @@ export function WidgetCapturePensee() {
           )}
         </div>
 
-        {/* ── Boutons recettes : midi sans dîner, ou aprem_soir après tap "non choisi" ── */}
+        {/* ── Boutons recettes : 11h–21h sans dîner choisi ── */}
         {(() => {
           const afficher =
-            (contexte.moment === 'midi' && !contexte.dinerCeSoir) ||
-            (contexte.moment === 'aprem_soir' && showRepasButtons)
+            (contexte.moment === 'midi' || contexte.moment === 'aprem_soir') &&
+            !contexte.dinerCeSoir
           const recettesAvecId = contexte.repasDisponibles.filter(r => r.recetteId)
           if (!afficher || recettesAvecId.length === 0) return null
           const visibles = repasExpanded ? recettesAvecId : recettesAvecId.slice(0, 3)
@@ -687,11 +684,6 @@ export function WidgetCapturePensee() {
                     key={chip.id ?? chip.label}
                     className={`widget-hero__chip${selectedChip === chip.label ? ' widget-hero__chip--selected' : ''}`}
                     onClick={() => {
-                      if (chip.id === 'diner-non-choisi') {
-                        setShowRepasButtons(v => !v)
-                        setRepasExpanded(false)
-                        return
-                      }
                       if (chip.recetteId) {
                         navigate('/cuisine', { state: { openRecette: chip.recetteId } })
                         return
