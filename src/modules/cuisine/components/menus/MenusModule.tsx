@@ -6,6 +6,7 @@
 import { useState } from 'react';
 import { MenusList } from './MenusList';
 import { MenuDetail } from './MenuDetail';
+import { useBackToList } from '@shared/hooks/useBackToList';
 
 type MenusView =
   | { type: 'list' }
@@ -13,12 +14,14 @@ type MenusView =
 
 export function MenusModule() {
   const [view, setView] = useState<MenusView>({ type: 'list' });
+  const goToList = () => setView({ type: 'list' });
+  useBackToList(view.type === 'detail', goToList);
 
   if (view.type === 'detail') {
     return (
       <MenuDetail
         menuId={view.menuId}
-        onBack={() => setView({ type: 'list' })}
+        onBack={() => window.history.back()}
       />
     );
   }

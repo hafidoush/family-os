@@ -5,6 +5,7 @@
  */
 
 import { usePersistedTab } from '../../shared/hooks/usePersistedTab'
+import { useBackToList } from '../../shared/hooks/useBackToList'
 import { useMaisonStore } from '../maison/stores/maisonStore'
 import { usePieces, usePieceById, useProjets } from '../maison/hooks'
 import { PiecesOverview, PieceDetail, PieceForm } from '../maison/components/pieces'
@@ -25,6 +26,7 @@ function SectionPieces() {
   const pieces = usePieces()
   const pieceActive = usePieceById(store.pieceActiveId)
   const tachesPiece = useTachesMaison({ pieceId: store.pieceActiveId, statut: 'toutes' })
+  useBackToList(!!store.pieceActiveId, () => store.setPieceActiveId(null))
 
   const handleCompleterTache = (id: string) => TacheService.completerTache(id)
   const handleRouvrirTache   = (id: string) => TacheService.rouvrir(id)
@@ -35,7 +37,7 @@ function SectionPieces() {
       <>
         <PieceDetail
           piece={pieceActive}
-          onBack={() => store.setPieceActiveId(null)}
+          onBack={() => window.history.back()}
           onEdit={() => store.openDrawerPiece(pieceActive.id)}
           onEntretenir={() => MaisonService.marquerEntretenue(pieceActive.id)}
           onAddTache={() => store.openDrawerTache({ pieceId: pieceActive.id })}
@@ -76,6 +78,7 @@ function SectionProjets() {
   const projets = useProjets()
   const projetActif = (projets ?? []).find(p => p.projet.id === store.projetActifId) ?? null
   const tachesProjet = useTachesMaison({ projetId: store.projetActifId, statut: 'toutes' })
+  useBackToList(!!store.projetActifId, () => store.setProjetActifId(null))
 
   const handleCompleterTache = (id: string) => TacheService.completerTache(id)
   const handleRouvrirTache   = (id: string) => TacheService.rouvrir(id)
@@ -90,7 +93,7 @@ function SectionProjets() {
           piece={projetActif.piece}
           nbTaches={projetActif.nbTaches}
           nbFaites={projetActif.nbFaites}
-          onBack={() => { store.setProjetActifId(null) }}
+          onBack={() => window.history.back()}
           onEdit={() => store.openDrawerProjet(projetActif.projet.id)}
           onChangerStatut={(s) => ProjetService.changerStatut(projetActif.projet.id, s)}
           onAddTache={() => store.openDrawerTache({ projetId: projetActif.projet.id })}

@@ -12,6 +12,7 @@ import { MaisonService, etatColor, etatLabel, scoreToEtat } from '../maison/serv
 import { useMaisonStore } from '../maison/stores/maisonStore';
 import { TacheForm } from '../maison/components/taches';
 import { usePieces } from '../maison/hooks';
+import { useBackToList } from '../../shared/hooks/useBackToList';
 import { useRappelMenageNatif } from './hooks/useRappelMenageNatif';
 import { useTachesDuJourEngine } from './hooks/useTachesDuJourEngine';
 import {
@@ -1096,6 +1097,7 @@ function SectionGrandMenage() {
   const [pieceSelectId, setPieceSelectId] = useState<string | null>(null);
   const [confirm, setConfirm] = useState(false);
   const [loading, setLoading] = useState(false);
+  useBackToList(!!pieceSelectId, () => setPieceSelectId(null));
 
   const dernierLancement = useLiveQuery(async () => {
     const p = await db.parametresSync.where('cle').equals('grandMenage.dernierLancement').first();
@@ -1108,7 +1110,7 @@ function SectionGrandMenage() {
     return (
       <GrandMenagePieceDetail
         piece={pieceSelect}
-        onBack={() => setPieceSelectId(null)}
+        onBack={() => window.history.back()}
       />
     );
   }

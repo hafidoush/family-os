@@ -5,6 +5,7 @@ import { AjoutCoursesSheet } from './AjoutCoursesSheet';
 import type { Produit } from '@shared/types/entities';
 import type { CategorieProduit } from '@shared/types/modules';
 import { IconCart } from '@shared/components/ui/Icon/Icon';
+import { useBackToList } from '@shared/hooks/useBackToList';
 import './CatalogueProduits.css';
 
 type View =
@@ -14,6 +15,8 @@ type View =
 export function CatalogueProduits() {
   const [view, setView] = useState<View>({ type: 'catalogue' });
   const [activeCatId, setActiveCatId] = useState<string | undefined>(undefined);
+  const goToCatalogue = () => setView({ type: 'catalogue' });
+  useBackToList(view.type === 'form', goToCatalogue);
   const [ajoutTarget, setAjoutTarget] = useState<Produit | null>(null);
   const [ajoutConfirm, setAjoutConfirm] = useState(false);
 
@@ -25,15 +28,15 @@ export function CatalogueProduits() {
         <div className="catalogue-produits__back-bar">
           <button
             className="catalogue-produits__back"
-            onClick={() => setView({ type: 'catalogue' })}
+            onClick={() => window.history.back()}
           >
             ← Catalogue
           </button>
         </div>
         <ProduitForm
           produitId={view.produitId}
-          onSave={() => setView({ type: 'catalogue' })}
-          onCancel={() => setView({ type: 'catalogue' })}
+          onSave={() => window.history.back()}
+          onCancel={() => window.history.back()}
         />
       </div>
     );
