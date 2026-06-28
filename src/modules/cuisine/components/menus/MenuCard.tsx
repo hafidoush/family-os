@@ -28,14 +28,18 @@ function formatSemaine(dateDebut: string, dateFin?: string): string {
   return `Semaine du ${debut.toLocaleDateString('fr-FR', opts)}`
 }
 
+function localISO(date: Date): string {
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`
+}
+
 function getSemaineLabel(dateDebut: string, dateFin?: string): string {
   const today = new Date()
   today.setHours(0, 0, 0, 0)
-  const iso = today.toISOString().split('T')[0]
+  const iso = localISO(today)
   const fin = dateFin ?? (() => {
     const d = new Date(dateDebut + 'T12:00:00')
     d.setDate(d.getDate() + 6)
-    return d.toISOString().split('T')[0]
+    return localISO(d)
   })()
   if (iso >= dateDebut && iso <= fin) return 'Cette semaine'
   const lundi = new Date(dateDebut + 'T12:00:00')
@@ -48,10 +52,10 @@ function getSemaineLabel(dateDebut: string, dateFin?: string): string {
 }
 
 function isCourante(dateDebut: string, dateFin?: string): boolean {
-  const iso = new Date().toISOString().split('T')[0]
+  const iso = localISO(new Date())
   const fin = dateFin ?? (() => {
     const d = new Date(dateDebut + 'T12:00:00'); d.setDate(d.getDate() + 6)
-    return d.toISOString().split('T')[0]
+    return localISO(d)
   })()
   return iso >= dateDebut && iso <= fin
 }
@@ -66,7 +70,7 @@ function EditDatesSheet({ menu, onClose }: { menu: Menu; onClose: () => void }) 
   const getDimanche = (lundi: string) => {
     const d = new Date(lundi + 'T12:00:00')
     d.setDate(d.getDate() + 6)
-    return d.toISOString().split('T')[0]
+    return localISO(d)
   }
 
   const handleSave = async () => {
