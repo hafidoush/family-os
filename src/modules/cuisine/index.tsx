@@ -28,10 +28,21 @@ export default function Cuisine() {
     if (state?.openRecette) {
       setActiveTab('recettes' as CuisineTab)
       setView({ type: 'detail', id: state.openRecette })
-      // Nettoyer le state pour éviter de re-ouvrir au prochain render
       window.history.replaceState({}, '')
     }
   }, [location.state]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Intercepte le bouton retour browser quand on est en vue détail
+  // pour rester dans /cuisine au lieu de partir vers la route précédente
+  useEffect(() => {
+    if (view.type !== 'detail') return
+    window.history.pushState({ cuisineInternal: true }, '')
+    const handlePop = () => setView({ type: 'list' })
+    window.addEventListener('popstate', handlePop)
+    return () => {
+      window.removeEventListener('popstate', handlePop)
+    }
+  }, [view.type]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const TABS: { key: CuisineTab; label: string }[] = [
     { key: 'recettes', label: 'Recettes'      },
@@ -39,15 +50,29 @@ export default function Cuisine() {
     { key: 'batch',    label: 'Batch Cooking' },
   ]
 
-  const goToList   = ()           => setView({ type: 'list' })
+  // Retour depuis le bouton "← Recettes" dans la barre de navigation interne
+  const goToList   = ()           => {
+    if (view.type === 'detail') {
+      window.history.back() // consomme l'entrée fantôme → popstate → setView(list)
+    } else {
+      setView({ type: 'list' })
+    }
+  }
   const goToDetail = (id: string) => setView({ type: 'detail', id })
   const goToCreate = ()           => setView({ type: 'form' })
   const goToEdit   = (id: string) => setView({ type: 'form', id })
-  const handleSave = (id: string) => goToDetail(id)
+  const handleSave = (id: string) => setView({ type: 'detail', id })
 
   const handleTabChange = (tab: CuisineTab) => {
     setActiveTab(tab)
-    setView({ type: 'list' })
+    if (view.type === 'detail') {
+      // consomme l'entrée fantôme puis change de tab
+      const onPop = () => { setView({ type: 'list' }); window.removeEventListener('popstate', onPop) }
+      window.addEventListener('popstate', onPop)
+      window.history.back()
+    } else {
+      setView({ type: 'list' })
+    }
   }
 
 

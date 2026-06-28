@@ -70,8 +70,18 @@ async function planifierBatchCooking(recetteIds: string[]): Promise<void> {
 
 // ─── Composant ────────────────────────────────────────────────────────────────
 
+const STORAGE_KEY_CATEGORIE = 'recettes-categorie-active'
+
 export function RecettesList({ onSelectRecette, onCreateRecette }: Props) {
-  const [categorieId, setCategorieId] = useState<string | undefined>(undefined)
+  const [categorieId, setCategorieIdRaw] = useState<string | undefined>(() => {
+    return sessionStorage.getItem(STORAGE_KEY_CATEGORIE) ?? undefined
+  })
+
+  const setCategorieId = useCallback((id: string | undefined) => {
+    setCategorieIdRaw(id)
+    if (id) sessionStorage.setItem(STORAGE_KEY_CATEGORIE, id)
+    else sessionStorage.removeItem(STORAGE_KEY_CATEGORIE)
+  }, [])
   const [favoriSeulement, setFavoriSeulement] = useState(false)
   const [kidsFavoriteSeulement, setKidsFavoriteSeulement] = useState(false)
   const [recherche, setRecherche] = useState('')

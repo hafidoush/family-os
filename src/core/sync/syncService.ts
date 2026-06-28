@@ -208,11 +208,16 @@ export async function pullAll() {
         // Modification locale non encore envoyée — priorité absolue au local
         if (pendingIds.has(row.id)) return false
         const local = localMap.get(row.id)
-        if (!local) return true // nouvel enregistrement → accepter
-        // Le remote est vivant (deleted_at IS NULL) mais local est soft-deleté → restaurer
+        if (!local) {
+          if (dexieTable === 'categoriesProduits') console.log(`[pull] categoriesProduits NOUVEAU id=${row.id} nom=${(row.data as {nom?:string}).nom} updated_at=${row.updated_at}`)
+          return true
+        }
+        // Le remote est vivant (deleted_at IS NULL) but local est soft-deleté → restaurer
         if (local.deletedAt) return true
         // Remote gagne seulement s'il est strictement plus récent
-        return tsMs(row.updated_at) > tsMs(local.updatedAt)
+        const remoteWins = tsMs(row.updated_at) > tsMs(local.updatedAt)
+        if (dexieTable === 'categoriesProduits') console.log(`[pull] categoriesProduits id=${row.id} nom=${(row.data as {nom?:string}).nom} remote=${row.updated_at} local=${local.updatedAt} → ${remoteWins ? 'SUPABASE GAGNE' : 'local gagne'}`)
+        return remoteWins
       })
       .map((row: { data: Record<string, unknown> }) => row.data)
 
@@ -247,6 +252,7 @@ export async function pullAll() {
     }
     if (missing.length > 0) {
       console.log(`[sync] repair: ${missing.length} produit(s) manquant(s), fetch depuis Supabase`)
+      console.log(`[sync] repair IDs manquants:`, missing)
       const { data: rows } = await supabase
         .from('produits')
         .select('id, data')
@@ -381,6 +387,11 @@ function buildRealtimeChannel() {
 
         // Résolution de conflit : ne jamais écraser une version locale plus récente
         const local: Record<string, unknown> | undefined = await table.get(row.data.id)
+        if (dexieTable === 'categoriesProduits') {
+          const remoteTs = row.deleted_at ?? row.updated_at ?? ''
+          const localWins = local && tsMs(remoteTs) <= tsMs(local.updatedAt)
+          console.log(`[realtime] categoriesProduits event=${payload.eventType} id=${row.data.id} nom=${(row.data as {nom?:string}).nom} remote=${row.updated_at} local=${local?.updatedAt ?? 'absent'} → ${localWins ? 'local gagne (ignoré)' : 'SUPABASE APPLIQUÉ'}`)
+        }
         if (local) {
           // Le remote doit être STRICTEMENT plus récent que le local pour s'appliquer
           const remoteTs = row.deleted_at ?? row.updated_at ?? ''

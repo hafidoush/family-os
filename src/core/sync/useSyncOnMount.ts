@@ -1,9 +1,10 @@
 import { useEffect } from 'react'
 import { useAuth } from '../auth/AuthContext'
-import { pullAll, installDexieHooks, startRealtime, stopRealtime, pushRecord, drainQueue, setHooksSuppressed } from './syncService'
+import { pullAll, installDexieHooks, startRealtime, stopRealtime, pushRecord, drainQueue, setHooksSuppressed, softDeleteRecord } from './syncService'
 import { db } from '../db/database'
 import { v4 as uuid } from 'uuid'
 import { loadOpenAIKeyFromCloud } from '../ai/openaiService'
+import { repairCatalogueProduits } from '../db/seed'
 
 // ── Push de TOUTES les données locales vers Supabase ─────────────────────────
 // Filet de sécurité : tourne 1 fois par heure max (les hooks couvrent les écritures en temps réel).
@@ -40,6 +41,7 @@ export async function pushAllLocalData(force = false) {
   try { await push('recettes',            await db.recettes.filter(fR).toArray()) } catch(e) { console.warn('[sync] pushAll recettes', e) }
   try { await push('recettesIngredients', await db.recettesIngredients.filter(fI).toArray()) } catch(e) { console.warn('[sync] pushAll recettesIngredients', e) }
   try { await push('produits',            await db.produits.filter(f).toArray()) } catch(e) { console.warn('[sync] pushAll produits', e) }
+  try { await push('categoriesProduits', await db.categoriesProduits.filter(f).toArray()) } catch(e) { console.warn('[sync] pushAll categoriesProduits', e) }
   try { await push('menus',               await db.menus.filter(f).toArray()) } catch(e) { console.warn('[sync] pushAll menus', e) }
   try { await push('menuSlots',           await db.menuSlots.filter(f).toArray()) } catch(e) { console.warn('[sync] pushAll menuSlots', e) }
   try { await push('membres',             await db.membres.filter(f).toArray()) } catch(e) { console.warn('[sync] pushAll membres', e) }
@@ -59,6 +61,17 @@ export async function pushAllLocalData(force = false) {
   try { await push('pensees',             await db.pensees.filter(f).toArray()) } catch(e) { console.warn('[sync] pushAll pensees', e) }
   try { await push('programmesAnnuels',   await db.programmesAnnuels.filter(f).toArray()) } catch(e) { console.warn('[sync] pushAll programmesAnnuels', e) }
   try { await push('activitesProgramme',  await db.activitesProgramme.filter(f).toArray()) } catch(e) { console.warn('[sync] pushAll activitesProgramme', e) }
+}
+
+// Supprime de Supabase les catégories produits avec vieux IDs UUID (non stables)
+// Doit tourner APRÈS pushAllLocalData pour garantir que les produits réparés sont déjà sur Supabase
+async function purgeUUIDCategoriesProduits() {
+  const toutes = await db.categoriesProduits.toArray()
+  const uuids = toutes.filter(c => !c.id.startsWith('cat-prod-'))
+  for (const c of uuids) {
+    await softDeleteRecord('categoriesProduits', c.id)
+  }
+  if (uuids.length > 0) console.log(`[sync] purgeUUIDCategoriesProduits: ${uuids.length} catégorie(s) UUID supprimées de Supabase`)
 }
 
 // Purge les tombstones écrits par l'ancien bug softDeleteRecord (data = {id} seulement)
@@ -96,8 +109,10 @@ export function useSyncOnMount() {
     // Évite qu'un device pousse ses vieilles données par-dessus une version plus récente sur Supabase.
     safe(cleanupLocalTombstones, 'cleanupLocalTombstones')
       .then(() => pullAll())
+      .then(() => repairCatalogueProduits().catch(e => console.warn('[sync] repairCatalogueProduits non-fatal:', e)))
       .then(() => safe(drainQueue, 'drainQueue'))
       .then(() => safe(pushAllLocalData, 'pushAllLocalData'))
+      .then(() => purgeUUIDCategoriesProduits().catch(e => console.warn('[sync] purgeUUIDCategoriesProduits non-fatal:', e)))
 
     startRealtime()
 

@@ -103,23 +103,9 @@ async function _seedDatabase(): Promise<void> {
   const storedCatalogVersion = localStorage.getItem(CATALOG_VERSION_KEY)
   const catalogOutdated = storedCatalogVersion !== CATALOG_VERSION
 
-  if (produitsCount === 0 || hasUnstableIds) {
-    if (hasUnstableIds) {
-      const old = await db.produits.filter(p => (p as { deviceId?: string }).deviceId === 'seed').toArray()
-      await db.produits.bulkDelete(old.map(p => p.id))
-    }
-    await db.categoriesProduits.clear()
-    await seedCategoriesProduits()
-    await seedProduitsCatalog()
-    localStorage.setItem(CATALOG_VERSION_KEY, CATALOG_VERSION)
-    console.log('[FamilyOS] Catalogue produits initialisé avec IDs stables.')
-  } else if (catalogOutdated) {
-    // Catalogue mis à jour — ajoute les nouveaux produits sans effacer les données utilisateur
-    await migrerCategoriesProduits()
-    await seedProduitsCatalog()
-    localStorage.setItem(CATALOG_VERSION_KEY, CATALOG_VERSION)
-    console.log('[FamilyOS] Catalogue produits mis à jour (v' + CATALOG_VERSION + ').')
-  }
+  // Réparation inconditionnelle — tourne à chaque démarrage, 100% additive
+  await repairCatalogueProduits()
+  localStorage.setItem(CATALOG_VERSION_KEY, CATALOG_VERSION)
 
   // Purge les tâches grand ménage dupliquées (UUID aléatoires seedés sur chaque appareil)
   await dedupGrandMenageTaches()
@@ -159,6 +145,81 @@ const CAT_IDS: Record<string, string> = {
   'Bio':                 'cat-prod-bio',
   'Hygiène':             'cat-prod-hygiene',
   'Entretien':           'cat-prod-entretien',
+}
+
+export async function repairCatalogueProduits(): Promise<void> {
+  // ── 1. Garantit que toutes les catégories standard existent avec leurs IDs stables ──
+  const now = new Date()
+  const catsStandard = [
+    { id: CAT_IDS['Fruits'],               nom: 'Fruits',               icone: '🍎', ordre: 1  },
+    { id: CAT_IDS['Légumes'],              nom: 'Légumes',              icone: '🥦', ordre: 2  },
+    { id: CAT_IDS['Viande & Charcuterie'],nom: 'Viande & Charcuterie', icone: '🥩', ordre: 3  },
+    { id: CAT_IDS['Poissons'],             nom: 'Poissons',             icone: '🐟', ordre: 4  },
+    { id: CAT_IDS['Produits Laitiers'],    nom: 'Produits Laitiers',    icone: '🥛', ordre: 5  },
+    { id: CAT_IDS['Épicerie salée'],       nom: 'Épicerie salée',       icone: '🫙', ordre: 6  },
+    { id: CAT_IDS['Épicerie sucrée'],      nom: 'Épicerie sucrée',      icone: '🍫', ordre: 7  },
+    { id: CAT_IDS['Conserves'],            nom: 'Conserves',            icone: '🥫', ordre: 8  },
+    { id: CAT_IDS['Surgelés'],             nom: 'Surgelés',             icone: '🧊', ordre: 9  },
+    { id: CAT_IDS['Boulangerie'],          nom: 'Boulangerie',          icone: '🍞', ordre: 10 },
+    { id: CAT_IDS['Boissons'],             nom: 'Boissons',             icone: '🧃', ordre: 11 },
+    { id: CAT_IDS['Épices'],               nom: 'Épices',               icone: '🌿', ordre: 12 },
+    { id: CAT_IDS['Asiatique'],            nom: 'Asiatique',            icone: '🥢', ordre: 13 },
+    { id: CAT_IDS['Bio'],                  nom: 'Bio',                  icone: '🌱', ordre: 14 },
+    { id: CAT_IDS['Hygiène'],              nom: 'Hygiène',              icone: '🧼', ordre: 15 },
+    { id: CAT_IDS['Entretien'],            nom: 'Entretien',            icone: '🧹', ordre: 16 },
+  ]
+  console.log(`[repair] AVANT bulkPut catégories — IDs stables à écrire:`, catsStandard.map(c => `${c.id}(${c.nom})`))
+  await db.categoriesProduits.bulkPut(
+    catsStandard.map(c => ({
+      ...c,
+      typeProduit: 'consommable' as const,
+      personnalisee: false,
+      createdAt: now,
+      updatedAt: now,
+    }))
+  )
+  const apres1 = await db.categoriesProduits.toArray()
+  console.log(`[repair] APRÈS bulkPut catégories — toutes les catégories en DB:`, apres1.map(c => `${c.id}(${c.nom})`))
+
+  // ── 2. Recalcule categorieIds des produits seed vers les IDs stables ──
+  const seedProduits = await db.produits
+    .filter(p => (p as { deviceId?: string }).deviceId === 'seed')
+    .toArray()
+
+  // Map nom de catégorie → ID stable
+  const nomVersIdStable: Record<string, string> = {}
+  for (const c of catsStandard) nomVersIdStable[c.nom] = c.id
+
+  // Pour chaque produit seed : si son categorie pointe vers un UUID (pas cat-prod-*),
+  // on récupère le nom de cette catégorie et on remplace par l'ID stable
+  const toutesCategories = await db.categoriesProduits.toArray()
+  const idVersNom = new Map(toutesCategories.map(c => [c.id, c.nom]))
+
+  const aReparerCategorie = seedProduits.filter(p => {
+    const catId = p.categorie
+    return catId && !catId.startsWith('cat-prod-')
+  })
+
+  console.log(`[repair] produits seed à réaffecter (${aReparerCategorie.length}):`, aReparerCategorie.map(p => `${p.id} categorie=${p.categorie}`))
+  for (const p of aReparerCategorie) {
+    const nomCat = idVersNom.get(p.categorie)
+    if (!nomCat) continue
+    const idStable = nomVersIdStable[nomCat]
+    if (!idStable) continue
+    console.log(`[repair] produit ${p.id}(${p.nom}) : ${p.categorie} → ${idStable}`)
+    await db.produits.update(p.id, {
+      categorie: idStable,
+      categorieIds: [idStable],
+      updatedAt: now,
+    })
+  }
+
+  // ── 3. Ajoute les produits seed manquants ──
+  await seedProduitsCatalog()
+
+  const apresRepair = await db.categoriesProduits.toArray()
+  console.log(`[repair] FIN — catégories en DB:`, apresRepair.map(c => `${c.id}(${c.nom})`))
+  console.log(`[FamilyOS] repairCatalogueProduits: ${catsStandard.length} catégories OK, ${aReparerCategorie.length} produit(s) réaffectés`)
 }
 
 async function seedCategoriesProduits(): Promise<void> {

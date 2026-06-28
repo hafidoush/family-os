@@ -79,31 +79,16 @@
   opacity: 0.4;
 }
 
-/* Glass overlay — blur dégradé comme RecetteCard */
+/* Gradient overlay — dégradé simple sans blur pour éviter les bugs iOS */
 .wmenu-card__overlay {
   position: absolute;
   inset: 0;
-  backdrop-filter: blur(18px) saturate(1.4);
-  -webkit-backdrop-filter: blur(18px) saturate(1.4);
   background: linear-gradient(
     to bottom,
-    rgba(15, 10, 30, 0)    0%,
-    rgba(15, 10, 30, 0.28) 60%,
-    rgba(15, 10, 30, 0.48) 100%
-  );
-  -webkit-mask-image: linear-gradient(
-    to bottom,
-    transparent  0%,
-    transparent 40%,
-    black       75%,
-    black      100%
-  );
-  mask-image: linear-gradient(
-    to bottom,
-    transparent  0%,
-    transparent 40%,
-    black       75%,
-    black      100%
+    rgba(10, 8, 20, 0)    0%,
+    rgba(10, 8, 20, 0)   40%,
+    rgba(10, 8, 20, 0.55) 75%,
+    rgba(10, 8, 20, 0.75) 100%
   );
   pointer-events: none;
   z-index: 1;
