@@ -140,20 +140,17 @@ export function RecetteCard({
         </>
       )}
 
-      {/* Mode sélection menu */}
-      {selectMode && (
-        <button
-          className={`recette-card__select-btn${alreadyAdded ? ' recette-card__select-btn--done' : selectDone ? ' recette-card__select-btn--done' : ''}`}
-          onClick={handleSelect}
-          aria-label={alreadyAdded ? 'Déjà dans le menu' : 'Ajouter au menu'}
-          disabled={alreadyAdded}
-        >
-          {alreadyAdded || selectDone ? '✓' : '+'}
-        </button>
+      {/* Mode sélection menu — overlay plein cadre */}
+      {selectMode && (alreadyAdded || selectDone) && (
+        <div className="recette-card__select-overlay">
+          <svg width="32" height="32" viewBox="0 0 24 24" fill="none">
+            <path d="M5 13l4 4L19 7" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
+          </svg>
+        </div>
       )}
 
-      {/* Texte sur la photo */}
-      <div className="recette-card__body">
+      {/* Texte sur la photo — masqué en mode sélection */}
+      <div className={`recette-card__body${selectMode ? ' recette-card__body--hidden' : ''}`}>
         <h3 className="recette-card__nom">{recette.nom}</h3>
 
         {categorie && (
