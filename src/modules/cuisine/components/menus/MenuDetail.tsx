@@ -4,6 +4,7 @@ import { MenuService } from '../../services/MenuService';
 import { IconCalendar, IconStarShine, IconCart, IconArchiveDown } from '@shared/components/ui/Icon/Icon';
 import { MenuSlotItem } from './MenuSlotItem';
 import { IngredientsPickerSheet } from '../courses/IngredientsPickerSheet';
+import { RecettesSelecteurModal } from './RecettesSelecteurModal';
 import { genererMenusIA } from '../../../../core/ai/genererMenusService';
 import { hasOpenAIKey } from '../../../../core/ai/openaiService';
 import type { JourMenu } from '@shared/types';
@@ -28,11 +29,11 @@ function formatSemaine(dateDebut: string, dateFin?: string): string {
 interface MenuDetailProps {
   menuId: string;
   onBack: () => void;
-  onAjouterRecettes?: (menuId: string) => void;
 }
 
-export function MenuDetail({ menuId, onBack, onAjouterRecettes }: MenuDetailProps) {
+export function MenuDetail({ menuId, onBack }: MenuDetailProps) {
   const data = useMenuDetail(menuId);
+  const [showSelecteur, setShowSelecteur] = useState(true);
   const [isValidating, setIsValidating] = useState(false);
   const [showIngredientsPicker, setShowIngredientsPicker] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
@@ -223,9 +224,13 @@ export function MenuDetail({ menuId, onBack, onAjouterRecettes }: MenuDetailProp
         </section>
       )}
 
-      <button className="menu-detail__add-btn" onClick={() => onAjouterRecettes?.(menuId)}>
+      <button className="menu-detail__add-btn" onClick={() => setShowSelecteur(true)}>
         <IconArchiveDown size={14} style={{ marginRight: 6, verticalAlign: 'middle' }} />Ajouter des recettes
       </button>
+
+      {showSelecteur && (
+        <RecettesSelecteurModal menuId={menuId} onClose={() => setShowSelecteur(false)} />
+      )}
 
       {showIngredientsPicker && (
         <IngredientsPickerSheet

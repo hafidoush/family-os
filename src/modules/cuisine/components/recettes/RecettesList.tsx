@@ -35,8 +35,6 @@ import './RecettesList.css'
 interface Props {
   onSelectRecette: (id: string) => void
   onCreateRecette: () => void
-  selectMenuId?: string
-  onSelectDone?: () => void
 }
 
 // ─── Helper : crée une session batch cooking ──────────────────────────────────
@@ -57,7 +55,7 @@ async function planifierBatchCooking(recetteIds: string[]): Promise<void> {
 
 const STORAGE_KEY_CATEGORIE = 'recettes-categorie-active'
 
-export function RecettesList({ onSelectRecette, onCreateRecette, selectMenuId, onSelectDone }: Props) {
+export function RecettesList({ onSelectRecette, onCreateRecette }: Props) {
   const [categorieId, setCategorieIdRaw] = useState<string | undefined>(() => {
     return sessionStorage.getItem(STORAGE_KEY_CATEGORIE) ?? undefined
   })
@@ -82,16 +80,6 @@ export function RecettesList({ onSelectRecette, onCreateRecette, selectMenuId, o
   const [bulkMsg, setBulkMsg] = useState('')
 
   const [importOuvert, setImportOuvert] = useState(false)
-  const [menuSelectAdded, setMenuSelectAdded] = useState<Set<string>>(new Set())
-
-  const handleSelectForMenu = useCallback(async (recetteId: string) => {
-    if (!selectMenuId) return
-    try {
-      const { MenuService } = await import('../../services/MenuService')
-      await MenuService.addSlot({ menuId: selectMenuId, recetteId })
-      setMenuSelectAdded(prev => new Set(prev).add(recetteId))
-    } catch { /* silencieux */ }
-  }, [selectMenuId])
 
   const toggleTag = useCallback((tagId: string) => {
     setTagsActifs((prev) =>
@@ -179,16 +167,6 @@ export function RecettesList({ onSelectRecette, onCreateRecette, selectMenuId, o
 
   return (
     <div className="recettes-list">
-
-      {/* Bannière mode sélection menu */}
-      {selectMenuId && (
-        <div className="recettes-list__select-banner">
-          <span>Appuie sur une recette pour l'ajouter au menu</span>
-          <button className="recettes-list__select-done" onClick={onSelectDone}>
-            Terminer ({menuSelectAdded.size})
-          </button>
-        </div>
-      )}
 
       {/* Bannières confirmation */}
       {batchDone && (
@@ -379,9 +357,6 @@ export function RecettesList({ onSelectRecette, onCreateRecette, selectMenuId, o
                 batchMode={batchMode}
                 batchSelected={batchSelected.has(r.id)}
                 onToggleBatch={toggleBatchSelect}
-                selectMode={!!selectMenuId}
-                alreadyAdded={menuSelectAdded.has(r.id)}
-                onSelect={handleSelectForMenu}
               />
             ))}
           </div>

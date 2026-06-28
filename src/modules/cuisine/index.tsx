@@ -19,7 +19,6 @@ export default function Cuisine() {
   const location = useLocation()
   const [activeTab, setActiveTab] = usePersistedTab<CuisineTab>('cuisine-v2', 'recettes')
   const [view, setView] = useState<CuisineView>({ type: 'list' })
-  const [selectMenuId, setSelectMenuId] = useState<string | null>(null)
 
   // Ouverture directe d'une recette depuis le dashboard (state.openRecette)
   useEffect(() => {
@@ -63,7 +62,6 @@ export default function Cuisine() {
   const handleSave = (id: string) => setView({ type: 'detail', id })
 
   const handleTabChange = (tab: CuisineTab) => {
-    setSelectMenuId(null)
     setActiveTab(tab)
     if (view.type === 'detail') {
       const onPop = () => { setView({ type: 'list' }); window.removeEventListener('popstate', onPop) }
@@ -74,16 +72,6 @@ export default function Cuisine() {
     }
   }
 
-  const handleAjouterRecettesForMenu = (menuId: string) => {
-    setSelectMenuId(menuId)
-    setActiveTab('recettes')
-    setView({ type: 'list' })
-  }
-
-  const handleSelectDone = () => {
-    setSelectMenuId(null)
-    setActiveTab('menus')
-  }
 
 
   const renderBackBar = (label: string, onBack: () => void) => (
@@ -128,8 +116,6 @@ export default function Cuisine() {
           <RecettesList
             onSelectRecette={goToDetail}
             onCreateRecette={goToCreate}
-            selectMenuId={selectMenuId ?? undefined}
-            onSelectDone={handleSelectDone}
           />
         </div>
       </>
@@ -155,7 +141,7 @@ export default function Cuisine() {
       )}
 
       {activeTab === 'recettes' && renderRecettes()}
-      {activeTab === 'menus'    && <div className="cuisine-module__content"><MenusModule onAjouterRecettes={handleAjouterRecettesForMenu} /></div>}
+      {activeTab === 'menus'    && <div className="cuisine-module__content"><MenusModule /></div>}
       {activeTab === 'batch'    && <div className="cuisine-module__content"><SweetBatch /></div>}
     </div>
   )
