@@ -1,0 +1,226 @@
+.mq__overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 500;
+  background: rgba(0,0,0,0.25);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+}
+
+.mq__sheet {
+  width: 100%;
+  max-width: 480px;
+  max-height: 80dvh;
+  background: #fff;
+  border-radius: 24px 24px 0 0;
+  padding: 12px 20px 32px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  overflow-y: auto;
+  animation: mq-in 0.3s cubic-bezier(.34,1.2,.64,1) both;
+}
+
+@keyframes mq-in {
+  from { transform: translateY(100%); opacity: 0; }
+  to   { transform: translateY(0);    opacity: 1; }
+}
+
+.mq__handle {
+  width: 36px;
+  height: 4px;
+  border-radius: 2px;
+  background: rgba(0,0,0,0.12);
+  align-self: center;
+  flex-shrink: 0;
+}
+
+.mq__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.mq__title {
+  font-size: 17px;
+  font-weight: 700;
+  color: #1E1C2E;
+}
+
+.mq__close {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(0,0,0,0.07);
+  color: #555;
+  font-size: 13px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.mq__hint {
+  font-size: 13px;
+  color: #7B7490;
+  margin: 0;
+  line-height: 1.5;
+}
+
+.mq__input {
+  width: 100%;
+  padding: 12px 14px;
+  border-radius: 14px;
+  border: 1.5px solid rgba(75,70,96,0.2);
+  background: rgba(245,243,250,0.8);
+  font-size: 14px;
+  color: #1E1C2E;
+  resize: none;
+  outline: none;
+  font-family: inherit;
+  box-sizing: border-box;
+  line-height: 1.5;
+}
+
+.mq__input:focus {
+  border-color: rgba(210,173,235,0.7);
+}
+
+.mq__erreur {
+  font-size: 13px;
+  color: #ef4444;
+  margin: 0;
+}
+
+.mq__btn {
+  width: 100%;
+  padding: 14px;
+  border-radius: 999px;
+  border: none;
+  background: #D2ADEB;
+  color: #4B4660;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: opacity 0.15s;
+}
+
+.mq__btn:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+
+.mq__btn:active:not(:disabled) {
+  opacity: 0.8;
+}
+
+.mq__btn--ghost {
+  background: transparent;
+  border: 1.5px solid rgba(75,70,96,0.2);
+  color: #4B4660;
+  margin-top: 4px;
+}
+
+/* Spinner */
+.mq__spinner {
+  width: 14px;
+  height: 14px;
+  border: 2px solid rgba(75,70,96,0.25);
+  border-top-color: #4B4660;
+  border-radius: 50%;
+  animation: mq-spin 0.7s linear infinite;
+  display: inline-block;
+}
+
+@keyframes mq-spin {
+  to { transform: rotate(360deg); }
+}
+
+/* Résultats */
+.mq__resultat {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.mq__recette {
+  border-radius: 14px;
+  padding: 12px 14px;
+}
+
+.mq__recette-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.mq__recette-nom {
+  font-size: 14px;
+  font-weight: 600;
+  color: #1E1C2E;
+  flex: 1;
+}
+
+.mq__badge {
+  font-size: 11px;
+  font-weight: 700;
+  border: 1.5px solid;
+  border-radius: 20px;
+  padding: 2px 9px;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.mq__conseil {
+  font-size: 13px;
+  color: #4B4660;
+  margin: 6px 0 0;
+  line-height: 1.5;
+}
+
+/* Recette joker */
+.mq__joker {
+  border-radius: 16px;
+  background: linear-gradient(135deg, rgba(210,173,235,0.2), rgba(189,195,234,0.2));
+  border: 1.5px solid rgba(210,173,235,0.4);
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.mq__joker-label {
+  font-size: 11px;
+  font-weight: 700;
+  color: #7C3AED;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.mq__joker-nom {
+  font-size: 16px;
+  font-weight: 700;
+  color: #1E1C2E;
+}
+
+.mq__joker-temps {
+  font-size: 12px;
+  color: #7B7490;
+  font-weight: 500;
+}
+
+.mq__joker-desc {
+  font-size: 13px;
+  color: #4B4660;
+  margin: 4px 0 0;
+  line-height: 1.55;
+}

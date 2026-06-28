@@ -5,6 +5,7 @@ import { IconCalendar, IconStarShine, IconCart, IconArchiveDown } from '@shared/
 import { MenuSlotItem } from './MenuSlotItem';
 import { IngredientsPickerSheet } from '../courses/IngredientsPickerSheet';
 import { RecettesSelecteurModal } from './RecettesSelecteurModal';
+import { ManquesSheet } from './ManquesSheet';
 import { genererMenusIA } from '../../../../core/ai/genererMenusService';
 import { hasOpenAIKey } from '../../../../core/ai/openaiService';
 import type { JourMenu } from '@shared/types';
@@ -34,6 +35,7 @@ interface MenuDetailProps {
 export function MenuDetail({ menuId, onBack }: MenuDetailProps) {
   const data = useMenuDetail(menuId);
   const [showSelecteur, setShowSelecteur] = useState(false);
+  const [showManques, setShowManques] = useState(false);
   const [isValidating, setIsValidating] = useState(false);
   const [showIngredientsPicker, setShowIngredientsPicker] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
@@ -135,6 +137,14 @@ export function MenuDetail({ menuId, onBack }: MenuDetailProps) {
           </div>
           <button
             className="menu-detail__btn-ia"
+            onClick={() => setShowManques(true)}
+            disabled={totalSlots === 0}
+            title="Que faire avec ce que j'ai ?"
+          >
+            <IconStarShine size={14} style={{ marginRight: 4, verticalAlign: 'middle' }} /> Manques
+          </button>
+          <button
+            className="menu-detail__btn-ia"
             onClick={() => setShowIntention(v => !v)}
             disabled={isGenerating}
             title={hasOpenAIKey() ? 'Générer les repas avec l\'IA' : 'Configurez une clé OpenAI dans Paramètres > IA'}
@@ -234,6 +244,10 @@ export function MenuDetail({ menuId, onBack }: MenuDetailProps) {
           onClose={() => setShowSelecteur(false)}
           dejaDansLeMenu={new Set(data.tousLesSlots.filter(s => s.recette).map(s => s.recette as string))}
         />
+      )}
+
+      {showManques && (
+        <ManquesSheet menuId={menuId} onClose={() => setShowManques(false)} />
       )}
 
       {showIngredientsPicker && (
