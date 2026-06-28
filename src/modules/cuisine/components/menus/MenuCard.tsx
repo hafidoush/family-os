@@ -171,7 +171,6 @@ export function MenuCard({ menu, onClick, onDeleted }: MenuCardProps) {
           </div>
 
           <p className="menu-card__dates">{formatSemaine(menu.dateDebut, menu.dateFin)}</p>
-          {menu.nom && <p className="menu-card__nom">{menu.nom}</p>}
 
           {(recettes?.length ?? 0) > 0 ? (
             <div className="menu-card__recettes">
