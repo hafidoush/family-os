@@ -212,8 +212,12 @@ export async function pullAll() {
           if (dexieTable === 'categoriesProduits') console.log(`[pull] categoriesProduits NOUVEAU id=${row.id} nom=${(row.data as {nom?:string}).nom} updated_at=${row.updated_at}`)
           return true
         }
-        // Le remote est vivant (deleted_at IS NULL) but local est soft-deleté → restaurer
-        if (local.deletedAt) return true
+        // Le remote est vivant (deleted_at IS NULL) mais local est soft-deleté.
+        // Ne restaurer que si le remote est strictement plus récent que la suppression locale.
+        // Sinon, la suppression locale gagne (elle sera poussée à la prochaine synchro).
+        if (local.deletedAt) {
+          return tsMs(row.updated_at) > tsMs(local.updatedAt as string)
+        }
         // Remote gagne seulement s'il est strictement plus récent
         const remoteWins = tsMs(row.updated_at) > tsMs(local.updatedAt)
         if (dexieTable === 'categoriesProduits') console.log(`[pull] categoriesProduits id=${row.id} nom=${(row.data as {nom?:string}).nom} remote=${row.updated_at} local=${local.updatedAt} → ${remoteWins ? 'SUPABASE GAGNE' : 'local gagne'}`)
