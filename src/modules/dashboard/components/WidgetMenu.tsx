@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { useNavigate } from 'react-router-dom';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { db } from '../../../core/db/database';
@@ -45,7 +46,8 @@ function useWeekSlots(): SlotRecette[] | null | undefined {
 
     if (!menusActifs.length) return null;
 
-    const menu = menusActifs[0];
+    // Priorité au menu validé si plusieurs menus se chevauchent sur la semaine
+    const menu = menusActifs.find((m) => m.valide) ?? menusActifs[0];
 
     const slots = await db.menuSlots
       .where('menu')
@@ -127,7 +129,7 @@ function IngredientsSheet({ recetteId, nom, onClose }: { recetteId: string; nom:
     navigate('/cuisine', { state: { openRecette: recetteId } });
   }
 
-  return (
+  return createPortal(
     <>
       <div className="wmenu-sheet-backdrop" onClick={onClose} />
       <div className="wmenu-sheet" role="dialog">
@@ -161,7 +163,8 @@ function IngredientsSheet({ recetteId, nom, onClose }: { recetteId: string; nom:
           Voir la recette complète →
         </button>
       </div>
-    </>
+    </>,
+    document.body
   );
 }
 
