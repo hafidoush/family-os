@@ -111,7 +111,7 @@ export function useContexteHoraire(): ContexteHoraire {
     if (moment !== 'aprem_soir' && moment !== 'midi') return []
     const menus = await db.menus
       .filter(m =>
-        !m.deletedAt && !m.archive &&
+        !m.deletedAt &&
         m.dateDebut <= todayISO &&
         (m.dateFin == null || m.dateFin >= todayISO)
       )
@@ -119,15 +119,9 @@ export function useContexteHoraire(): ContexteHoraire {
     if (!menus.length) return []
     menus.sort((a, b) => (b.dateDebut ?? '').localeCompare(a.dateDebut ?? ''))
     const menu = menus[0]
-    // Index des jours pour filtrer uniquement aujourd'hui et les jours suivants
-    const ORDRE_JOURS: Record<string, number> = {
-      lundi: 0, mardi: 1, mercredi: 2, jeudi: 3, vendredi: 4, samedi: 5, dimanche: 6
-    }
-    const jourAujIdx = ORDRE_JOURS[JOUR_NOM[new Date().getDay()]] ?? 0
     const slots = await db.menuSlots
       .where('menu').equals(menu.id)
-      .filter(s => !s.deletedAt && !s.archive &&
-        (!!s.recette || !!s.descriptionLibre))
+      .filter(s => !s.deletedAt && (!!s.recette || !!s.descriptionLibre))
       .toArray()
     if (!slots.length) return []
     const ids = [...new Set(slots.map(s => s.recette).filter(Boolean) as string[])]
@@ -145,7 +139,7 @@ export function useContexteHoraire(): ContexteHoraire {
   const dinerCeSoir = useLiveQuery(async (): Promise<DinerCeSoir | null> => {
     if (moment !== 'midi' && moment !== 'aprem_soir') return null
     const menus = await db.menus
-      .filter(m => !m.deletedAt && !m.archive && m.dateDebut <= todayISO && (m.dateFin == null || m.dateFin >= todayISO))
+      .filter(m => !m.deletedAt && m.dateDebut <= todayISO && (m.dateFin == null || m.dateFin >= todayISO))
       .toArray()
     if (!menus.length) return null
     menus.sort((a, b) => (b.dateDebut ?? '').localeCompare(a.dateDebut ?? ''))
@@ -153,7 +147,7 @@ export function useContexteHoraire(): ContexteHoraire {
     const jourAuj = JOUR_NOM[new Date().getDay()]
     const slot = await db.menuSlots
       .where('menu').equals(menu.id)
-      .filter(s => !s.deletedAt && !s.archive && s.jour === jourAuj && s.repas === 'diner')
+      .filter(s => !s.deletedAt && s.jour === jourAuj && s.repas === 'diner')
       .first()
     if (!slot) return null
     if (!slot.recette) return { nom: slot.descriptionLibre ?? 'Dîner prévu' }
