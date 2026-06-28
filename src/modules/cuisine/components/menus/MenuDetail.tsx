@@ -8,9 +8,8 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useMenuDetail } from '../../hooks/useMenuDetail';
 import { MenuService } from '../../services/MenuService';
-import { IconCalendar, IconStarShine, IconCart, IconArchiveDown, IconPen } from '@shared/components/ui/Icon/Icon';
+import { IconCalendar, IconStarShine, IconCart, IconArchiveDown } from '@shared/components/ui/Icon/Icon';
 import { MenuSlotItem } from './MenuSlotItem';
-import { MenuSlotForm } from './MenuSlotForm';
 import { IngredientsPickerSheet } from '../courses/IngredientsPickerSheet';
 import { genererMenusIA } from '../../../../core/ai/genererMenusService';
 import { hasOpenAIKey } from '../../../../core/ai/openaiService';
@@ -116,8 +115,7 @@ function RecettesSelecteur({ menuId, recettesDejaIds, onClose }: {
 
 export function MenuDetail({ menuId, onBack }: MenuDetailProps) {
   const data = useMenuDetail(menuId);
-  const [showForm, setShowForm] = useState(false);
-  const [showSelecteur, setShowSelecteur] = useState(false);
+  const [showSelecteur, setShowSelecteur] = useState(true);
   const [isValidating, setIsValidating] = useState(false);
   const [showIngredientsPicker, setShowIngredientsPicker] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
@@ -319,26 +317,10 @@ export function MenuDetail({ menuId, onBack }: MenuDetailProps) {
         </section>
       )}
 
-      {/* Boutons ajout */}
-      <div className="menu-detail__add-row">
-        <button className="menu-detail__add-btn menu-detail__add-btn--select" onClick={() => setShowSelecteur(true)}>
-          <IconArchiveDown size={14} style={{ marginRight: 6, verticalAlign: 'middle' }} />Ajouter des recettes
-        </button>
-        <button className="menu-detail__add-btn menu-detail__add-btn--libre" onClick={() => setShowForm(true)}>
-          <IconPen size={13} style={{ marginRight: 6, verticalAlign: 'middle' }} />Description libre
-        </button>
-      </div>
-
-      {/* Drawer ajout slot */}
-      {showForm && (
-        <MenuSlotForm
-          menuId={menuId}
-          onClose={() => setShowForm(false)}
-          recettesDejaUtilisees={new Set(
-            data.tousLesSlots.filter((s) => s.recette).map((s) => s.recette as string)
-          )}
-        />
-      )}
+      {/* Bouton ajout */}
+      <button className="menu-detail__add-btn" onClick={() => setShowSelecteur(true)}>
+        <IconArchiveDown size={14} style={{ marginRight: 6, verticalAlign: 'middle' }} />Ajouter des recettes
+      </button>
 
       {/* Overlay sélection recettes */}
       {showSelecteur && (
