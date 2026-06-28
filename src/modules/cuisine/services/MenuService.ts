@@ -198,7 +198,10 @@ export const MenuService = {
   async archiveMenu(menuId: string): Promise<void> {
     const now = new Date();
     await db.menus.update(menuId, { archive: true, deletedAt: now, updatedAt: now });
-    const slots = await db.menuSlots.where('menu').equals(menuId).toArray();
+    const slots = await db.menuSlots
+      .where('menu').equals(menuId)
+      .filter(s => !s.deletedAt)
+      .toArray();
     await Promise.all(
       slots.map((s) =>
         db.menuSlots.update(s.id, { archive: true, deletedAt: now, updatedAt: now })

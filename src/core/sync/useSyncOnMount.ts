@@ -42,8 +42,10 @@ export async function pushAllLocalData(force = false) {
   try { await push('recettesIngredients', await db.recettesIngredients.filter(fI).toArray()) } catch(e) { console.warn('[sync] pushAll recettesIngredients', e) }
   try { await push('produits',            await db.produits.filter(f).toArray()) } catch(e) { console.warn('[sync] pushAll produits', e) }
   try { await push('categoriesProduits', await db.categoriesProduits.filter(f).toArray()) } catch(e) { console.warn('[sync] pushAll categoriesProduits', e) }
-  try { await push('menus',               await db.menus.filter(f).toArray()) } catch(e) { console.warn('[sync] pushAll menus', e) }
-  try { await push('menuSlots',           await db.menuSlots.filter(f).toArray()) } catch(e) { console.warn('[sync] pushAll menuSlots', e) }
+  // Menus et slots : inclure les supprimés récents (7 jours) pour propager les deletes
+  const cutoff7j = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)
+  try { await push('menus',     await db.menus.filter(r => !r.deletedAt || new Date(r.deletedAt) > cutoff7j).toArray()) } catch(e) { console.warn('[sync] pushAll menus', e) }
+  try { await push('menuSlots', await db.menuSlots.filter(r => !r.deletedAt || new Date(r.deletedAt) > cutoff7j).toArray()) } catch(e) { console.warn('[sync] pushAll menuSlots', e) }
   try { await push('membres',             await db.membres.filter(f).toArray()) } catch(e) { console.warn('[sync] pushAll membres', e) }
   try { await push('enfants',             await db.enfants.filter(f).toArray()) } catch(e) { console.warn('[sync] pushAll enfants', e) }
   try { await push('taches',              await db.taches.filter(f).toArray()) } catch(e) { console.warn('[sync] pushAll taches', e) }
