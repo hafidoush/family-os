@@ -5,6 +5,26 @@ import { MenuService } from '../../services/MenuService';
 import type { Recette, CategorieRecette } from '../../../../shared/types';
 import './RecettesSelecteurModal.css';
 
+const TAGS_RECETTES = [
+  { id: 'française',      label: 'Française' },
+  { id: 'italienne',      label: 'Italienne' },
+  { id: 'espagnole',      label: 'Espagnole' },
+  { id: 'grecque',        label: 'Grecque' },
+  { id: 'marocaine',      label: 'Marocaine' },
+  { id: 'asiatique',      label: 'Asiatique' },
+  { id: 'indienne',       label: 'Indienne' },
+  { id: 'fast-food',      label: 'Fast-food' },
+  { id: 'mexicaine',      label: 'Mexicaine' },
+  { id: 'réception',      label: 'Réception' },
+  { id: 'batch cooking',  label: 'Batch cooking' },
+  { id: 'ramadan',        label: 'Ramadan' },
+  { id: 'enfant',         label: 'Enfant' },
+  { id: 'réconfortant',   label: 'Réconfortant' },
+  { id: 'frais & léger',  label: 'Frais & léger' },
+  { id: 'apéro',          label: 'Apéro' },
+  { id: 'pizza & tartes', label: 'Pizza & tartes' },
+] as const;
+
 function RecetteThumb({ recette, categorie, added, onSelect }: {
   recette: Recette
   categorie?: CategorieRecette
@@ -56,6 +76,8 @@ export function RecettesSelecteurModal({ menuId, onClose }: Props) {
   const [added, setAdded] = useState<Set<string>>(new Set());
   const [recherche, setRecherche] = useState('');
   const [categorieId, setCategorieId] = useState<string | undefined>();
+  const [tagsActifs, setTagsActifs] = useState<string[]>([]);
+  const [onglet, setOnglet] = useState<'attente' | 'toutes'>('attente');
 
   const recettes = useLiveQuery(async () => {
     const list = await db.recettes.filter(r => !r.archive && !r.deletedAt).toArray();
@@ -65,8 +87,14 @@ export function RecettesSelecteurModal({ menuId, onClose }: Props) {
   const categories = useLiveQuery(() => db.categoriesRecettes.orderBy('ordre').toArray(), []);
   const categoriesMap = new Map(categories?.map(c => [c.id, c]));
 
+  const toggleTag = (tagId: string) => {
+    setTagsActifs(prev => prev.includes(tagId) ? prev.filter(t => t !== tagId) : [...prev, tagId]);
+  };
+
   const filtered = (recettes ?? []).filter(r => {
+    if (onglet === 'attente' && !r.aProgrammer) return false;
     if (categorieId && r.categorie !== categorieId) return false;
+    if (tagsActifs.length > 0 && !tagsActifs.every(t => r.tags?.includes(t))) return false;
     if (recherche && !r.nom.toLowerCase().includes(recherche.toLowerCase())) return false;
     return true;
   });
@@ -92,17 +120,37 @@ export function RecettesSelecteurModal({ menuId, onClose }: Props) {
         <div className="rsel__header">
           <div className="rsel__header-top">
             <span className="rsel__title">Ajouter des recettes</span>
-            <button className="rsel__close" onClick={onClose} aria-label="Fermer">✕</button>
+            <button className="rsel__close" onClick={onClose}>✕</button>
           </div>
+
+          {/* Onglets */}
+          <div className="rsel__tabs">
+            <button
+              className={`rsel__tab${onglet === 'attente' ? ' rsel__tab--active' : ''}`}
+              onClick={() => setOnglet('attente')}
+            >
+              En attente
+            </button>
+            <button
+              className={`rsel__tab${onglet === 'toutes' ? ' rsel__tab--active' : ''}`}
+              onClick={() => setOnglet('toutes')}
+            >
+              Toutes
+            </button>
+          </div>
+
           {added.size > 0 && (
             <span className="rsel__count">{added.size} ajoutée{added.size > 1 ? 's' : ''}</span>
           )}
+
           <input
             className="rsel__search"
             placeholder="Rechercher une recette…"
             value={recherche}
             onChange={e => setRecherche(e.target.value)}
           />
+
+          {/* Chips catégories */}
           {categories && categories.length > 0 && (
             <div className="rsel__chips">
               <button
@@ -122,12 +170,29 @@ export function RecettesSelecteurModal({ menuId, onClose }: Props) {
               ))}
             </div>
           )}
+
+          {/* Chips tags */}
+          <div className="rsel__chips">
+            {TAGS_RECETTES.map(tag => (
+              <button
+                key={tag.id}
+                className={`rsel__chip rsel__chip--tag${tagsActifs.includes(tag.id) ? ' rsel__chip--active' : ''}`}
+                onClick={() => toggleTag(tag.id)}
+              >
+                {tag.label}
+              </button>
+            ))}
+          </div>
         </div>
 
         {/* Grille */}
         <div className="rsel__scroll">
           {filtered.length === 0 ? (
-            <p className="rsel__empty">Aucune recette</p>
+            <p className="rsel__empty">
+              {onglet === 'attente'
+                ? 'Aucune recette en attente. Marque des recettes avec l\'icône archive depuis la bibliothèque.'
+                : 'Aucune recette'}
+            </p>
           ) : (
             <div className="rsel__grid">
               {filtered.map(r => (
