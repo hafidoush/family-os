@@ -58,17 +58,29 @@ function CreationSheet({ onClose, onCreate }: {
   onClose: () => void
   onCreate: (dateDebut: string, dateFin: string, nom?: string) => Promise<void>
 }) {
-  const options = getSemaineOptions()
-  const [selected, setSelected] = useState<number | null>(0)
+  const todayISO = toISO(new Date())
+  const [dateDebut, setDateDebut] = useState(todayISO)
+  const [dateFin, setDateFin] = useState('')
   const [nom, setNom] = useState('')
   const [creating, setCreating] = useState(false)
 
+  const handleDebutChange = (val: string) => {
+    setDateDebut(val)
+    // Auto-calcule la fin à J+6 si pas encore saisie ou si l'utilisatrice n'a pas modifié
+    if (val) {
+      const d = new Date(val + 'T12:00:00')
+      d.setDate(d.getDate() + 6)
+      setDateFin(toISO(d))
+    }
+  }
+
+  const canCreate = dateDebut && dateFin && dateFin >= dateDebut
+
   const handleCreate = async () => {
-    if (selected === null) return
+    if (!canCreate) return
     setCreating(true)
     try {
-      const opt = options[selected]
-      await onCreate(opt.dateDebut, opt.dateFin, nom.trim() || undefined)
+      await onCreate(dateDebut, dateFin, nom.trim() || undefined)
       onClose()
     } finally {
       setCreating(false)
@@ -81,21 +93,24 @@ function CreationSheet({ onClose, onCreate }: {
         <div className="menus-sheet__handle" />
         <h3 className="menus-sheet__title">Nouveau menu</h3>
 
-        <p className="menus-sheet__label">Pour quelle semaine ?</p>
-        <div className="menus-sheet__options">
-          {options.map((opt, i) => (
-            <button
-              key={i}
-              className={`menus-sheet__option ${selected === i ? 'menus-sheet__option--selected' : ''}`}
-              onClick={() => setSelected(i)}
-            >
-              <span className="menus-sheet__opt-label">{opt.label}</span>
-              <span className="menus-sheet__opt-date">{opt.sublabel}</span>
-            </button>
-          ))}
-        </div>
+        <p className="menus-sheet__label">Du</p>
+        <input
+          type="date"
+          className="menus-sheet__input"
+          value={dateDebut}
+          onChange={e => handleDebutChange(e.target.value)}
+        />
 
-        <p className="menus-sheet__label">Nom du menu <span className="menus-sheet__opt-label" style={{ fontWeight: 400, fontSize: '12px' }}>(optionnel)</span></p>
+        <p className="menus-sheet__label">Au</p>
+        <input
+          type="date"
+          className="menus-sheet__input"
+          value={dateFin}
+          min={dateDebut}
+          onChange={e => setDateFin(e.target.value)}
+        />
+
+        <p className="menus-sheet__label" style={{ marginTop: 16 }}>Nom <span style={{ fontWeight: 400, fontSize: '12px' }}>(optionnel)</span></p>
         <input
           className="menus-sheet__input"
           placeholder="ex : Menu léger, Semaine végé…"
@@ -109,7 +124,7 @@ function CreationSheet({ onClose, onCreate }: {
           <button
             className="menus-sheet__btn-create"
             onClick={handleCreate}
-            disabled={selected === null || creating}
+            disabled={!canCreate || creating}
           >
             {creating ? '…' : 'Créer le menu'}
           </button>
