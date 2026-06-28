@@ -40,7 +40,7 @@
   display: flex;
   flex-direction: column;
   gap: 10px;
-  border-bottom: 1px solid rgba(124,58,237,0.1);
+  border-bottom: 1px solid rgba(75,70,96,0.1);
 }
 
 .rsel__header-top {
@@ -94,15 +94,15 @@
 
 .rsel__tab--active {
   background: #fff;
-  color: #7C3AED;
+  color: #4B4660;
   box-shadow: 0 1px 4px rgba(0,0,0,0.1);
 }
 
 .rsel__count {
   font-size: 12px;
   font-weight: 600;
-  color: #7C3AED;
-  background: rgba(124,58,237,0.1);
+  color: #4B4660;
+  background: rgba(210,173,235,0.25);
   padding: 3px 10px;
   border-radius: 20px;
   align-self: flex-start;
@@ -112,7 +112,7 @@
   width: 100%;
   padding: 9px 14px;
   border-radius: 12px;
-  border: 1.5px solid rgba(124,58,237,0.18);
+  border: 1.5px solid rgba(75,70,96,0.18);
   background: rgba(255,255,255,0.75);
   font-size: 14px;
   outline: none;
@@ -121,7 +121,7 @@
 }
 
 .rsel__search:focus {
-  border-color: rgba(124,58,237,0.45);
+  border-color: rgba(210,173,235,0.7);
 }
 
 /* Chips catégories */
@@ -138,19 +138,19 @@
   flex-shrink: 0;
   padding: 5px 12px;
   border-radius: 20px;
-  border: 1.5px solid rgba(124,58,237,0.2);
+  border: 1.5px solid rgba(75,70,96,0.2);
   background: transparent;
   font-size: 12px;
   font-weight: 500;
-  color: #7C3AED;
+  color: #4B4660;
   cursor: pointer;
   white-space: nowrap;
   transition: all 0.15s;
 }
 
 .rsel__chip--active {
-  background: #7C3AED;
-  border-color: #7C3AED;
+  background: #4B4660;
+  border-color: #4B4660;
   color: white;
 }
 
@@ -160,8 +160,8 @@
 }
 
 .rsel__chip--tag.rsel__chip--active {
-  background: #1E1C2E;
-  border-color: #1E1C2E;
+  background: #4B4660;
+  border-color: #4B4660;
   color: white;
 }
 
@@ -287,16 +287,16 @@
 .rsel__bottom {
   flex-shrink: 0;
   padding: 12px 18px 16px;
-  border-top: 1px solid rgba(124,58,237,0.08);
+  border-top: 1px solid rgba(75,70,96,0.08);
 }
 
 .rsel__cta {
   width: 100%;
   padding: 14px;
-  border-radius: 16px;
+  border-radius: 999px;
   border: none;
-  background: #7C3AED;
-  color: white;
+  background: #D2ADEB;
+  color: #4B4660;
   font-size: 15px;
   font-weight: 600;
   cursor: pointer;
