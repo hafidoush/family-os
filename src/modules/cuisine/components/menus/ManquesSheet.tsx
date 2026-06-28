@@ -57,56 +57,62 @@ export function ManquesSheet({ menuId, onClose }: Props) {
 
         {!resultat ? (
           <>
-            <p className="mq__hint">Dis-moi ce qui te manque et je t'indique comment adapter tes repas de la semaine.</p>
-            <textarea
-              className="mq__input"
-              placeholder="Ex : il me manque du riz, du saumon et du pesto…"
-              value={manques}
-              onChange={e => setManques(e.target.value)}
-              rows={3}
-              autoFocus
-            />
-            {erreur && <p className="mq__erreur">{erreur}</p>}
-            <button
-              className="mq__btn"
-              onClick={handleAnalyser}
-              disabled={loading || !manques.trim()}
-            >
-              {loading ? <><span className="mq__spinner" /> Analyse en cours…</> : '✦ Analyser mes repas'}
-            </button>
+            <div className="mq__body">
+              <p className="mq__hint">Dis-moi ce qui te manque et je t'indique comment adapter tes repas de la semaine.</p>
+              <textarea
+                className="mq__input"
+                placeholder="Ex : il me manque du riz, du saumon et du pesto…"
+                value={manques}
+                onChange={e => setManques(e.target.value)}
+                rows={3}
+              />
+              {erreur && <p className="mq__erreur">{erreur}</p>}
+            </div>
+            <div className="mq__footer">
+              <button
+                className="mq__btn"
+                onClick={handleAnalyser}
+                disabled={loading || !manques.trim()}
+              >
+                {loading ? <><span className="mq__spinner" /> Analyse en cours…</> : '✦ Analyser mes repas'}
+              </button>
+            </div>
           </>
         ) : (
-          <div className="mq__resultat">
-            {resultat.analyses.map(a => {
-              const cfg = STATUT_CONFIG[a.statut];
-              return (
-                <div key={a.recetteId} className="mq__recette" style={{ background: cfg.bg }}>
-                  <div className="mq__recette-header">
-                    <span className="mq__recette-nom">{a.recetteNom}</span>
-                    <span className="mq__badge" style={{ color: cfg.color, borderColor: cfg.color }}>
-                      {cfg.label}
-                    </span>
+          <>
+            <div className="mq__body">
+              {resultat.analyses.map(a => {
+                const cfg = STATUT_CONFIG[a.statut];
+                return (
+                  <div key={a.recetteId} className="mq__recette" style={{ background: cfg.bg }}>
+                    <div className="mq__recette-header">
+                      <span className="mq__recette-nom">{a.recetteNom}</span>
+                      <span className="mq__badge" style={{ color: cfg.color, borderColor: cfg.color }}>
+                        {cfg.label}
+                      </span>
+                    </div>
+                    {a.conseil && <p className="mq__conseil">{a.conseil}</p>}
                   </div>
-                  {a.conseil && <p className="mq__conseil">{a.conseil}</p>}
+                );
+              })}
+
+              {resultat.recetteJoker && (
+                <div className="mq__joker">
+                  <div className="mq__joker-label">✦ Recette joker</div>
+                  <div className="mq__joker-nom">{resultat.recetteJoker.nom}</div>
+                  {resultat.recetteJoker.temps && (
+                    <div className="mq__joker-temps">{resultat.recetteJoker.temps}</div>
+                  )}
+                  <p className="mq__joker-desc">{resultat.recetteJoker.description}</p>
                 </div>
-              );
-            })}
-
-            {resultat.recetteJoker && (
-              <div className="mq__joker">
-                <div className="mq__joker-label">✦ Recette joker</div>
-                <div className="mq__joker-nom">{resultat.recetteJoker.nom}</div>
-                {resultat.recetteJoker.temps && (
-                  <div className="mq__joker-temps">{resultat.recetteJoker.temps}</div>
-                )}
-                <p className="mq__joker-desc">{resultat.recetteJoker.description}</p>
-              </div>
-            )}
-
-            <button className="mq__btn mq__btn--ghost" onClick={() => { setResultat(null); setManques(''); }}>
-              Nouvelle analyse
-            </button>
-          </div>
+              )}
+            </div>
+            <div className="mq__footer">
+              <button className="mq__btn mq__btn--ghost" onClick={() => { setResultat(null); setManques(''); }}>
+                Nouvelle analyse
+              </button>
+            </div>
+          </>
         )}
 
       </div>
