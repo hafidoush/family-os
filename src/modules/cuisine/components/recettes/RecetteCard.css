@@ -242,6 +242,7 @@
   align-items: center;
   justify-content: center;
   font-size: 0.85rem;
+  color: rgba(255, 255, 255, 0.85);
   transition: transform 0.18s ease, background 0.18s ease;
   z-index: 3;
 }
