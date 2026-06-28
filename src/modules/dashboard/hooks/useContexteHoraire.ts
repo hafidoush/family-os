@@ -117,8 +117,7 @@ export function useContexteHoraire(): ContexteHoraire {
       )
       .toArray()
     if (!menus.length) return []
-    menus.sort((a, b) => (b.dateDebut ?? '').localeCompare(a.dateDebut ?? ''))
-    const menu = menus[0]
+    const menu = menus.find(m => m.valide) ?? menus.sort((a, b) => (b.dateDebut ?? '').localeCompare(a.dateDebut ?? ''))[0]
     const slots = await db.menuSlots
       .where('menu').equals(menu.id)
       .filter(s => !s.deletedAt && (s.jour == null) && (!!s.recette || !!s.descriptionLibre))
@@ -142,8 +141,7 @@ export function useContexteHoraire(): ContexteHoraire {
       .filter(m => !m.deletedAt && m.dateDebut <= todayISO && (m.dateFin == null || m.dateFin >= todayISO))
       .toArray()
     if (!menus.length) return null
-    menus.sort((a, b) => (b.dateDebut ?? '').localeCompare(a.dateDebut ?? ''))
-    const menu = menus[0]
+    const menu = menus.find(m => m.valide) ?? menus.sort((a, b) => (b.dateDebut ?? '').localeCompare(a.dateDebut ?? ''))[0]
     const jourAuj = JOUR_NOM[new Date().getDay()]
     const slot = await db.menuSlots
       .where('menu').equals(menu.id)
