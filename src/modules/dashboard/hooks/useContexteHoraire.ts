@@ -121,7 +121,7 @@ export function useContexteHoraire(): ContexteHoraire {
     const menu = menus[0]
     const slots = await db.menuSlots
       .where('menu').equals(menu.id)
-      .filter(s => !s.deletedAt && (!!s.recette || !!s.descriptionLibre))
+      .filter(s => !s.deletedAt && (s.jour == null) && (!!s.recette || !!s.descriptionLibre))
       .toArray()
     if (!slots.length) return []
     const ids = [...new Set(slots.map(s => s.recette).filter(Boolean) as string[])]

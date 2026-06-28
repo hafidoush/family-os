@@ -30,30 +30,16 @@ export function RecetteDetail({ recetteId, onBack, onEdit }: Props) {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
   const [menuAdding, setMenuAdding] = useState(false)
   const [menuAdded, setMenuAdded] = useState(false)
-  const [showMenuPicker, setShowMenuPicker] = useState(false)
   const [repairIngId, setRepairIngId] = useState<string | null>(null)
-
-  const today = new Date()
-  today.setHours(0, 0, 0, 0)
-  const todayStr = today.toISOString().split('T')[0]
-  const futureMenus = useLiveQuery(
-    () => db.menus.filter((m) => !m.archive && !m.deletedAt && m.dateDebut >= todayStr).toArray(),
-    [todayStr]
-  ) ?? []
   const [repairNom, setRepairNom] = useState('')
   const repairInputRef = useRef<HTMLInputElement>(null)
 
-  const planifierDansMenu = useCallback(async (targetMenuId?: string) => {
+  const handleAddToMenu = useCallback(async () => {
     if (menuAdding || menuAdded) return
     setMenuAdding(true)
-    setShowMenuPicker(false)
     try {
-      let menuId = targetMenuId
-      if (!menuId) {
-        const menu = await menuService.getMenuActifOuCreer()
-        menuId = menu.id
-      }
-      await menuService.addSlot({ menuId, recetteId: recetteId })
+      const menu = await menuService.getMenuActifOuCreer()
+      await menuService.addSlot({ menuId: menu.id, recetteId: recetteId })
       setMenuAdded(true)
       setTimeout(() => setMenuAdded(false), 3000)
     } catch {
@@ -62,14 +48,6 @@ export function RecetteDetail({ recetteId, onBack, onEdit }: Props) {
       setMenuAdding(false)
     }
   }, [recetteId, menuAdding, menuAdded])
-
-  const handleAddToMenu = useCallback(() => {
-    if (futureMenus.length > 1) {
-      setShowMenuPicker(true)
-    } else {
-      planifierDansMenu(futureMenus[0]?.id)
-    }
-  }, [futureMenus, planifierDansMenu])
 
   // Charger les produits pour afficher leurs noms
   const produitsIds = ingredients?.map((i) => i.produit) ?? []
@@ -375,33 +353,6 @@ export function RecetteDetail({ recetteId, onBack, onEdit }: Props) {
 
       {/* Spacer pour le FAB */}
       <div style={{ height: 80 }} />
-
-      {/* Bottom sheet sélection menu */}
-      {showMenuPicker && (
-        <div className="recette-detail__overlay" onClick={() => setShowMenuPicker(false)}>
-          <div className="recette-detail__confirm" onClick={(e) => e.stopPropagation()}>
-            <p><strong>Choisir un menu</strong></p>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginTop: 8 }}>
-              {futureMenus.map((m) => {
-                const d = new Date(m.dateDebut + 'T12:00:00')
-                const label = d.toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })
-                return (
-                  <button
-                    key={m.id}
-                    className="recette-detail__confirm-cancel"
-                    onClick={() => planifierDansMenu(m.id)}
-                  >
-                    Semaine du {label}
-                  </button>
-                )
-              })}
-            </div>
-            <button className="recette-detail__confirm-cancel" style={{ marginTop: 12 }} onClick={() => setShowMenuPicker(false)}>
-              Annuler
-            </button>
-          </div>
-        </div>
-      )}
 
       {/* Modal de confirmation suppression */}
       {showDeleteConfirm && (

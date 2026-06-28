@@ -13,13 +13,13 @@ import type { Menu, MenuSlot, JourMenu, RepasMenu } from '@shared/types';
 
 // ─── Helpers internes ─────────────────────────────────────────────────────────
 
-/** Calcule le lundi de la semaine contenant `date` */
+/** Calcule le lundi de la semaine contenant `date` (semaine ISO : lundi → dimanche) */
 function getLundi(date: Date): Date {
   const d = new Date(date);
-  const day = d.getDay(); // 0 = dimanche
-  const diff = day === 0 ? -6 : 1 - day;
-  d.setDate(d.getDate() + diff);
   d.setHours(0, 0, 0, 0);
+  const jourSemaine = d.getDay(); // 0 = dimanche
+  const diffLundi = jourSemaine === 0 ? -6 : 1 - jourSemaine;
+  d.setDate(d.getDate() + diffLundi);
   return d;
 }
 
@@ -222,16 +222,21 @@ export const MenuService = {
    */
   async getMenuActifOuCreer(): Promise<Menu> {
     const today = toISODate(new Date());
-    const menu = await db.menus
+    // Ne pas filtrer sur !m.archive — un menu peut être marqué archive:true tout en étant actif
+    // (cohérent avec WidgetMenu qui ne filtre que sur !m.deletedAt)
+    const menus = await db.menus
       .filter(
         (m) =>
-          !m.archive &&
           !m.deletedAt &&
           m.dateDebut <= today &&
           (m.dateFin == null || m.dateFin >= today)
       )
-      .first();
-    if (menu) return menu;
+      .toArray();
+    if (menus.length) {
+      // Prendre le plus récent en cas de doublons
+      menus.sort((a, b) => b.dateDebut.localeCompare(a.dateDebut));
+      return menus[0];
+    }
     return this.createMenu();
   },
 
