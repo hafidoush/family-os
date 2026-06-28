@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { toggleFavori, toggleKidsFavorite, toggleAProgrammer } from '../../services/recetteService'
 import type { Recette, CategorieRecette } from '../../../../shared/types'
-import { IconHeart, IconStarMinimalistic } from '@shared/components/ui/Icon/Icon'
+import { IconHeart, IconStarMinimalistic, IconArchiveDown, IconArchiveCheck } from '@shared/components/ui/Icon/Icon'
 import './RecetteCard.css'
 
 interface Props {
@@ -125,7 +125,7 @@ export function RecetteCard({
             aria-label={recette.aProgrammer ? 'Retirer de "À programmer"' : 'Ajouter à "À programmer"'}
             title={recette.aProgrammer ? 'Dans ta liste' : 'Ajouter à ma liste'}
           >
-            {recette.aProgrammer ? '📋' : '📥'}
+            {recette.aProgrammer ? <IconArchiveCheck size={15} /> : <IconArchiveDown size={15} />}
           </button>
         </>
       )}

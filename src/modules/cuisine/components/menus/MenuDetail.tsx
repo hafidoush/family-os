@@ -8,7 +8,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useMenuDetail } from '../../hooks/useMenuDetail';
 import { MenuService } from '../../services/MenuService';
-import { IconCalendar, IconStarShine, IconCart } from '@shared/components/ui/Icon/Icon';
+import { IconCalendar, IconStarShine, IconCart, IconArchiveDown, IconPen } from '@shared/components/ui/Icon/Icon';
 import { MenuSlotItem } from './MenuSlotItem';
 import { MenuSlotForm } from './MenuSlotForm';
 import { IngredientsPickerSheet } from '../courses/IngredientsPickerSheet';
@@ -78,7 +78,7 @@ function RecettesSelecteur({ menuId, recettesDejaIds, onClose }: {
             className={`recettes-selecteur__toggle-btn${filtreAProgrammer ? ' recettes-selecteur__toggle-btn--active' : ''}`}
             onClick={() => setFiltreAProgrammer(true)}
           >
-            📥 À programmer
+            <IconArchiveDown size={14} style={{ marginRight: 5, verticalAlign: 'middle' }} />À programmer
           </button>
           <button
             className={`recettes-selecteur__toggle-btn${!filtreAProgrammer ? ' recettes-selecteur__toggle-btn--active' : ''}`}
@@ -322,10 +322,10 @@ export function MenuDetail({ menuId, onBack }: MenuDetailProps) {
       {/* Boutons ajout */}
       <div className="menu-detail__add-row">
         <button className="menu-detail__add-btn menu-detail__add-btn--select" onClick={() => setShowSelecteur(true)}>
-          📥 Ajouter des recettes
+          <IconArchiveDown size={14} style={{ marginRight: 6, verticalAlign: 'middle' }} />Ajouter des recettes
         </button>
         <button className="menu-detail__add-btn menu-detail__add-btn--libre" onClick={() => setShowForm(true)}>
-          ✏️ Description libre
+          <IconPen size={13} style={{ marginRight: 6, verticalAlign: 'middle' }} />Description libre
         </button>
       </div>
 

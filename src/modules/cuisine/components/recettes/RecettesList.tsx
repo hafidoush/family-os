@@ -29,7 +29,7 @@ import { db } from '../../../../core/db/database'
 import { newEntity } from '../../../../core/db/helpers'
 import type { SessionPreparation } from '../../../../shared/types'
 import { ImportRecetteSheet } from './ImportRecetteSheet'
-import { IconHeart, IconStarMinimalistic, IconBookBookmark, IconMagnifier, IconStarShine } from '@shared/components/ui/Icon/Icon'
+import { IconHeart, IconStarMinimalistic, IconBookBookmark, IconMagnifier, IconStarShine, IconArchiveDown } from '@shared/components/ui/Icon/Icon'
 import './RecettesList.css'
 
 interface Props {
@@ -216,9 +216,8 @@ export function RecettesList({ onSelectRecette, onCreateRecette }: Props) {
           onClick={() => setAProgrammerSeulement(v => !v)}
           aria-pressed={aProgrammerSeulement}
           title="À programmer"
-          style={{ fontSize: '1rem' }}
         >
-          📥
+          <IconArchiveDown size={18} />
         </button>
 
         <button
