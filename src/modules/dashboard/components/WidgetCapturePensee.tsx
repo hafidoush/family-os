@@ -8,17 +8,20 @@
  * - Input "Décharge tes pensées ici…" + classification IA
  */
 
-import { useState, useRef, useCallback, KeyboardEvent } from 'react'
+import { useState, useRef, useCallback, useEffect, KeyboardEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { db } from '../../../core/db/database'
 import { newEntity, withUpdate } from '../../../core/db/helpers'
 import type {
   Pensee, CategoriePensee, Evenement, Tache,
-  CoursesItem, TypeEvenement, WishlistItem,
+  CoursesItem, TypeEvenement, WishlistItem, JourMenu,
 } from '../../../shared/types'
 import { useContexteHoraire } from '../hooks/useContexteHoraire'
+import { MenuService } from '../../cuisine/services/MenuService'
 import './WidgetCapturePensee.css'
+
+const JOURS_MENU = ['dimanche', 'lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi', 'samedi'] as const
 
 // ─── Icône envoi ──────────────────────────────────────────────────────────────
 
@@ -559,7 +562,25 @@ export function WidgetCapturePensee() {
   const [showDetail,   setShowDetail]   = useState(false)
   const [selectedChip, setSelectedChip] = useState<string | null>(null)
   const [chipsExpanded, setChipsExpanded] = useState(false)
+  const [showRepasButtons, setShowRepasButtons] = useState(false)
+  const [repasExpanded, setRepasExpanded] = useState(false)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
+
+  // Reset boutons repas quand on change de moment
+  useEffect(() => {
+    setShowRepasButtons(false)
+    setRepasExpanded(false)
+  }, [contexte.moment])
+
+  const handleChoisirRepas = useCallback(async (recetteId: string) => {
+    try {
+      const menuActif = await MenuService.getMenuActifOuCreer()
+      const jourAuj = JOURS_MENU[new Date().getDay()] as JourMenu
+      await MenuService.upsertSlot({ menuId: menuActif.id, jour: jourAuj, repas: 'diner', recetteId })
+      setShowRepasButtons(false)
+      setRepasExpanded(false)
+    } catch { /* silencieux */ }
+  }, [])
 
   const handleCapture = useCallback(async () => {
     const contenu = texte.trim()
@@ -621,6 +642,38 @@ export function WidgetCapturePensee() {
           )}
         </div>
 
+        {/* ── Boutons recettes : midi sans dîner, ou aprem_soir après tap "non choisi" ── */}
+        {(() => {
+          const afficher =
+            (contexte.moment === 'midi' && !contexte.dinerCeSoir) ||
+            (contexte.moment === 'aprem_soir' && showRepasButtons)
+          const recettesAvecId = contexte.repasDisponibles.filter(r => r.recetteId)
+          if (!afficher || recettesAvecId.length === 0) return null
+          const visibles = repasExpanded ? recettesAvecId : recettesAvecId.slice(0, 3)
+          const restantes = recettesAvecId.length - 3
+          return (
+            <div className="widget-hero__repas-buttons">
+              {visibles.map(r => (
+                <button
+                  key={r.id}
+                  className="widget-hero__repas-btn"
+                  onClick={() => handleChoisirRepas(r.recetteId!)}
+                >
+                  {r.nom}
+                </button>
+              ))}
+              {!repasExpanded && restantes > 0 && (
+                <button
+                  className="widget-hero__repas-btn widget-hero__repas-btn--more"
+                  onClick={() => setRepasExpanded(true)}
+                >
+                  +{restantes}
+                </button>
+              )}
+            </div>
+          )
+        })()}
+
         <div className="widget-hero__suggestions">
           {(() => {
             const MAX_VISIBLE = 3
@@ -629,17 +682,26 @@ export function WidgetCapturePensee() {
             const hiddenCount = chips.length - MAX_VISIBLE
             return (
               <>
-                {visible.map(({ label, route, badge }) => (
+                {visible.map((chip) => (
                   <button
-                    key={label}
-                    className={`widget-hero__chip${selectedChip === label ? ' widget-hero__chip--selected' : ''}`}
+                    key={chip.id ?? chip.label}
+                    className={`widget-hero__chip${selectedChip === chip.label ? ' widget-hero__chip--selected' : ''}`}
                     onClick={() => {
-                      setSelectedChip(selectedChip === label ? null : label)
-                      if (route) navigate(route)
+                      if (chip.id === 'diner-non-choisi') {
+                        setShowRepasButtons(v => !v)
+                        setRepasExpanded(false)
+                        return
+                      }
+                      if (chip.recetteId) {
+                        navigate('/cuisine', { state: { openRecette: chip.recetteId } })
+                        return
+                      }
+                      setSelectedChip(selectedChip === chip.label ? null : chip.label)
+                      if (chip.route) navigate(chip.route)
                     }}
                   >
-                    <span className="widget-hero__chip-label">{label}</span>
-                    {badge && <span className="widget-hero__chip-badge">{badge}</span>}
+                    <span className="widget-hero__chip-label">{chip.label}</span>
+                    {chip.badge && <span className="widget-hero__chip-badge">{chip.badge}</span>}
                   </button>
                 ))}
                 {!chipsExpanded && hiddenCount > 0 && (

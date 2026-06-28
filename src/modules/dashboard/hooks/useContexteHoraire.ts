@@ -6,11 +6,25 @@ import { toISODate } from '../../../shared/utils/formatDate'
 import { getInfoJour } from '../../../shared/utils/calendrierScolaire'
 
 export interface ChipContextuel {
+  id?: string
   label: string
   route?: string
   action?: () => void
   selected?: boolean
   badge?: string
+  recetteId?: string
+}
+
+export interface RepasDisponible {
+  id: string
+  nom: string
+  recetteId?: string
+  jour?: string
+}
+
+export interface DinerCeSoir {
+  nom: string
+  recetteId?: string
 }
 
 export interface ContexteHoraire {
@@ -18,6 +32,8 @@ export interface ContexteHoraire {
   titre: string
   sousTitre: string
   chips: ChipContextuel[]
+  repasDisponibles: RepasDisponible[]
+  dinerCeSoir: DinerCeSoir | null | undefined
 }
 
 function toISO(d: Date): string {
@@ -89,11 +105,9 @@ export function useContexteHoraire(): ContexteHoraire {
       .map(t => t.titre)
   }, [moment, todayISO]) ?? []
 
-  // Aprem/Soir : dîners de la semaine (pool à choisir)
-  const repasDisponibles = useLiveQuery(async () => {
-    if (moment !== 'aprem_soir') return []
-    // Fenêtre élargie : menu actif aujourd'hui OU dont la fin remonte à max 2 jours
-    // (couvre le week-end après un menu lun-ven)
+  // Midi + Aprem/Soir : pool de recettes du menu de la semaine (boutons de sélection dîner)
+  const repasDisponibles = useLiveQuery(async (): Promise<RepasDisponible[]> => {
+    if (moment !== 'aprem_soir' && moment !== 'midi') return []
     const cutoff = new Date(today()); cutoff.setDate(cutoff.getDate() - 2)
     const cutoffISO = toISO(cutoff)
     const menus = await db.menus
@@ -104,10 +118,8 @@ export function useContexteHoraire(): ContexteHoraire {
       )
       .toArray()
     if (!menus.length) return []
-    // Priorité au menu le plus récent
     menus.sort((a, b) => (b.dateDebut ?? '').localeCompare(a.dateDebut ?? ''))
     const menu = menus[0]
-    // Inclure dîners ET slots sans repas spécifié (ajoutés sans sélectionner "Dîner")
     const slots = await db.menuSlots
       .where('menu').equals(menu.id)
       .filter(s => !s.deletedAt && !s.archive &&
@@ -118,11 +130,35 @@ export function useContexteHoraire(): ContexteHoraire {
     const ids = [...new Set(slots.map(s => s.recette).filter(Boolean) as string[])]
     const recettes = ids.length ? await db.recettes.where('id').anyOf(ids).toArray() : []
     const recMap = new Map(recettes.map(r => [r.id, r]))
-    return slots.map(s => {
-      const nom = s.recette ? (recMap.get(s.recette)?.nom ?? s.descriptionLibre ?? '—') : (s.descriptionLibre ?? '—')
-      return { id: s.id, nom, jour: s.jour }
-    })
+    return slots.map(s => ({
+      id: s.id,
+      nom: s.recette ? (recMap.get(s.recette)?.nom ?? s.descriptionLibre ?? '—') : (s.descriptionLibre ?? '—'),
+      recetteId: s.recette ?? undefined,
+      jour: s.jour,
+    }))
   }, [moment, todayISO]) ?? []
+
+  // Midi + Aprem/Soir : dîner du soir sélectionné
+  const dinerCeSoir = useLiveQuery(async (): Promise<DinerCeSoir | null> => {
+    if (moment !== 'midi' && moment !== 'aprem_soir') return null
+    const cutoff = new Date(today()); cutoff.setDate(cutoff.getDate() - 2)
+    const cutoffISO = toISO(cutoff)
+    const menus = await db.menus
+      .filter(m => !m.deletedAt && !m.archive && m.dateDebut <= todayISO && (m.dateFin == null || m.dateFin >= cutoffISO))
+      .toArray()
+    if (!menus.length) return null
+    menus.sort((a, b) => (b.dateDebut ?? '').localeCompare(a.dateDebut ?? ''))
+    const menu = menus[0]
+    const jourAuj = JOUR_NOM[new Date().getDay()]
+    const slot = await db.menuSlots
+      .where('menu').equals(menu.id)
+      .filter(s => !s.deletedAt && !s.archive && s.jour === jourAuj && s.repas === 'diner')
+      .first()
+    if (!slot) return null
+    if (!slot.recette) return { nom: slot.descriptionLibre ?? 'Dîner prévu' }
+    const recette = await db.recettes.get(slot.recette)
+    return { nom: recette?.nom ?? '—', recetteId: slot.recette }
+  }, [moment, todayISO])
 
   // Nuit : aperçu de demain
   const activitesDemain = useLiveQuery(async () => {
@@ -196,42 +232,47 @@ export function useContexteHoraire(): ContexteHoraire {
         chips.push({ label: 'Voir le planning', route: '/programme-du-jour' })
         chips.push({ label: 'Mes tâches', route: '/maison' })
       }
-      return { moment, titre: 'Une nouvelle journée', sousTitre: sousTitre || 'Tout est là pour commencer sereinement', chips }
+      return { moment, titre: 'Une nouvelle journée', sousTitre: sousTitre || 'Tout est là pour commencer sereinement', chips, repasDisponibles: [], dinerCeSoir: null }
     }
 
     if (moment === 'midi') {
       const nbActiv = activitesAujourdhui.length
-      const parts: string[] = []
-      if (badgeEcoleDem) parts.push(badgeEcoleDem)
-      if (nbActiv > 0) parts.push(activitesAujourdhui.slice(0, 2).join(' · '))
-      const sousTitre = parts.join(' · ') || 'Rien de prévu cet après-midi'
-      const chips: ChipContextuel[] = [
-        { label: 'Activités', route: '/enfants', ...(nbActiv > 0 ? { badge: `${nbActiv}` } : {}) },
-        { label: 'Choisir le dîner', route: '/cuisine' },
-        { label: 'Mes tâches', route: '/maison' },
-      ]
-      return { moment, titre: 'Le cœur de la journée', sousTitre: sousTitre || 'Tout avance à son rythme', chips }
+      const hasDiner = dinerCeSoir != null
+
+      // Sous-titre : activités (max 2) + question dîner si pas encore choisi
+      const sousParts: string[] = []
+      if (nbActiv > 0) sousParts.push(activitesAujourdhui.slice(0, 2).join(' · '))
+      if (!hasDiner) sousParts.push("Qu'est-ce qu'on mange ce soir ?")
+      const sousTitre = sousParts.join(' · ') || 'Tout avance à son rythme'
+
+      // Chips : dîner choisi en premier si applicable, puis activités + tâches
+      const chips: ChipContextuel[] = []
+      if (hasDiner && dinerCeSoir) {
+        chips.push({ label: `🍽️ Ce soir : ${dinerCeSoir.nom}`, recetteId: dinerCeSoir.recetteId })
+      }
+      chips.push({ label: 'Activités', route: '/enfants', ...(nbActiv > 0 ? { badge: `${nbActiv}` } : {}) })
+      chips.push({ label: 'Mes tâches', route: '/maison' })
+
+      return { moment, titre: 'Le cœur de la journée', sousTitre, chips, repasDisponibles, dinerCeSoir }
     }
 
     if (moment === 'aprem_soir') {
-      const nbRepas = repasDisponibles.length
-      const parts: string[] = []
-      if (badgeEcoleDem) parts.push(badgeEcoleDem)
-      parts.push(nbRepas > 0 ? `${nbRepas} repas prévus cette semaine` : 'Aucun repas planifié')
-      const sousTitre = parts.join(' · ')
-      const chips: ChipContextuel[] = nbRepas > 0
-        ? repasDisponibles.map(r => ({ label: r.nom, route: '/cuisine' }))
-        : [{ label: 'Planifier les repas', route: '/cuisine' }]
+      const hasDiner = dinerCeSoir != null
       const titreSoir = heure < 18 ? "L'après-midi continue" : 'La soirée commence'
-      const sousTitreSoirDefaut = heure < 18 ? 'Ce soir se prépare doucement' : 'Le reste attendra demain'
-      return { moment, titre: titreSoir, sousTitre: sousTitre || sousTitreSoirDefaut, chips }
+
+      const sousParts: string[] = []
+      if (badgeEcoleDem) sousParts.push(badgeEcoleDem)
+      const sousTitre = sousParts.join(' · ') || (heure < 18 ? 'Ce soir se prépare doucement' : 'Le reste attendra demain')
+
+      const chips: ChipContextuel[] = hasDiner && dinerCeSoir
+        ? [{ label: `🍽️ Ce soir : ${dinerCeSoir.nom}`, recetteId: dinerCeSoir.recetteId }]
+        : [{ id: 'diner-non-choisi', label: '🍽️ Dîner non choisi' }]
+
+      return { moment, titre: titreSoir, sousTitre, chips, repasDisponibles, dinerCeSoir }
     }
 
     // nuit
-    const jourDemainLabel = JOUR_NOM[(jourIdx + 1) % 7]
-    const jourCapitalize = jourDemainLabel.charAt(0).toUpperCase() + jourDemainLabel.slice(1)
     const titre = 'Bonne nuit'
-    const nbTotal = activitesDemain.length + evtsDemain + tachesDemain
     const partsDemain: string[] = []
     if (infoDem.pasEcole && infoDem.raison) partsDemain.push(infoDem.raison === 'Samedi' || infoDem.raison === 'Dimanche' ? '' : `Pas d'école · ${infoDem.raison}`)
     if (infoDem.ferie && infoDem.labelFerie) partsDemain.push(infoDem.labelFerie)
@@ -245,7 +286,7 @@ export function useContexteHoraire(): ContexteHoraire {
       ...(tachesDemain > 0 ? [{ label: `${tachesDemain} tâche${tachesDemain > 1 ? 's' : ''}`, route: '/maison' }] : []),
       { label: 'Voir demain', route: '/programme-du-jour' },
     ].slice(0, 3)
-    return { moment, titre, sousTitre, chips }
+    return { moment, titre, sousTitre, chips, repasDisponibles: [], dinerCeSoir: null }
 
-  }, [moment, heure, activitesAujourdhui, tachesMatinales, repasDisponibles, activitesDemain, evtsDemain, tachesDemain, jourIdx])
+  }, [moment, heure, activitesAujourdhui, tachesMatinales, repasDisponibles, dinerCeSoir, activitesDemain, evtsDemain, tachesDemain, jourIdx])
 }

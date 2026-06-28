@@ -231,6 +231,42 @@
   border-color: rgba(198, 156, 226, 0.55);
 }
 
+/* ── Boutons recettes de la semaine ── */
+.widget-hero__repas-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 2px 0 8px;
+}
+
+.widget-hero__repas-btn {
+  padding: 7px 14px;
+  border-radius: 999px;
+  border: 1.5px solid rgba(212, 153, 10, 0.35);
+  background: rgba(212, 153, 10, 0.07);
+  color: #8a6200;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+  white-space: nowrap;
+  max-width: 200px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.widget-hero__repas-btn:hover,
+.widget-hero__repas-btn:active {
+  background: rgba(212, 153, 10, 0.15);
+  border-color: rgba(212, 153, 10, 0.6);
+}
+
+.widget-hero__repas-btn--more {
+  background: rgba(212, 153, 10, 0.04);
+  color: #b08000;
+  font-weight: 600;
+}
+
 /* Chip urgent — léger contour ambré */
 .widget-hero__chip--urgent {
   background: #FFF8EE;
