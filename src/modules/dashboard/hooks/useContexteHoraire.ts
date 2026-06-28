@@ -113,7 +113,7 @@ export function useContexteHoraire(): ContexteHoraire {
       .filter(m =>
         !m.deletedAt && !m.archive &&
         m.dateDebut <= todayISO &&
-        (m.dateFin == null || m.dateFin >= todayISO)
+        m.dateFin != null && m.dateFin >= todayISO
       )
       .toArray()
     if (!menus.length) return []
@@ -146,7 +146,7 @@ export function useContexteHoraire(): ContexteHoraire {
   const dinerCeSoir = useLiveQuery(async (): Promise<DinerCeSoir | null> => {
     if (moment !== 'midi' && moment !== 'aprem_soir') return null
     const menus = await db.menus
-      .filter(m => !m.deletedAt && !m.archive && m.dateDebut <= todayISO && (m.dateFin == null || m.dateFin >= todayISO))
+      .filter(m => !m.deletedAt && !m.archive && m.dateDebut <= todayISO && m.dateFin != null && m.dateFin >= todayISO)
       .toArray()
     if (!menus.length) return null
     menus.sort((a, b) => (b.dateDebut ?? '').localeCompare(a.dateDebut ?? ''))

@@ -17,7 +17,8 @@ export function useDinerAujourdhui() {
           !m.archive &&
           !m.deletedAt &&
           m.dateDebut <= today &&
-          (m.dateFin == null || m.dateFin >= today)
+          m.dateFin != null &&
+          m.dateFin >= today
       )
       .first();
 

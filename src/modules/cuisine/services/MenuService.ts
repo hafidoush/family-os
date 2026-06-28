@@ -228,7 +228,8 @@ export const MenuService = {
           !m.archive &&
           !m.deletedAt &&
           m.dateDebut <= today &&
-          (m.dateFin == null || m.dateFin >= today)
+          m.dateFin != null &&
+          m.dateFin >= today
       )
       .first();
     if (menu) return menu;
