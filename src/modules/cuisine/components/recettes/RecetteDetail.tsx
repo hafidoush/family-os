@@ -50,19 +50,7 @@ export function RecetteDetail({ recetteId, onBack, onEdit }: Props) {
     try {
       let menuId = targetMenuId
       if (!menuId) {
-        // Récupère ou crée le menu de la semaine courante
-        const now = new Date()
-        const lundi = new Date(now)
-        const diff = now.getDay() === 0 ? -6 : 1 - now.getDay()
-        lundi.setDate(now.getDate() + diff)
-        lundi.setHours(0, 0, 0, 0)
-        const dateDebut = lundi.toISOString().split('T')[0]
-        let menu = await db.menus
-          .filter((m) => m.dateDebut === dateDebut && !m.archive && !m.deletedAt)
-          .first()
-        if (!menu) {
-          menu = await menuService.createMenu({ dateReference: now })
-        }
+        const menu = await menuService.getMenuActifOuCreer()
         menuId = menu.id
       }
       await menuService.addSlot({ menuId, recetteId: recetteId })

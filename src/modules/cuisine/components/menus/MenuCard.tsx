@@ -72,8 +72,10 @@ function EditDatesSheet({ menu, onClose }: { menu: Menu; onClose: () => void }) 
   const handleSave = async () => {
     setSaving(true)
     const dateFin = getDimanche(dateDebut)
+    const d = new Date(dateDebut + 'T12:00:00')
+    const nom = `Menu du ${d.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}`
     try {
-      await db.menus.update(menu.id, withUpdate({ dateDebut, dateFin }))
+      await db.menus.update(menu.id, withUpdate({ dateDebut, dateFin, nom }))
       onClose()
     } finally {
       setSaving(false)
