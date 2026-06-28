@@ -371,6 +371,7 @@ export interface Recette extends AuditWithDevice {
   etapes: string[]
   favori: boolean
   kidsFavorite?: boolean
+  aProgrammer?: boolean
   archive: boolean
   // F8 — Préparation hebdomadaire
   typePreparation?: 'plat' | 'gouter' | 'dessert' | 'petit_dejeuner' | 'snack'

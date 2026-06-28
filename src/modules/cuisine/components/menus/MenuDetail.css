@@ -176,15 +176,20 @@
 }
 
 /* ── Bouton ajouter ── */
+.menu-detail__add-row {
+  display: flex;
+  gap: 10px;
+}
+
 .menu-detail__add-btn {
-  width: 100%;
-  padding: 13px 16px;
+  flex: 1;
+  padding: 13px 12px;
   background: transparent;
   color: #A89EC0;
   border: 2px dashed rgba(167,139,250,0.3);
   border-radius: 14px;
   font-family: var(--font-body);
-  font-size: 13.5px;
+  font-size: 13px;
   font-weight: 600;
   cursor: pointer;
   transition: border-color 0.18s, color 0.18s, background 0.18s;
@@ -195,6 +200,95 @@
   border-color: rgba(167,139,250,0.6);
   color: #6D28D9;
   background: rgba(167,139,250,0.05);
+}
+
+.menu-detail__add-btn--select {
+  border-color: rgba(167,139,250,0.5);
+  color: #7C3AED;
+}
+
+/* ── Overlay sélecteur de recettes ── */
+.recettes-selecteur__overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 300;
+  background: var(--bg, #f5f0eb);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.recettes-selecteur__header {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 16px 16px 12px;
+  border-bottom: 1px solid rgba(0,0,0,0.06);
+  background: var(--bg, #f5f0eb);
+  position: sticky;
+  top: 0;
+  z-index: 1;
+}
+
+.recettes-selecteur__close {
+  align-self: flex-end;
+  background: none;
+  border: none;
+  font-size: 1.2rem;
+  color: var(--text-secondary, #888);
+  cursor: pointer;
+  padding: 4px 8px;
+}
+
+.recettes-selecteur__title {
+  font-family: var(--font-display);
+  font-size: 20px;
+  font-weight: 700;
+  color: #3D2F5E;
+  margin: 0;
+}
+
+.recettes-selecteur__toggle {
+  display: flex;
+  gap: 8px;
+}
+
+.recettes-selecteur__toggle-btn {
+  flex: 1;
+  padding: 8px 12px;
+  border-radius: 20px;
+  border: 1.5px solid rgba(167,139,250,0.3);
+  background: transparent;
+  font-size: 13px;
+  font-weight: 600;
+  color: #A89EC0;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.recettes-selecteur__toggle-btn--active {
+  background: rgba(139, 92, 246, 0.12);
+  border-color: rgba(139, 92, 246, 0.5);
+  color: #6D28D9;
+}
+
+.recettes-selecteur__grid {
+  flex: 1;
+  overflow-y: auto;
+  padding: 16px;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+  align-content: start;
+}
+
+.recettes-selecteur__empty {
+  grid-column: 1 / -1;
+  text-align: center;
+  padding: 48px 24px;
+  color: var(--text-secondary, #888);
+  font-size: 14px;
+  line-height: 1.6;
 }
 
 /* ── Skeletons ── */

@@ -126,6 +126,10 @@ export async function toggleKidsFavorite(id: string, kidsFavorite: boolean): Pro
   await db.recettes.update(id, withUpdate({ kidsFavorite }))
 }
 
+export async function toggleAProgrammer(id: string, value: boolean): Promise<void> {
+  await db.recettes.update(id, withUpdate({ aProgrammer: value }))
+}
+
 export async function deleteRecette(id: string): Promise<void> {
   await db.recettes.update(id, softDeleteFields())
 }

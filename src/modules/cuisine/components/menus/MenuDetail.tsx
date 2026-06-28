@@ -5,7 +5,7 @@
  *   1. Recettes libres (sans jour assigné)
  *   2. Recettes par jour (si certaines ont un jour)
  */
-import { useState } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useMenuDetail } from '../../hooks/useMenuDetail';
 import { MenuService } from '../../services/MenuService';
 import { IconCalendar, IconStarShine, IconCart } from '@shared/components/ui/Icon/Icon';
@@ -14,6 +14,8 @@ import { MenuSlotForm } from './MenuSlotForm';
 import { IngredientsPickerSheet } from '../courses/IngredientsPickerSheet';
 import { genererMenusIA } from '../../../../core/ai/genererMenusService';
 import { hasOpenAIKey } from '../../../../core/ai/openaiService';
+import { useRecettes, useCategoriesRecettes } from '../../hooks/useRecettes';
+import { RecetteCard } from '../recettes/RecetteCard';
 import type { JourMenu } from '@shared/types';
 import './MenuDetail.css';
 
@@ -38,9 +40,84 @@ interface MenuDetailProps {
   onBack: () => void;
 }
 
+// ─── Sélecteur de recettes (overlay plein écran) ──────────────────────────────
+
+function RecettesSelecteur({ menuId, recettesDejaIds, onClose }: {
+  menuId: string
+  recettesDejaIds: Set<string>
+  onClose: () => void
+}) {
+  const [filtreAProgrammer, setFiltreAProgrammer] = useState(true)
+  const [ajoutees, setAjoutees] = useState<Set<string>>(new Set())
+
+  const recettes = useRecettes({ aProgrammerSeulement: filtreAProgrammer })
+  const categories = useCategoriesRecettes()
+  const categoriesMap = new Map(categories?.map(c => [c.id, c]))
+
+  const handleSelect = useCallback(async (recetteId: string) => {
+    try {
+      await MenuService.addSlot({ menuId, recetteId })
+      setAjoutees(prev => new Set(prev).add(recetteId))
+    } catch { /* silencieux */ }
+  }, [menuId])
+
+  // Ferme avec Escape
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose() }
+    window.addEventListener('keydown', handler)
+    return () => window.removeEventListener('keydown', handler)
+  }, [onClose])
+
+  return (
+    <div className="recettes-selecteur__overlay">
+      <div className="recettes-selecteur__header">
+        <button className="recettes-selecteur__close" onClick={onClose}>✕</button>
+        <h2 className="recettes-selecteur__title">Ajouter des recettes</h2>
+        <div className="recettes-selecteur__toggle">
+          <button
+            className={`recettes-selecteur__toggle-btn${filtreAProgrammer ? ' recettes-selecteur__toggle-btn--active' : ''}`}
+            onClick={() => setFiltreAProgrammer(true)}
+          >
+            📥 À programmer
+          </button>
+          <button
+            className={`recettes-selecteur__toggle-btn${!filtreAProgrammer ? ' recettes-selecteur__toggle-btn--active' : ''}`}
+            onClick={() => setFiltreAProgrammer(false)}
+          >
+            Toutes
+          </button>
+        </div>
+      </div>
+
+      <div className="recettes-selecteur__grid">
+        {!recettes || recettes.length === 0 ? (
+          <div className="recettes-selecteur__empty">
+            {filtreAProgrammer
+              ? 'Aucune recette dans ta liste. Ajoute des recettes avec 📥 depuis la bibliothèque.'
+              : 'Aucune recette.'}
+          </div>
+        ) : recettes.map(r => (
+          <RecetteCard
+            key={r.id}
+            recette={r}
+            categorie={categoriesMap.get(r.categorie)}
+            onClick={() => {}}
+            selectMode
+            alreadyAdded={recettesDejaIds.has(r.id) || ajoutees.has(r.id)}
+            onSelect={handleSelect}
+          />
+        ))}
+      </div>
+    </div>
+  )
+}
+
+// ─── MenuDetail ───────────────────────────────────────────────────────────────
+
 export function MenuDetail({ menuId, onBack }: MenuDetailProps) {
   const data = useMenuDetail(menuId);
   const [showForm, setShowForm] = useState(false);
+  const [showSelecteur, setShowSelecteur] = useState(false);
   const [isValidating, setIsValidating] = useState(false);
   const [showIngredientsPicker, setShowIngredientsPicker] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
@@ -242,10 +319,15 @@ export function MenuDetail({ menuId, onBack }: MenuDetailProps) {
         </section>
       )}
 
-      {/* Bouton ajouter une recette */}
-      <button className="menu-detail__add-btn" onClick={() => setShowForm(true)}>
-        + Ajouter une recette
-      </button>
+      {/* Boutons ajout */}
+      <div className="menu-detail__add-row">
+        <button className="menu-detail__add-btn menu-detail__add-btn--select" onClick={() => setShowSelecteur(true)}>
+          📥 Ajouter des recettes
+        </button>
+        <button className="menu-detail__add-btn menu-detail__add-btn--libre" onClick={() => setShowForm(true)}>
+          ✏️ Description libre
+        </button>
+      </div>
 
       {/* Drawer ajout slot */}
       {showForm && (
@@ -255,6 +337,15 @@ export function MenuDetail({ menuId, onBack }: MenuDetailProps) {
           recettesDejaUtilisees={new Set(
             data.tousLesSlots.filter((s) => s.recette).map((s) => s.recette as string)
           )}
+        />
+      )}
+
+      {/* Overlay sélection recettes */}
+      {showSelecteur && (
+        <RecettesSelecteur
+          menuId={menuId}
+          recettesDejaIds={new Set(data.tousLesSlots.filter(s => s.recette).map(s => s.recette as string))}
+          onClose={() => setShowSelecteur(false)}
         />
       )}
 
