@@ -70,10 +70,11 @@ function RecetteThumb({ recette, categorie, added, onSelect }: {
 interface Props {
   menuId: string;
   onClose: () => void;
+  dejaDansLeMenu?: Set<string>;
 }
 
-export function RecettesSelecteurModal({ menuId, onClose }: Props) {
-  const [added, setAdded] = useState<Set<string>>(new Set());
+export function RecettesSelecteurModal({ menuId, onClose, dejaDansLeMenu }: Props) {
+  const [added, setAdded] = useState<Set<string>>(dejaDansLeMenu ?? new Set());
   const [recherche, setRecherche] = useState('');
   const [categorieId, setCategorieId] = useState<string | undefined>();
   const [tagsActifs, setTagsActifs] = useState<string[]>([]);

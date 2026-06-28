@@ -33,7 +33,7 @@ interface MenuDetailProps {
 
 export function MenuDetail({ menuId, onBack }: MenuDetailProps) {
   const data = useMenuDetail(menuId);
-  const [showSelecteur, setShowSelecteur] = useState(true);
+  const [showSelecteur, setShowSelecteur] = useState(false);
   const [isValidating, setIsValidating] = useState(false);
   const [showIngredientsPicker, setShowIngredientsPicker] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
@@ -229,7 +229,11 @@ export function MenuDetail({ menuId, onBack }: MenuDetailProps) {
       </button>
 
       {showSelecteur && (
-        <RecettesSelecteurModal menuId={menuId} onClose={() => setShowSelecteur(false)} />
+        <RecettesSelecteurModal
+          menuId={menuId}
+          onClose={() => setShowSelecteur(false)}
+          dejaDansLeMenu={new Set(data.tousLesSlots.filter(s => s.recette).map(s => s.recette as string))}
+        />
       )}
 
       {showIngredientsPicker && (
