@@ -140,3 +140,34 @@
 
 .materiel-courses-btn:active { opacity: 0.85; transform: scale(0.98); }
 .materiel-courses-btn:disabled { opacity: 0.6; cursor: default; }
+
+/* Bonus immersion */
+.materiel-bonus {
+  margin: 18px 16px 0;
+  padding: 14px 16px;
+  border-radius: 14px;
+  background: rgba(167, 139, 250, 0.07);
+  border: 1px solid rgba(167, 139, 250, 0.16);
+}
+
+.materiel-bonus__title {
+  margin: 0 0 10px;
+  font-size: 13px;
+  font-weight: 700;
+  color: #1a1a2e;
+}
+
+.materiel-bonus__list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.materiel-bonus__chip {
+  padding: 5px 11px;
+  border-radius: 999px;
+  background: rgba(124, 58, 237, 0.08);
+  color: #7C3AED;
+  font-size: 12px;
+  font-weight: 500;
+}

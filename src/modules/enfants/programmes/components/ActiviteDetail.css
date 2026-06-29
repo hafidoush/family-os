@@ -250,6 +250,16 @@
   line-height: 1.5;
 }
 
+/* ── Préparation spécifique ── */
+.ad-preparation-list {
+  margin: 0;
+  padding-left: 18px;
+  font-family: var(--font-body);
+  font-size: 14px;
+  color: var(--color-text-primary, #1F2937);
+  line-height: 1.6;
+}
+
 /* ── Matériel ── */
 .ad-materiel-list {
   display: flex;

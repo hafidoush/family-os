@@ -136,6 +136,30 @@ export function ActiviteDetail({ activite, onClose }: ActiviteDetailProps) {
             </div>
           )}
 
+          {/* Préparation spécifique */}
+          {activite.preparationSpecifique && activite.preparationSpecifique.length > 0 && (
+            <div className="ad-section">
+              <h3 className="ad-section__title">Préparation</h3>
+              <ul className="ad-preparation-list">
+                {activite.preparationSpecifique.map((item, i) => (
+                  <li key={i}>{item}</li>
+                ))}
+              </ul>
+            </div>
+          )}
+
+          {/* Bonus immersion */}
+          {activite.ideesImmersion && activite.ideesImmersion.length > 0 && (
+            <div className="ad-section">
+              <h3 className="ad-section__title">✨ Bonus immersion</h3>
+              <div className="ad-tags">
+                {activite.ideesImmersion.map((idee, i) => (
+                  <span key={i} className="ad-tag">{idee}</span>
+                ))}
+              </div>
+            </div>
+          )}
+
           {/* Matériel nécessaire */}
           {activite.materielNecessaire.length > 0 && (
             <div className="ad-section">

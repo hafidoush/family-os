@@ -787,6 +787,10 @@ export interface ActiviteProgramme extends AuditWithDevice {
   deroulement: EtapeActiviteProgramme[]
   variantes?: VarianteAge[]
 
+  // Immersion (complémentaire — optionnel, n'écrase pas l'existant)
+  preparationSpecifique?: string[]     // ce que l'adulte doit préparer avant CETTE activité
+  ideesImmersion?: string[]            // accessoires/mises en scène propres à cette activité
+
   // État
   ordre: number
   statutRealisation: StatutRealisationActivite
@@ -794,6 +798,22 @@ export interface ActiviteProgramme extends AuditWithDevice {
   datePlanifiee?: string               // "YYYY-MM-DD" — jour choisi par l'utilisateur
   notesParent?: string
   archive: boolean
+}
+
+// ─── IMMERSION PÉDAGOGIQUE (programme) ────────────────────────────────────────
+
+export interface IntroductionTheme {
+  histoire: string         // histoire de départ pour entrer dans l'univers
+  presentation: string     // façon de présenter le thème aux enfants
+  rituelLancement: string  // rituel de lancement de semaine/programme
+  miseEnScene: string      // idée de mise en scène
+}
+
+export interface ConclusionProgramme {
+  jeuFinal: string
+  activiteRestitution: string
+  ideeSouvenir: string
+  questionsBilan?: string[]
 }
 
 export interface ProgrammePedagogique extends AuditWithDevice {
@@ -827,6 +847,11 @@ export interface ProgrammePedagogique extends AuditWithDevice {
   progression: number                  // 0–100 — calculé à la volée
   materielStatuts?: Record<string, 'a_verifier' | 'possede' | 'a_acheter'>  // clé = nom normalisé
   archive: boolean
+
+  // Immersion pédagogique (complémentaire — optionnel, n'écrase pas l'existant)
+  introductionTheme?: IntroductionTheme  // section "Introduction du thème" avant les activités
+  conclusion?: ConclusionProgramme       // section "Mission finale / conclusion"
+  ideesImmersion?: string[]              // "Bonus immersion" globaux au programme (accessoires, déco…)
 }
 
 // ─── PROGRAMME ANNUEL ─────────────────────────────────────────────────────────

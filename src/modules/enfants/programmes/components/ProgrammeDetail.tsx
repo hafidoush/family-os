@@ -4,6 +4,7 @@ import { useProgrammeDetail, useActivitesSemaine } from '../hooks/useProgrammes'
 import { activerProgramme, archiverProgramme } from '../services/programmeService'
 import { ActiviteDetail } from './ActiviteDetail'
 import { SectionMateriel } from './SectionMateriel'
+import { SectionPreparation } from './SectionPreparation'
 import type { ActiviteProgramme } from '../../../../shared/types'
 
 // ─── Utilitaires ──────────────────────────────────────────────────────────────
@@ -111,10 +112,11 @@ interface ProgrammeDetailProps {
 
 export function ProgrammeDetail({ programmeId, onClose }: ProgrammeDetailProps) {
   const { programme, isLoading } = useProgrammeDetail(programmeId)
-  const [onglet, setOnglet] = useState<'activites' | 'materiel'>('activites')
+  const [onglet, setOnglet] = useState<'activites' | 'materiel' | 'preparation'>('activites')
   const [semaineActive, setSemaineActive] = useState(1)
   const [activiteOuverte, setActiviteOuverte] = useState<ActiviteProgramme | null>(null)
   const [confirmArchive, setConfirmArchive] = useState(false)
+  const [introOuverte, setIntroOuverte] = useState(false)
 
   if (isLoading) {
     return (
@@ -217,6 +219,12 @@ export function ProgrammeDetail({ programmeId, onClose }: ProgrammeDetailProps) 
             >
               📦 Matériel
             </button>
+            <button
+              className={`pd-onglet${onglet === 'preparation' ? ' pd-onglet--active' : ''}`}
+              onClick={() => setOnglet('preparation')}
+            >
+              🧰 Préparation
+            </button>
           </div>
 
           {/* Vue Matériel */}
@@ -226,9 +234,53 @@ export function ProgrammeDetail({ programmeId, onClose }: ProgrammeDetailProps) 
             </div>
           )}
 
+          {/* Vue Préparation */}
+          {onglet === 'preparation' && (
+            <div className="pd-content">
+              <SectionPreparation programme={programme} />
+            </div>
+          )}
+
           {/* Vue Activités */}
           {onglet === 'activites' && (
             <>
+              {programme.introductionTheme && (
+                <div className="pd-intro">
+                  <button className="pd-intro__toggle" onClick={() => setIntroOuverte(o => !o)}>
+                    <span>🎬 Introduction du thème</span>
+                    <span className="pd-intro__chevron">{introOuverte ? '▾' : '▸'}</span>
+                  </button>
+                  {introOuverte && (
+                    <div className="pd-intro__body">
+                      {programme.introductionTheme.histoire && (
+                        <div className="pd-intro__bloc">
+                          <span className="pd-intro__label">Histoire de départ</span>
+                          <p className="pd-intro__text">{programme.introductionTheme.histoire}</p>
+                        </div>
+                      )}
+                      {programme.introductionTheme.presentation && (
+                        <div className="pd-intro__bloc">
+                          <span className="pd-intro__label">Présenter le thème</span>
+                          <p className="pd-intro__text">{programme.introductionTheme.presentation}</p>
+                        </div>
+                      )}
+                      {programme.introductionTheme.rituelLancement && (
+                        <div className="pd-intro__bloc">
+                          <span className="pd-intro__label">Rituel de lancement</span>
+                          <p className="pd-intro__text">{programme.introductionTheme.rituelLancement}</p>
+                        </div>
+                      )}
+                      {programme.introductionTheme.miseEnScene && (
+                        <div className="pd-intro__bloc">
+                          <span className="pd-intro__label">Mise en scène</span>
+                          <p className="pd-intro__text">{programme.introductionTheme.miseEnScene}</p>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              )}
+
               <div className="pd-semaine-nav">
                 <button
                   className="pd-semaine-nav__btn"
@@ -270,6 +322,40 @@ export function ProgrammeDetail({ programmeId, onClose }: ProgrammeDetailProps) 
                   totalSemaines={totalSemaines}
                   onSelect={setActiviteOuverte}
                 />
+
+                {semaineActive === totalSemaines && programme.conclusion && (
+                  <div className="pd-conclusion">
+                    <h3 className="pd-conclusion__title">🏁 Mission finale / conclusion</h3>
+                    {programme.conclusion.jeuFinal && (
+                      <div className="pd-conclusion__bloc">
+                        <span className="pd-conclusion__label">Jeu final</span>
+                        <p className="pd-conclusion__text">{programme.conclusion.jeuFinal}</p>
+                      </div>
+                    )}
+                    {programme.conclusion.activiteRestitution && (
+                      <div className="pd-conclusion__bloc">
+                        <span className="pd-conclusion__label">Restitution</span>
+                        <p className="pd-conclusion__text">{programme.conclusion.activiteRestitution}</p>
+                      </div>
+                    )}
+                    {programme.conclusion.ideeSouvenir && (
+                      <div className="pd-conclusion__bloc">
+                        <span className="pd-conclusion__label">Souvenir à garder</span>
+                        <p className="pd-conclusion__text">{programme.conclusion.ideeSouvenir}</p>
+                      </div>
+                    )}
+                    {programme.conclusion.questionsBilan && programme.conclusion.questionsBilan.length > 0 && (
+                      <div className="pd-conclusion__bloc">
+                        <span className="pd-conclusion__label">Questions de bilan</span>
+                        <ul className="pd-conclusion__questions">
+                          {programme.conclusion.questionsBilan.map((q, i) => (
+                            <li key={i}>{q}</li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
             </>
           )}

@@ -13,6 +13,8 @@ import type {
   DureeProgramme,
   DifficulteActivite,
   StatutProgramme,
+  IntroductionTheme,
+  ConclusionProgramme,
 } from '../../../../shared/types'
 
 // ─── Types formulaires ────────────────────────────────────────────────────────
@@ -33,6 +35,9 @@ export interface ProgrammeFormData {
   genereParIA?: boolean
   promptGeneration?: string
   modelIA?: string
+  introductionTheme?: IntroductionTheme
+  conclusion?: ConclusionProgramme
+  ideesImmersion?: string[]
 }
 
 export interface ActiviteProgrammeFormData {

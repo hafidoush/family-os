@@ -429,6 +429,118 @@
   font-size: 13px;
 }
 
+/* ── Introduction du thème ── */
+.pd-intro {
+  flex-shrink: 0;
+  margin: 0 20px 0;
+  margin-top: 12px;
+  border-radius: 14px;
+  background: rgba(167, 139, 250, 0.07);
+  border: 1px solid rgba(167, 139, 250, 0.16);
+  overflow: hidden;
+}
+
+.pd-intro__toggle {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 14px;
+  border: none;
+  background: transparent;
+  font-family: var(--font-body);
+  font-size: 13px;
+  font-weight: 700;
+  color: #1a1a2e;
+  cursor: pointer;
+}
+
+.pd-intro__chevron {
+  color: #7C3AED;
+}
+
+.pd-intro__body {
+  padding: 0 14px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.pd-intro__bloc {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.pd-intro__label {
+  font-family: var(--font-body);
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: #7C3AED;
+}
+
+.pd-intro__text {
+  margin: 0;
+  font-family: var(--font-body);
+  font-size: 13px;
+  color: var(--color-text-secondary, #6B7280);
+  line-height: 1.5;
+}
+
+/* ── Conclusion / mission finale ── */
+.pd-conclusion {
+  margin-top: 18px;
+  padding: 14px 16px;
+  border-radius: 14px;
+  background: rgba(236, 72, 153, 0.06);
+  border: 1px solid rgba(236, 72, 153, 0.14);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.pd-conclusion__title {
+  margin: 0;
+  font-family: var(--font-body);
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--color-text-primary, #1F2937);
+}
+
+.pd-conclusion__bloc {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.pd-conclusion__label {
+  font-family: var(--font-body);
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: #EC4899;
+}
+
+.pd-conclusion__text {
+  margin: 0;
+  font-family: var(--font-body);
+  font-size: 13px;
+  color: var(--color-text-secondary, #6B7280);
+  line-height: 1.5;
+}
+
+.pd-conclusion__questions {
+  margin: 0;
+  padding-left: 18px;
+  font-family: var(--font-body);
+  font-size: 13px;
+  color: var(--color-text-secondary, #6B7280);
+  line-height: 1.6;
+}
+
 /* ── Onglets Activités / Matériel ── */
 .pd-onglets {
   display: flex;

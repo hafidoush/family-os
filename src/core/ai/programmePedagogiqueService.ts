@@ -29,6 +29,8 @@ import type {
   DifficulteActivite,
   PhaseApprentissage,
   RepartitionMois,
+  IntroductionTheme,
+  ConclusionProgramme,
 } from '../../shared/types'
 
 // ─── Types IA internes ────────────────────────────────────────────────────────
@@ -48,6 +50,8 @@ interface ActiviteIABrute {
   ageRecommande: string
   deroulement: Array<{ ordre: number; texte: string; duree?: number; conseil?: string }>
   variantes?: Array<{ ageMin: number; ageMax: number; adaptation: string }>
+  preparationSpecifique?: string[]
+  ideesImmersion?: string[]
 }
 
 interface SemaineIABrute {
@@ -70,6 +74,9 @@ interface ProgrammeIABrut {
   objectifsPedagogiques: string[]
   competencesCiblees: string[]
   semaines: SemaineIABrute[]
+  introductionTheme?: IntroductionTheme
+  conclusion?: ConclusionProgramme
+  ideesImmersion?: string[]
 }
 
 // ─── Paramètres de génération ─────────────────────────────────────────────────
@@ -194,6 +201,9 @@ ${resumeCatalogue(catalogueGeneral.slice(0, 20))}
 
 RÈGLE CATALOGUE : Pour utiliser une activité du catalogue (source: "catalogue"), son objectifPedagogique doit contenir un lien explicite au thème "${params.theme}". Sinon, créer une nouvelle activité (source: "generee_ia") spécifiquement thématique.
 
+CONSIGNE COMPLÉMENTAIRE — IMMERSION ET COHÉRENCE D'ENSEMBLE :
+Les activités générées doivent rester adaptées au thème choisi et s'intégrer dans une aventure pédagogique globale. Chaque activité doit aider l'enfant à entrer dans l'univers du thème, développer sa curiosité et donner une cohérence à l'ensemble du programme.
+
 COMPÉTENCES DISPONIBLES (format : ID | Nom | Domaine) :
 ${resumeCompetences(competences)}
 
@@ -207,12 +217,47 @@ CONTRAINTES TECHNIQUES :
 - aAcheter: true uniquement pour les éléments non courants
 - Tâches de préparation : anticipent la semaine suivante (urgence: "prochaine_semaine") ou courante (urgence: "cette_semaine")
 
+ÉTAPE 4 — INTRODUCTION DU THÈME (génère "introductionTheme" au niveau du programme) :
+Avant la liste des activités, conçois une courte introduction pour aider l'adulte à lancer le programme :
+- histoire : une histoire de départ courte qui plonge les enfants dans l'univers du thème "${params.theme}"
+- presentation : une façon concrète de présenter le thème aux enfants (ce que l'adulte dit/montre)
+- rituelLancement : un petit rituel à répéter pour lancer chaque séance/semaine
+- miseEnScene : une idée de mise en scène (déguisement, mission, lieu transformé…) cohérente avec le thème
+
+ÉTAPE 5 — PRÉPARATION ET IMMERSION PAR ACTIVITÉ (champs optionnels par activité, à remplir UNIQUEMENT quand pertinent) :
+- preparationSpecifique : liste d'actions concrètes que l'adulte doit faire avant CETTE activité (impressions, fiches à découper, éléments à fabriquer, déco, indices à cacher, coin thématique à installer…)
+- ideesImmersion : liste de petits accessoires ou idées de mise en scène propres à cette activité (badge, enveloppe de mission, gommettes, carte, déguisement léger…)
+Ne remplis ces deux champs que s'ils apportent une réelle valeur immersive ; sinon laisse un tableau vide.
+
+ÉTAPE 6 — BONUS IMMERSION GLOBAL (génère "ideesImmersion" au niveau du programme) :
+Propose 3 à 6 idées d'accessoires/éléments d'immersion transverses à tout le programme (en complément du matériel pédagogique classique), qui rendent l'ensemble plus vivant (ex : badge d'explorateur, carnet de mission, carte ancienne, sac d'exploration…).
+
+ÉTAPE 7 — CLÔTURE PÉDAGOGIQUE (génère "conclusion" au niveau du programme) :
+Conçois une section de clôture pour la fin du programme :
+- jeuFinal : un petit jeu final en lien avec le thème
+- activiteRestitution : une activité où l'enfant restitue ce qu'il a appris/vécu
+- ideeSouvenir : une idée de souvenir concret à garder du programme
+- questionsBilan : 2-4 questions simples à poser aux enfants pour faire le bilan
+
 FORMAT JSON (répondre UNIQUEMENT avec ce JSON, sans markdown, sans texte avant/après) :
 {
   "titre": "Titre précis incluant le thème",
   "description": "Description en 2 phrases mentionnant le thème et la progression",
   "objectifsPedagogiques": ["Objectif thématique 1", "Objectif thématique 2", "Objectif thématique 3"],
   "competencesCiblees": ["<ID_EXACT_depuis_la_liste_COMPÉTENCES_DISPONIBLES>"],
+  "introductionTheme": {
+    "histoire": "Courte histoire de départ qui plonge les enfants dans l'univers du thème.",
+    "presentation": "Comment l'adulte présente le thème aux enfants.",
+    "rituelLancement": "Petit rituel à répéter pour lancer chaque séance.",
+    "miseEnScene": "Idée de mise en scène cohérente avec le thème."
+  },
+  "ideesImmersion": ["Accessoire/idée bonus immersion 1", "Accessoire/idée bonus immersion 2"],
+  "conclusion": {
+    "jeuFinal": "Petit jeu final en lien avec le thème.",
+    "activiteRestitution": "Activité où l'enfant restitue ce qu'il a appris.",
+    "ideeSouvenir": "Idée de souvenir concret à garder du programme.",
+    "questionsBilan": ["Question de bilan 1", "Question de bilan 2"]
+  },
   "semaines": [
     {
       "numero": 1,
@@ -239,7 +284,9 @@ FORMAT JSON (répondre UNIQUEMENT avec ce JSON, sans markdown, sans texte avant/
           "variantes": [
             {"ageMin": ${params.ageMin}, "ageMax": ${Math.min(params.ageMin + 1, params.ageMax)}, "adaptation": "Version simplifiée pour les plus jeunes."},
             {"ageMin": ${Math.max(params.ageMax - 1, params.ageMin)}, "ageMax": ${params.ageMax}, "adaptation": "Version enrichie pour les plus grands."}
-          ]
+          ],
+          "preparationSpecifique": ["Action de préparation propre à cette activité (laisser [] si non pertinent)."],
+          "ideesImmersion": ["Petit accessoire/idée immersive propre à cette activité (laisser [] si non pertinent)."]
         }
       ],
       "tachesPreparation": [
@@ -308,6 +355,8 @@ function validerActiviteIA(raw: ActiviteIABrute, ordre: number): Omit<ActivitePr
     ageRecommande:         raw.ageRecommande ?? '',
     deroulement:           Array.isArray(raw.deroulement) ? raw.deroulement : [],
     variantes:             Array.isArray(raw.variantes) ? raw.variantes : [],
+    preparationSpecifique: Array.isArray(raw.preparationSpecifique) ? raw.preparationSpecifique : [],
+    ideesImmersion:        Array.isArray(raw.ideesImmersion) ? raw.ideesImmersion : [],
     ordre,
     statutRealisation:     'a_faire',
     archive:               false,
@@ -340,6 +389,9 @@ async function persisterProgramme(
       dateDebut:            params.dateDebut,
       genereParIA:          true,
       modelIA:              'gpt-4o',
+      introductionTheme:    brut.introductionTheme,
+      conclusion:           brut.conclusion,
+      ideesImmersion:       brut.ideesImmersion ?? [],
     },
     [], // semaines embarquées vides — on utilise la table activitesProgramme
   )

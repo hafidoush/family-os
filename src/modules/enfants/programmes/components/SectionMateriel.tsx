@@ -106,6 +106,16 @@ export function SectionMateriel({ programme }: SectionMaterielProps) {
     })
   }, [activites, statuts])
 
+  // Bonus immersion : idées globales du programme + idées propres aux activités, dédupliquées
+  const bonusImmersion: string[] = useMemo(() => {
+    const set = new Set<string>()
+    for (const idee of programme.ideesImmersion ?? []) set.add(idee)
+    for (const act of activites) {
+      for (const idee of act.ideesImmersion ?? []) set.add(idee)
+    }
+    return Array.from(set)
+  }, [programme.ideesImmersion, activites])
+
   const aAcheter  = materiel.filter(m => m.statut === 'a_acheter')
   const possede   = materiel.filter(m => m.statut === 'possede')
   const aVerifier = materiel.filter(m => m.statut === 'a_verifier')
@@ -151,9 +161,21 @@ export function SectionMateriel({ programme }: SectionMaterielProps) {
 
   if (materiel.length === 0) {
     return (
-      <div className="materiel-empty">
-        <span>📦</span>
-        <p>Aucun matériel référencé pour ce programme.</p>
+      <div className="materiel-section">
+        <div className="materiel-empty">
+          <span>📦</span>
+          <p>Aucun matériel référencé pour ce programme.</p>
+        </div>
+        {bonusImmersion.length > 0 && (
+          <div className="materiel-bonus">
+            <h3 className="materiel-bonus__title">✨ Idées d'immersion / bonus</h3>
+            <div className="materiel-bonus__list">
+              {bonusImmersion.map((idee, i) => (
+                <span key={i} className="materiel-bonus__chip">{idee}</span>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
     )
   }
@@ -237,6 +259,18 @@ export function SectionMateriel({ programme }: SectionMaterielProps) {
             : pushDone ? `✓ ${aAcheter.length} ajouté${aAcheter.length > 1 ? 's' : ''} aux courses`
             : `🛒 Ajouter aux courses (${aAcheter.length} item${aAcheter.length > 1 ? 's' : ''})`}
         </button>
+      )}
+
+      {/* Bonus immersion */}
+      {bonusImmersion.length > 0 && (
+        <div className="materiel-bonus">
+          <h3 className="materiel-bonus__title">✨ Idées d'immersion / bonus</h3>
+          <div className="materiel-bonus__list">
+            {bonusImmersion.map((idee, i) => (
+              <span key={i} className="materiel-bonus__chip">{idee}</span>
+            ))}
+          </div>
+        </div>
       )}
     </div>
   )
