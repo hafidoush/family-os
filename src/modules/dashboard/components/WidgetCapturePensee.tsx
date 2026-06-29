@@ -614,11 +614,12 @@ export function WidgetCapturePensee() {
     setRepasExpanded(false)
   }, [contexte.moment])
 
-  const handleChoisirRepas = useCallback(async (recetteId: string) => {
+  const handleChoisirRepas = useCallback(async (slotId: string) => {
     try {
-      const menuActif = await MenuService.getMenuActifOuCreer()
       const jourAuj = JOURS_MENU[new Date().getDay()] as JourMenu
-      await MenuService.upsertSlot({ menuId: menuActif.id, jour: jourAuj, repas: 'diner', recetteId })
+      // Déplace le slot "libre" existant vers le jour choisi plutôt que d'en créer un
+      // nouveau — sinon la recette apparaît en double (libre + assignée au jour).
+      await MenuService.assignerSlotAuJour(slotId, jourAuj, 'diner')
       setRepasExpanded(false)
     } catch { /* silencieux */ }
   }, [])
@@ -709,7 +710,7 @@ export function WidgetCapturePensee() {
                 <button
                   key={r.id}
                   className="widget-hero__repas-btn"
-                  onClick={() => handleChoisirRepas(r.recetteId!)}
+                  onClick={() => handleChoisirRepas(r.id)}
                 >
                   {r.nom}
                 </button>

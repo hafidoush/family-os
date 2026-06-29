@@ -274,6 +274,38 @@ export const MenuService = {
   },
 
   /**
+   * Déplace un slot existant (ex : recette "libre" sans jour) vers un jour/repas précis.
+   * Le slot garde son id — évite de créer un doublon entre la version "libre" et la
+   * version assignée à un jour. Si un autre slot occupait déjà ce jour/repas, il est retiré.
+   */
+  async assignerSlotAuJour(slotId: string, jour: JourMenu, repas: RepasMenu): Promise<void> {
+    const slot = await db.menuSlots.get(slotId);
+    if (!slot) return;
+
+    const occupant = await db.menuSlots
+      .filter(
+        (s) =>
+          s.menu === slot.menu &&
+          s.jour === jour &&
+          s.repas === repas &&
+          s.id !== slotId &&
+          !s.archive &&
+          !s.deletedAt
+      )
+      .first();
+    if (occupant) {
+      await this.removeSlot(occupant.id);
+    }
+
+    await db.menuSlots.update(slotId, {
+      jour,
+      repas,
+      statut: 'prevue' as const,
+      updatedAt: new Date(),
+    });
+  },
+
+  /**
    * Récupère les slots d'un menu, sans les archivés.
    * Résout les recettes associées.
    */
