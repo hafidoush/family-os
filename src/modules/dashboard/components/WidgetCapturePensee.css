@@ -260,7 +260,7 @@
 .widget-hero__repas-card-thumb {
   width: 44px;
   height: 44px;
-  border-radius: 14px;
+  border-radius: 50%;
   overflow: hidden;
   flex-shrink: 0;
   background: #e8e4dc;
