@@ -46,7 +46,8 @@
 .widget-hero__salam,
 .widget-hero__question,
 .widget-hero__question-block,
-.widget-hero__suggestions {
+.widget-hero__suggestions,
+.widget-hero__repas-buttons {
   position: relative;
   z-index: 1;
 }
