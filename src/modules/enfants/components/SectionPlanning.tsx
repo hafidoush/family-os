@@ -190,7 +190,13 @@ export function SectionPlanning() {
 
   const [placingId, setPlacingId] = useState<string | null>(null)
 
-  // Activités à placer : celles de la semaine affichée dans le programme (± fenêtre 3 sem.)
+  // Activités à placer : uniquement celles de la semaine du programme correspondant
+  // à la semaine affichée (± rattrapage des semaines en retard, mais seulement
+  // quand on regarde la semaine réelle actuelle — pas en naviguant vers une autre semaine,
+  // sinon le retard d'un programme de plusieurs semaines réapparaît partout).
+  const lundiCourantISO = toISO(getLundi(new Date()))
+  const estSemaineReelleActuelle = lundiISO === lundiCourantISO
+
   const activitesPlacer = useLiveQuery(async () => {
     const programmes = await db.programmesPedagogiques
       .where('statut').equals('actif')
@@ -204,7 +210,7 @@ export function SectionPlanning() {
       const semaineCourante = semaineEnCours(prog.dateDebut)
       // Semaine du programme correspondant à la semaine affichée
       const semaineAffichee = semaineEnCours(prog.dateDebut, lundi)
-      // Fenêtre : semaine affichée ± jusqu'à 3 semaines en arrière (non sautées)
+      // Fenêtre de rattrapage (jusqu'à 2 semaines en arrière) — uniquement sur la semaine réelle actuelle
       const semaineMin = Math.max(1, semaineCourante - 2)
 
       const acts = await db.activitesProgramme
@@ -212,9 +218,9 @@ export function SectionPlanning() {
         .filter(a =>
           !a.archive && !a.deletedAt && !a.datePlanifiee &&
           a.statutRealisation !== 'realise' && a.statutRealisation !== 'saute' &&
-          // Semaine affichée ou en retard dans la fenêtre des 3 semaines
+          // Semaine affichée ou, seulement sur la semaine réelle actuelle, en retard dans la fenêtre
           (a.semaineNumero === semaineAffichee ||
-           (a.semaineNumero >= semaineMin && a.semaineNumero < semaineCourante))
+           (estSemaineReelleActuelle && a.semaineNumero >= semaineMin && a.semaineNumero < semaineCourante))
         )
         .toArray()
 
@@ -440,7 +446,7 @@ export function SectionPlanning() {
     }
   }
 
-  const isCurrentWeek = lundiISO === toISO(getLundi(new Date()))
+  const isCurrentWeek = estSemaineReelleActuelle
 
   // ── Rendu ─────────────────────────────────────────────────────────────────
 
