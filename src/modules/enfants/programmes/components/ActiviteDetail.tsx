@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useLiveQuery } from 'dexie-react-hooks'
 import './ActiviteDetail.css'
-import { marquerActiviteRealisee, marquerActiviteSautee } from '../services/programmeService'
+import { marquerActiviteRealisee, marquerActiviteSautee, annulerStatutActivite } from '../services/programmeService'
 import { db } from '../../../../core/db/database'
 import type { ActiviteProgramme } from '../../../../shared/types'
 
@@ -22,8 +22,15 @@ interface ActiviteDetailProps {
   onClose: () => void
 }
 
-export function ActiviteDetail({ activite, onClose }: ActiviteDetailProps) {
-  const [notes, setNotes] = useState(activite.notesParent ?? '')
+export function ActiviteDetail({ activite: activiteInitiale, onClose }: ActiviteDetailProps) {
+  // Suit l'état réel en base (et non un instantané figé) pour que la fiche
+  // se mette à jour immédiatement après "Réaliser" / "Sauter" / "Annuler".
+  const activite = useLiveQuery(
+    () => db.activitesProgramme.get(activiteInitiale.id),
+    [activiteInitiale.id]
+  ) ?? activiteInitiale
+
+  const [notes, setNotes] = useState(activiteInitiale.notesParent ?? '')
   const [enCours, setEnCours] = useState(false)
   const [confirmerSaut, setConfirmerSaut] = useState(false)
 
@@ -41,12 +48,17 @@ export function ActiviteDetail({ activite, onClose }: ActiviteDetailProps) {
     setEnCours(true)
     await marquerActiviteRealisee(activite.id, notes || undefined)
     setEnCours(false)
-    onClose()
+    // On laisse la fiche ouverte (bannière + bouton Annuler) au cas où c'est une erreur de saisie
   }
 
   const handleSauter = async () => {
     await marquerActiviteSautee(activite.id)
-    onClose()
+  }
+
+  const handleAnnuler = async () => {
+    setEnCours(true)
+    await annulerStatutActivite(activite.id)
+    setEnCours(false)
   }
 
   return (
@@ -284,6 +296,13 @@ export function ActiviteDetail({ activite, onClose }: ActiviteDetailProps) {
 
         {(estRealisee || estSautee) && (
           <div className="ad-footer">
+            <button
+              className="ad-btn ad-btn--ghost"
+              onClick={handleAnnuler}
+              disabled={enCours}
+            >
+              {enCours ? '...' : '↩ Annuler — je me suis trompé(e)'}
+            </button>
             <button className="ad-btn ad-btn--ghost" onClick={onClose}>Fermer</button>
           </div>
         )}

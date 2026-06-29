@@ -182,6 +182,20 @@ export async function marquerActiviteSautee(activiteId: string): Promise<void> {
   if (activite) await recalculerProgression(activite.programmeId)
 }
 
+/**
+ * Annule le statut "réalisée" ou "sautée" d'une activité (erreur de saisie).
+ * Revient à "planifié" si une date était déjà choisie, sinon "à faire".
+ */
+export async function annulerStatutActivite(activiteId: string): Promise<void> {
+  const activite = await db.activitesProgramme.get(activiteId)
+  if (!activite) return
+  await db.activitesProgramme.update(activiteId, withUpdate({
+    statutRealisation: activite.datePlanifiee ? 'planifie' : 'a_faire',
+    dateRealisation: undefined,
+  }))
+  await recalculerProgression(activite.programmeId)
+}
+
 export async function reordonnerActivites(
   programmeId: string,
   semaineNumero: number,
