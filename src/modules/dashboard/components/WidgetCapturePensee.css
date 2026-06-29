@@ -232,6 +232,90 @@
   border-color: rgba(198, 156, 226, 0.55);
 }
 
+/* ── Mini-carte repas du soir choisi ── */
+.widget-hero__repas-card {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  max-width: 340px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: rgba(255, 255, 255, 0.92);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  border: none;
+  border-radius: 20px;
+  padding: 8px 12px;
+  box-shadow: 0 2px 12px rgba(30, 20, 50, 0.08);
+  cursor: pointer;
+  text-align: left;
+  transition: transform 0.15s ease;
+}
+
+.widget-hero__repas-card:active {
+  transform: scale(0.98);
+}
+
+.widget-hero__repas-card-thumb {
+  width: 44px;
+  height: 44px;
+  border-radius: 14px;
+  overflow: hidden;
+  flex-shrink: 0;
+  background: #e8e4dc;
+}
+
+.widget-hero__repas-card-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.widget-hero__repas-card-thumb-placeholder {
+  display: block;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(145deg, #d8d0e8, #e8d8e0);
+}
+
+.widget-hero__repas-card-body {
+  flex: 1;
+  min-width: 0;
+}
+
+.widget-hero__repas-card-nom {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 700;
+  color: #1E1C2E;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.widget-hero__repas-card-sub {
+  margin: 2px 0 0;
+  font-size: 12px;
+  color: #9b8db5;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.widget-hero__repas-card-icon {
+  flex-shrink: 0;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: rgba(124, 58, 237, 0.12);
+  color: #7C3AED;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
 /* ── Boutons recettes de la semaine ── */
 .widget-hero__repas-buttons {
   position: relative;
@@ -246,7 +330,9 @@
   padding: 7px 14px;
   border-radius: 999px;
   border: 1.5px solid rgba(212, 153, 10, 0.35);
-  background: rgba(212, 153, 10, 0.07);
+  background: rgba(255, 252, 245, 0.92);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
   color: #8a6200;
   font-size: 13px;
   font-weight: 500;
@@ -260,12 +346,12 @@
 
 .widget-hero__repas-btn:hover,
 .widget-hero__repas-btn:active {
-  background: rgba(212, 153, 10, 0.15);
+  background: rgba(255, 248, 232, 0.97);
   border-color: rgba(212, 153, 10, 0.6);
 }
 
 .widget-hero__repas-btn--more {
-  background: rgba(212, 153, 10, 0.04);
+  background: rgba(255, 252, 245, 0.85);
   color: #b08000;
   font-weight: 600;
 }

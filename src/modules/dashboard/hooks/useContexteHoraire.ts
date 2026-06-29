@@ -25,6 +25,9 @@ export interface RepasDisponible {
 export interface DinerCeSoir {
   nom: string
   recetteId?: string
+  image?: Blob
+  imageData?: string
+  accompagnements?: string[]
 }
 
 export interface ContexteHoraire {
@@ -150,7 +153,12 @@ export function useContexteHoraire(): ContexteHoraire {
     if (!slot) return null
     if (!slot.recette) return { nom: slot.descriptionLibre ?? 'Dîner prévu' }
     const recette = await db.recettes.get(slot.recette)
-    return { nom: recette?.nom ?? '—', recetteId: slot.recette }
+    return {
+      nom: recette?.nom ?? '—',
+      recetteId: slot.recette,
+      image: recette?.image,
+      imageData: recette?.imageData,
+    }
   }, [moment, todayISO])
 
   // Nuit : aperçu de demain
@@ -238,11 +246,8 @@ export function useContexteHoraire(): ContexteHoraire {
       if (!hasDiner) sousParts.push("Qu'est-ce qu'on mange ce soir ?")
       const sousTitre = sousParts.join(' · ') || 'Tout avance à son rythme'
 
-      // Chips : dîner choisi en premier si applicable, puis activités + tâches
+      // Chips : activités + tâches (le dîner choisi a sa propre carte dédiée)
       const chips: ChipContextuel[] = []
-      if (hasDiner && dinerCeSoir) {
-        chips.push({ label: `🍽️ Ce soir : ${dinerCeSoir.nom}`, recetteId: dinerCeSoir.recetteId })
-      }
       chips.push({ label: 'Activités', route: '/enfants', ...(nbActiv > 0 ? { badge: `${nbActiv}` } : {}) })
       chips.push({ label: 'Mes tâches', route: '/maison' })
 
@@ -250,16 +255,13 @@ export function useContexteHoraire(): ContexteHoraire {
     }
 
     if (moment === 'aprem_soir') {
-      const hasDiner = dinerCeSoir != null
       const titreSoir = heure < 18 ? "L'après-midi continue" : 'La soirée commence'
 
       const sousParts: string[] = []
       if (badgeEcoleDem) sousParts.push(badgeEcoleDem)
       const sousTitre = sousParts.join(' · ') || (heure < 18 ? 'Ce soir se prépare doucement' : 'Le reste attendra demain')
 
-      const chips: ChipContextuel[] = hasDiner && dinerCeSoir
-        ? [{ label: `🍽️ Ce soir : ${dinerCeSoir.nom}`, recetteId: dinerCeSoir.recetteId }]
-        : []
+      const chips: ChipContextuel[] = []
 
       return { moment, titre: titreSoir, sousTitre, chips, repasDisponibles, dinerCeSoir }
     }

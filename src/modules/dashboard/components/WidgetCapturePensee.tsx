@@ -38,6 +38,50 @@ const CheckIcon = () => (
   </svg>
 )
 
+const ForkKnifeIcon = () => (
+  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M7 2v6a2 2 0 0 0 2 2v0a2 2 0 0 0 2-2V2"/>
+    <path d="M9 10v12"/>
+    <path d="M17 2c-1.5 1.5-2 3-2 5.5S15.5 12 17 12s2-2 2-4.5S18.5 3.5 17 2Z"/>
+    <path d="M17 12v10"/>
+  </svg>
+)
+
+// ─── Mini-carte repas du soir ──────────────────────────────────────────────────
+
+function RepasCard({ nom, image, imageData, accompagnements, onClick }: {
+  nom: string
+  image?: Blob
+  imageData?: string
+  accompagnements?: string[]
+  onClick?: () => void
+}) {
+  const [blobSrc, setBlobSrc] = useState<string | null>(null)
+  useEffect(() => {
+    if (!image) return
+    const url = URL.createObjectURL(image)
+    setBlobSrc(url)
+    return () => URL.revokeObjectURL(url)
+  }, [image])
+
+  const src = imageData ?? blobSrc
+
+  return (
+    <button className="widget-hero__repas-card" onClick={onClick}>
+      <div className="widget-hero__repas-card-thumb">
+        {src ? <img src={src} alt={nom} /> : <span className="widget-hero__repas-card-thumb-placeholder" />}
+      </div>
+      <div className="widget-hero__repas-card-body">
+        <p className="widget-hero__repas-card-nom">{nom}</p>
+        {accompagnements && accompagnements.length > 0 && (
+          <p className="widget-hero__repas-card-sub">avec {accompagnements.join(', ')}</p>
+        )}
+      </div>
+      <span className="widget-hero__repas-card-icon"><ForkKnifeIcon /></span>
+    </button>
+  )
+}
+
 // ─── Labels confirmation ──────────────────────────────────────────────────────
 
 const TYPE_LABEL: Record<string, string> = {
@@ -638,6 +682,17 @@ export function WidgetCapturePensee() {
             <p className="widget-hero__sous-titre">{contexte.sousTitre}</p>
           )}
         </div>
+
+        {/* ── Carte dîner choisi ── */}
+        {contexte.dinerCeSoir && (
+          <RepasCard
+            nom={contexte.dinerCeSoir.nom}
+            image={contexte.dinerCeSoir.image}
+            imageData={contexte.dinerCeSoir.imageData}
+            accompagnements={contexte.dinerCeSoir.accompagnements}
+            onClick={() => contexte.dinerCeSoir?.recetteId && navigate('/cuisine', { state: { openRecette: contexte.dinerCeSoir.recetteId } })}
+          />
+        )}
 
         {/* ── Boutons recettes : 11h–21h sans dîner choisi ── */}
         {(() => {
