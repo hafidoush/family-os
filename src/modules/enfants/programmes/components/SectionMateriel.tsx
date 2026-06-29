@@ -107,38 +107,52 @@ export function SectionMateriel({ programme }: SectionMaterielProps) {
   }, [activites, statuts])
 
   // Bonus immersion : idées globales du programme + idées propres aux activités, dédupliquées
-  const bonusImmersion: string[] = useMemo(() => {
+  // Cochables comme le matériel classique (même cycle de statut), avec une clé dédiée
+  // pour ne jamais entrer en collision avec un nom de matériel réel.
+  const bonusImmersion: MaterielAgrege[] = useMemo(() => {
     const set = new Set<string>()
     for (const idee of programme.ideesImmersion ?? []) set.add(idee)
     for (const act of activites) {
       for (const idee of act.ideesImmersion ?? []) set.add(idee)
     }
-    return Array.from(set)
-  }, [programme.ideesImmersion, activites])
+    return Array.from(set).map(idee => {
+      const key = `immersion::${normaliser(idee)}`
+      return {
+        nomNormalise: key,
+        nom: idee,
+        optionnel: true,
+        activitesTitres: [],
+        statut: statuts[key] ?? 'a_verifier',
+      }
+    })
+  }, [programme.ideesImmersion, activites, statuts])
 
   const aAcheter  = materiel.filter(m => m.statut === 'a_acheter')
   const possede   = materiel.filter(m => m.statut === 'possede')
   const aVerifier = materiel.filter(m => m.statut === 'a_verifier')
+
+  const bonusAAcheter = bonusImmersion.filter(m => m.statut === 'a_acheter')
 
   const affiche = filtre === 'tous' ? materiel
     : filtre === 'a_acheter' ? aAcheter
     : filtre === 'possede'   ? possede
     : aVerifier
 
-  // Changer le statut d'un item
+  // Changer le statut d'un item (matériel classique ou bonus immersion — même mécanisme)
   async function toggleStatut(item: MaterielAgrege) {
     const newStatut = STATUT_CYCLE[item.statut]
     const newStatuts = { ...statuts, [item.nomNormalise]: newStatut }
     await db.programmesPedagogiques.update(programme.id, withUpdate({ materielStatuts: newStatuts }))
   }
 
-  // Pousser les "à acheter" vers Courses
+  // Pousser les "à acheter" (matériel + bonus immersion) vers Courses
   async function envoyerVersCourses() {
-    if (pushing || aAcheter.length === 0) return
+    const items = [...aAcheter, ...bonusAAcheter]
+    if (pushing || items.length === 0) return
     setPushing(true)
     try {
       await Promise.all(
-        aAcheter.map(item =>
+        items.map(item =>
           db.coursesItems.add(newEntity<CoursesItem>({
             produit: '',
             nom: item.nom,
@@ -167,14 +181,42 @@ export function SectionMateriel({ programme }: SectionMaterielProps) {
           <p>Aucun matériel référencé pour ce programme.</p>
         </div>
         {bonusImmersion.length > 0 && (
-          <div className="materiel-bonus">
-            <h3 className="materiel-bonus__title">✨ Idées d'immersion / bonus</h3>
-            <div className="materiel-bonus__list">
-              {bonusImmersion.map((idee, i) => (
-                <span key={i} className="materiel-bonus__chip">{idee}</span>
-              ))}
+          <>
+            <div className="materiel-bonus">
+              <h3 className="materiel-bonus__title">✨ Idées d'immersion / bonus</h3>
+              <p className="materiel-hint">
+                Appuyez sur un item pour changer son statut : À vérifier → J'ai déjà → À acheter
+              </p>
+              <div className="materiel-bonus-list">
+                {bonusImmersion.map(item => {
+                  const cfg = STATUT_CONFIG[item.statut]
+                  return (
+                    <button
+                      key={item.nomNormalise}
+                      className="materiel-item"
+                      style={{ background: cfg.bg }}
+                      onClick={() => toggleStatut(item)}
+                    >
+                      <span className="materiel-item__icon" style={{ color: cfg.color }}>{cfg.icon}</span>
+                      <div className="materiel-item__body">
+                        <span className="materiel-item__nom">{item.nom}</span>
+                      </div>
+                      <span className="materiel-item__statut" style={{ color: cfg.color }}>
+                        {cfg.label}
+                      </span>
+                    </button>
+                  )
+                })}
+              </div>
             </div>
-          </div>
+            {bonusAAcheter.length > 0 && (
+              <button className="materiel-courses-btn" onClick={envoyerVersCourses} disabled={pushing}>
+                {pushing ? 'Ajout en cours…'
+                  : pushDone ? `✓ ${bonusAAcheter.length} ajouté${bonusAAcheter.length > 1 ? 's' : ''} aux courses`
+                  : `🛒 Ajouter aux courses (${bonusAAcheter.length} item${bonusAAcheter.length > 1 ? 's' : ''})`}
+              </button>
+            )}
+          </>
         )}
       </div>
     )
@@ -248,29 +290,48 @@ export function SectionMateriel({ programme }: SectionMaterielProps) {
         })}
       </div>
 
-      {/* Action Courses */}
-      {aAcheter.length > 0 && (
+      {/* Bonus immersion */}
+      {bonusImmersion.length > 0 && (
+        <div className="materiel-bonus">
+          <h3 className="materiel-bonus__title">✨ Idées d'immersion / bonus</h3>
+          <p className="materiel-hint">
+            Appuyez sur un item pour changer son statut : À vérifier → J'ai déjà → À acheter
+          </p>
+          <div className="materiel-bonus-list">
+            {bonusImmersion.map(item => {
+              const cfg = STATUT_CONFIG[item.statut]
+              return (
+                <button
+                  key={item.nomNormalise}
+                  className="materiel-item"
+                  style={{ background: cfg.bg }}
+                  onClick={() => toggleStatut(item)}
+                >
+                  <span className="materiel-item__icon" style={{ color: cfg.color }}>{cfg.icon}</span>
+                  <div className="materiel-item__body">
+                    <span className="materiel-item__nom">{item.nom}</span>
+                  </div>
+                  <span className="materiel-item__statut" style={{ color: cfg.color }}>
+                    {cfg.label}
+                  </span>
+                </button>
+              )
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* Action Courses — matériel classique + bonus immersion à acheter */}
+      {(aAcheter.length + bonusAAcheter.length) > 0 && (
         <button
           className="materiel-courses-btn"
           onClick={envoyerVersCourses}
           disabled={pushing}
         >
           {pushing ? 'Ajout en cours…'
-            : pushDone ? `✓ ${aAcheter.length} ajouté${aAcheter.length > 1 ? 's' : ''} aux courses`
-            : `🛒 Ajouter aux courses (${aAcheter.length} item${aAcheter.length > 1 ? 's' : ''})`}
+            : pushDone ? `✓ ${aAcheter.length + bonusAAcheter.length} ajouté${(aAcheter.length + bonusAAcheter.length) > 1 ? 's' : ''} aux courses`
+            : `🛒 Ajouter aux courses (${aAcheter.length + bonusAAcheter.length} item${(aAcheter.length + bonusAAcheter.length) > 1 ? 's' : ''})`}
         </button>
-      )}
-
-      {/* Bonus immersion */}
-      {bonusImmersion.length > 0 && (
-        <div className="materiel-bonus">
-          <h3 className="materiel-bonus__title">✨ Idées d'immersion / bonus</h3>
-          <div className="materiel-bonus__list">
-            {bonusImmersion.map((idee, i) => (
-              <span key={i} className="materiel-bonus__chip">{idee}</span>
-            ))}
-          </div>
-        </div>
       )}
     </div>
   )
