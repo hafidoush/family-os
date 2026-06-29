@@ -245,7 +245,7 @@
   backdrop-filter: blur(6px);
   -webkit-backdrop-filter: blur(6px);
   border: none;
-  border-radius: 20px;
+  border-radius: 999px;
   padding: 8px 12px;
   box-shadow: 0 2px 12px rgba(30, 20, 50, 0.08);
   cursor: pointer;
