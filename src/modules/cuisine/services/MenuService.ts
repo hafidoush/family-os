@@ -309,6 +309,7 @@ export const MenuService = {
     const slot = await db.menuSlots.get(slotId);
     if (!slot) return;
 
+    // Supprimer tout slot occupant déjà ce jour/repas
     const occupant = await db.menuSlots
       .filter(
         (s) =>
@@ -322,6 +323,27 @@ export const MenuService = {
       .first();
     if (occupant) {
       await this.removeSlot(occupant.id);
+    }
+
+    // Supprimer tout autre slot libre pour la même recette (évite les doublons libre + assigné)
+    if (slot.recette) {
+      const now = new Date();
+      const doublesLibres = await db.menuSlots
+        .filter(
+          (s) =>
+            s.menu === slot.menu &&
+            s.recette === slot.recette &&
+            s.id !== slotId &&
+            !s.jour &&
+            !s.archive &&
+            !s.deletedAt
+        )
+        .toArray();
+      await Promise.all(
+        doublesLibres.map((s) =>
+          db.menuSlots.update(s.id, { archive: true, deletedAt: now, updatedAt: now })
+        )
+      );
     }
 
     await db.menuSlots.update(slotId, {
