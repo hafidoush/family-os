@@ -315,6 +315,30 @@
 
 /* ─── Ingrédients ─────────────────────────────────────────────────────────── */
 
+.recette-detail__ingredients-groupes {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.recette-detail__ing-groupe {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.recette-detail__ing-groupe-titre {
+  font-size: var(--text-xs, 0.72rem);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: var(--color-lavande, #7C6FAF);
+  margin: 0;
+  padding-bottom: 2px;
+  border-bottom: 1px solid var(--color-lavande, #7C6FAF);
+  opacity: 0.75;
+}
+
 .recette-detail__ingredients {
   list-style: none;
   margin: 0;

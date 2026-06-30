@@ -47,6 +47,7 @@ export interface IngredientValideFormData {
   quantite?: number
   unite?: string
   optionnel: boolean
+  groupe?: string
 }
 
 // ─── Initialiser un import ────────────────────────────────────────────────────
@@ -142,6 +143,7 @@ export async function validerEtSauvegarder(
           quantite:  i.quantite ?? 1,
           unite:     i.unite,
           optionnel: i.optionnel,
+          groupe:    i.groupe,
         }
       })
   )

@@ -35,6 +35,7 @@ RÈGLES D'EXTRACTION :
 - confidenceScore : 0.0–1.0 (1.0 = recette claire et complète, 0.3 = informations partielles)
 - Si le contenu ne contient pas de recette, retourne {"erreur": "Aucune recette détectée"}
 - notes : regroupe TOUT ce qui n'est pas une étape de cuisson — astuces du chef, variantes proposées, conseils de conservation, suggestions de présentation, anecdotes. Si plusieurs éléments, sépare-les par un saut de ligne. Si rien, omets le champ.
+- groupe (dans ingredients) : si la recette contient des sous-préparations distinctes (ex: une pâte, une béchamel, une sauce tomate, une garniture, une crème…), affecte à chaque ingrédient le nom de sa sous-préparation. Si tous les ingrédients font partie d'une seule préparation sans distinction, omets le champ groupe sur tous les ingrédients.
 
 FORMAT JSON ATTENDU (sans markdown, sans backticks) :
 {
@@ -44,8 +45,9 @@ FORMAT JSON ATTENDU (sans markdown, sans backticks) :
   "portions": 4,
   "difficulte": "facile",
   "ingredients": [
-    {"nom": "farine", "quantite": 200, "unite": "g", "optionnel": false},
-    {"nom": "sucre vanillé", "quantite": 1, "unite": "sachet", "optionnel": true}
+    {"nom": "farine", "quantite": 200, "unite": "g", "optionnel": false, "groupe": "Pâte"},
+    {"nom": "sucre vanillé", "quantite": 1, "unite": "sachet", "optionnel": true, "groupe": "Pâte"},
+    {"nom": "lait", "quantite": 250, "unite": "ml", "optionnel": false, "groupe": "Sauce béchamel"}
   ],
   "etapes": [
     "Préchauffer le four à 180°C (th. 6).",
@@ -81,7 +83,7 @@ FORMAT JSON ATTENDU :
   "portions": 4,
   "difficulte": "moyen",
   "ingredients": [
-    {"nom": "beurre", "quantite": 100, "unite": "g", "optionnel": false}
+    {"nom": "beurre", "quantite": 100, "unite": "g", "optionnel": false, "groupe": "Pâte"}
   ],
   "etapes": ["Étape 1 complète.", "Étape 2 complète."],
   "notes": "Astuce ou variante visible dans l'image, si présente.",
@@ -124,6 +126,7 @@ function validerIngredient(raw: RawIngredient): IngredientExtrait | null {
     quantite:  typeof raw.quantite === 'number' ? raw.quantite : undefined,
     unite:     raw.unite?.trim(),
     optionnel: raw.optionnel === true,
+    groupe:    raw.groupe?.trim() || undefined,
   }
 }
 
@@ -159,7 +162,7 @@ function validerExtraction(raw: ExtractedRaw, sourceUrl?: string): RecetteExtrac
 
 import { db } from '../db/database'
 
-type RawIngredient = { nom?: string; quantite?: number; unite?: string; optionnel?: boolean }
+type RawIngredient = { nom?: string; quantite?: number; unite?: string; optionnel?: boolean; groupe?: string }
 
 function normaliser(s: string): string {
   return s.toLowerCase()

@@ -264,8 +264,21 @@ export function RecetteDetail({ recetteId, onBack, onEdit }: Props) {
             )}
           </div>
 
-          <ul className="recette-detail__ingredients">
-            {ingredients.map((ing) => {
+          {(() => {
+            // Regrouper les ingrédients par sous-préparation
+            const groupes: Array<{ nom: string | null; items: typeof ingredients }> = []
+            const seen = new Map<string, typeof ingredients>()
+            for (const ing of ingredients) {
+              const key = ing.groupe ?? ''
+              if (!seen.has(key)) {
+                seen.set(key, [])
+                groupes.push({ nom: ing.groupe ?? null, items: seen.get(key)! })
+              }
+              seen.get(key)!.push(ing)
+            }
+            const avecGroupes = groupes.some(g => g.nom !== null)
+
+            const renderIng = (ing: typeof ingredients[0]) => {
               const produit = produitsMap.get(ing.produit)
               const qte = ing.quantite * portionsMultiplier
               const qteAffichee = Number.isInteger(qte) ? qte : qte.toFixed(1)
@@ -307,8 +320,27 @@ export function RecetteDetail({ recetteId, onBack, onEdit }: Props) {
                   </span>
                 </li>
               )
-            })}
-          </ul>
+            }
+
+            if (!avecGroupes) {
+              return <ul className="recette-detail__ingredients">{ingredients.map(renderIng)}</ul>
+            }
+
+            return (
+              <div className="recette-detail__ingredients-groupes">
+                {groupes.map((g, gi) => (
+                  <div key={gi} className="recette-detail__ing-groupe">
+                    {g.nom && (
+                      <p className="recette-detail__ing-groupe-titre">{g.nom}</p>
+                    )}
+                    <ul className="recette-detail__ingredients">
+                      {g.items.map(renderIng)}
+                    </ul>
+                  </div>
+                ))}
+              </div>
+            )
+          })()}
         </section>
       )}
 

@@ -401,6 +401,7 @@ export interface RecetteIngredient extends AuditFields {
   quantite: number
   unite?: string
   optionnel: boolean
+  groupe?: string  // ex: "Béchamel", "Sauce tomate" — regroupe les sous-préparations
 }
 
 export interface Menu extends AuditWithDevice {
@@ -957,6 +958,7 @@ export interface IngredientExtrait {
   unite?: string
   optionnel: boolean
   produitMatchId?: string              // Produit.id — si correspondance trouvée
+  groupe?: string                      // ex: "Béchamel", "Sauce tomate"
 }
 
 export interface RecetteExtractee {

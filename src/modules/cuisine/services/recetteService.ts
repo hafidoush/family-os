@@ -50,6 +50,7 @@ export interface IngredientFormData {
   quantite: number
   unite?: string
   optionnel: boolean
+  groupe?: string
 }
 
 // ─── Recette CRUD ─────────────────────────────────────────────────────────────
@@ -75,6 +76,7 @@ export async function createRecette(
         quantite: ing.quantite,
         unite: ing.unite,
         optionnel: ing.optionnel,
+        groupe: ing.groupe,
       })
     )
   }
@@ -112,6 +114,7 @@ export async function updateRecette(
           quantite: ing.quantite,
           unite: ing.unite,
           optionnel: ing.optionnel,
+          groupe: ing.groupe,
         })
       )
     }

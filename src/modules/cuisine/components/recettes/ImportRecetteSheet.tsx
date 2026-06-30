@@ -147,6 +147,7 @@ function fromExtrait(ing: IngredientExtrait): IngredientEditable {
     quantite:   ing.quantite,
     unite:      ing.unite,
     optionnel:  ing.optionnel,
+    groupe:     ing.groupe,
   }
 }
 
