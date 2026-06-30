@@ -13,7 +13,7 @@ import { db } from '../../../../core/db/database'
 import { newEntity, withUpdate } from '../../../../core/db/helpers'
 import { hasOpenAIKey } from '../../../../core/ai/openaiService'
 import { genererPlanningSession, cocherTachePlanning } from '../../../../core/ai/batchPlanningService'
-import type { Recette, SessionPreparation, BlocTimeline, ConservationRecette } from '../../../../shared/types'
+import type { Recette, SessionPreparation, BlocTimeline, ConservationRecette, PlanningGenere } from '../../../../shared/types'
 import { type BatchCategorie, BATCH_CATEGORIES, matchesBatchCategorie } from './batchTypes'
 import './PreparationHebdo.css'
 
@@ -179,6 +179,118 @@ export function ConservationCard({ item }: { item: ConservationRecette }) {
   )
 }
 
+// ─── Timeline condensée + modal détail (vue session active) ───────────────────
+
+function BlocCard({ bloc, recettesParId, onClick }: {
+  bloc: BlocTimeline
+  recettesParId: Map<string, string>
+  onClick: () => void
+}) {
+  const nbFait = bloc.taches.filter(t => t.fait).length
+  const toutFait = nbFait === bloc.taches.length
+  const recettesUniques = [...new Set(bloc.taches.map(t => recettesParId.get(t.recetteId) ?? t.recetteId))]
+
+  return (
+    <button className="timeline-card" onClick={onClick}>
+      <div className="timeline-card__left">
+        <span className="timeline-card__plage">
+          {formatMinutes(bloc.tempsDebut)}<span className="timeline-card__arrow"> → </span>{formatMinutes(bloc.tempsFin)}
+        </span>
+        <span className="timeline-card__duree">({bloc.tempsFin - bloc.tempsDebut} min)</span>
+      </div>
+      <div className="timeline-card__center">
+        <span className="timeline-card__count">{bloc.taches.length} tâche{bloc.taches.length > 1 ? 's' : ''}</span>
+        <span className="timeline-card__recettes">{recettesUniques.join(' · ')}</span>
+      </div>
+      <div className="timeline-card__right">
+        {toutFait
+          ? <span className="timeline-card__dot timeline-card__dot--done" title="Tout fait" />
+          : nbFait > 0
+            ? <span className="timeline-card__dot timeline-card__dot--partial" title={`${nbFait}/${bloc.taches.length}`} />
+            : <span className="timeline-card__chevron">›</span>
+        }
+      </div>
+    </button>
+  )
+}
+
+function BlocDetailModal({ bloc, recettesParId, sessionId, onClose }: {
+  bloc: BlocTimeline
+  recettesParId: Map<string, string>
+  sessionId: string
+  onClose: () => void
+}) {
+  return (
+    <div className="batch-overlay" onClick={onClose}>
+      <div className="batch-modal batch-modal--planning" onClick={e => e.stopPropagation()}>
+        <div className="batch-modal__header">
+          <div>
+            <span className="batch-modal__title">
+              {formatMinutes(bloc.tempsDebut)} → {formatMinutes(bloc.tempsFin)}
+            </span>
+            <span className="batch-modal__subtitle"> · {bloc.tempsFin - bloc.tempsDebut} min</span>
+          </div>
+          <button className="batch-modal__close" onClick={onClose}>✕</button>
+        </div>
+        <div className="batch-modal__body batch-modal__body--planning">
+          {bloc.taches.map((t, i) => (
+            <div
+              key={`${t.recetteId}-${t.etapeId}-${i}`}
+              className={['planning-tache', `planning-tache--${t.type}`, t.fait ? 'planning-tache--fait' : ''].filter(Boolean).join(' ')}
+            >
+              <div className="planning-tache__header">
+                <button
+                  className={`planning-tache__check${t.fait ? ' planning-tache__check--fait' : ''}`}
+                  onClick={() => void cocherTachePlanning(sessionId, t.recetteId, t.etapeId, !t.fait)}
+                  aria-label={t.fait ? 'Marquer comme à faire' : 'Marquer comme fait'}
+                >
+                  {t.fait ? '✓' : ''}
+                </button>
+                <span className={`planning-tache__badge planning-tache__badge--${t.type}`}>
+                  {t.type === 'actif' ? '● Actif' : '○ Passif'}
+                </span>
+                <span className="planning-tache__recette">{recettesParId.get(t.recetteId) ?? t.recetteId}</span>
+              </div>
+              <p className="planning-tache__desc">{t.description}</p>
+              {t.equipement.filter(e => e !== 'aucun').length > 0 && (
+                <div className="planning-tache__equip">
+                  {t.equipement.filter(e => e !== 'aucun').map(e => (
+                    <span key={e} className="planning-tache__equip-badge">{EQUIPEMENT_LABEL[e] ?? e}</span>
+                  ))}
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function TimelineCondensee({ planning, recettesParId, sessionId }: {
+  planning: PlanningGenere
+  recettesParId: Map<string, string>
+  sessionId: string
+}) {
+  const [blocOuvert, setBlocOuvert] = useState<number | null>(null)
+
+  return (
+    <div className="timeline-condensee">
+      {planning.timeline.map((bloc, i) => (
+        <BlocCard key={i} bloc={bloc} recettesParId={recettesParId} onClick={() => setBlocOuvert(i)} />
+      ))}
+      {blocOuvert !== null && (
+        <BlocDetailModal
+          bloc={planning.timeline[blocOuvert]}
+          recettesParId={recettesParId}
+          sessionId={sessionId}
+          onClose={() => setBlocOuvert(null)}
+        />
+      )}
+    </div>
+  )
+}
+
 // ─── Session en cours ─────────────────────────────────────────────────────────
 
 function SessionEnCours({ session, onTerminer, onRelancerPlanning }: {
@@ -187,7 +299,7 @@ function SessionEnCours({ session, onTerminer, onRelancerPlanning }: {
   onRelancerPlanning: () => void
 }) {
   const [conseilsOuverts, setConseilsOuverts] = useState(false)
-  const [alertesOuvertes, setAlertesOuvertes] = useState(false)
+  const [alertesOuverts, setAlertesOuverts] = useState(false)
 
   const recettes = useLiveQuery(
     async () => {
@@ -256,12 +368,8 @@ function SessionEnCours({ session, onTerminer, onRelancerPlanning }: {
             </span>
           </div>
 
-          {/* Timeline */}
-          <div className="planning-timeline">
-            {planning.timeline.map((bloc, i) => (
-              <BlocTimelineItem key={i} bloc={bloc} recettesParId={recettesParId} sessionId={session.id} />
-            ))}
-          </div>
+          {/* Timeline condensée + modal détail */}
+          <TimelineCondensee planning={planning} recettesParId={recettesParId} sessionId={session.id} />
 
           {/* Conservation */}
           {planning.conservation.length > 0 && (
@@ -296,12 +404,12 @@ function SessionEnCours({ session, onTerminer, onRelancerPlanning }: {
             <div className="planning-repliable planning-repliable--alerte">
               <button
                 className="planning-repliable__toggle"
-                onClick={() => setAlertesOuvertes(v => !v)}
+                onClick={() => setAlertesOuverts(v => !v)}
               >
                 <span>Alertes équipement ({planning.alertesEquipement.length})</span>
-                <span className="planning-repliable__chevron">{alertesOuvertes ? '▲' : '▼'}</span>
+                <span className="planning-repliable__chevron">{alertesOuverts ? '▲' : '▼'}</span>
               </button>
-              {alertesOuvertes && (
+              {alertesOuverts && (
                 <ul className="planning-repliable__liste">
                   {planning.alertesEquipement.map((a, i) => <li key={i}>{a}</li>)}
                 </ul>

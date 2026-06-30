@@ -138,23 +138,58 @@ export async function genererPlanningSession(sessionId: string): Promise<void> {
     session.recetteIds.map(id => db.recettes.get(id))
   )).filter(Boolean) as Recette[]
 
-  // Filtre les recettes sans étapes (elles figureront dans conservation uniquement)
-  const payload: RecettePayload[] = recettesStructurees.map(r => ({
-    id: r.id,
+  // Diagnostic : étapes brutes vs structurées par recette
+  console.group('[BatchPlanning] Payload structuration')
+  for (const r of recettesStructurees) {
+    console.log(`${r.nom} — etapes brutes: ${r.etapes.length}, etapesStructurees: ${r.etapesStructurees?.length ?? 0}`)
+  }
+  console.groupEnd()
+
+  // Sépare les recettes avec étapes (timeline) de celles sans (conservation seulement)
+  const avecEtapes = recettesStructurees.filter(r => (r.etapesStructurees?.length ?? 0) > 0)
+  const sansEtapes = recettesStructurees.filter(r => (r.etapesStructurees?.length ?? 0) === 0)
+
+  if (avecEtapes.length === 0) {
+    console.warn('[BatchPlanning] Aucune recette avec étapes structurées — planning vide attendu')
+  }
+
+  const payload: RecettePayload[] = [
+    // Recettes avec étapes → planifiées dans la timeline
+    ...avecEtapes.map(r => ({
+      id: r.id,
+      nom: r.nom,
+      portions: r.portions,
+      modeConservation: r.modeConservation,
+      dureeConservation: r.dureeConservation,
+      congelable: r.congelable,
+      etapesStructurees: r.etapesStructurees!,
+    })),
+    // Recettes sans étapes → conservation uniquement (etapesStructurees vide explicitement)
+    ...sansEtapes.map(r => ({
+      id: r.id,
+      nom: r.nom,
+      portions: r.portions,
+      modeConservation: r.modeConservation,
+      dureeConservation: r.dureeConservation,
+      congelable: r.congelable,
+      etapesStructurees: [] as EtapeStructuree[],
+    })),
+  ]
+
+  console.log('[BatchPlanning] Prompt payload (extrait) :', payload.map(r => ({
     nom: r.nom,
-    portions: r.portions,
-    modeConservation: r.modeConservation,
-    dureeConservation: r.dureeConservation,
-    congelable: r.congelable,
-    etapesStructurees: r.etapesStructurees ?? [],
-  }))
+    nbEtapes: r.etapesStructurees.length,
+  })))
 
   const raw = await appelOpenAI(buildPromptPlanning(payload), {
     model: 'gpt-4o-mini',
     temperature: 0,
-    maxTokens: 4096,
+    maxTokens: 16000,  // était 4096 — insuffisant pour 5 recettes × ~8 étapes (JSON ~8000 tokens)
     jsonMode: true,
   })
+
+  console.log('[BatchPlanning] Réponse brute longueur :', raw.length, 'chars')
+  console.log('[BatchPlanning] Réponse brute (extrait) :', raw.slice(0, 500))
 
   let planning: PlanningGenere
   try {

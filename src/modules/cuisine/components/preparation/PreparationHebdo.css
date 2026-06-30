@@ -1100,3 +1100,136 @@
   margin: 0;
   opacity: 0.75;
 }
+
+/* ════════════════════════════════════════════════════════════
+   TIMELINE CONDENSÉE — vue session active
+   ═══════════════════════════════════════════════════════════ */
+
+.timeline-condensee {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+
+.timeline-card {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  border-radius: 14px;
+  border: 1.5px solid rgba(201,184,232,0.35);
+  background: rgba(255,255,255,0.72);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  cursor: pointer;
+  text-align: left;
+  font-family: inherit;
+  transition: background 0.15s, box-shadow 0.15s;
+}
+
+.timeline-card:hover {
+  background: rgba(255,255,255,0.92);
+  box-shadow: 0 2px 12px rgba(100,80,140,0.10);
+}
+
+.timeline-card__left {
+  display: flex;
+  flex-direction: column;
+  min-width: 88px;
+  flex-shrink: 0;
+}
+
+.timeline-card__plage {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: #4B4660;
+  white-space: nowrap;
+}
+
+.timeline-card__arrow {
+  color: #A89BC2;
+  font-weight: 400;
+}
+
+.timeline-card__duree {
+  font-size: 0.7rem;
+  color: #A89BC2;
+  margin-top: 2px;
+}
+
+.timeline-card__center {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.timeline-card__count {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: #1E1C2E;
+}
+
+.timeline-card__recettes {
+  font-size: 0.72rem;
+  color: #7A7A9A;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.timeline-card__right {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+  width: 20px;
+  justify-content: center;
+}
+
+.timeline-card__chevron {
+  font-size: 1.2rem;
+  color: #C9B8E8;
+  line-height: 1;
+}
+
+.timeline-card__dot {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+}
+
+.timeline-card__dot--done {
+  background: #5EC87A;
+  box-shadow: 0 0 0 3px rgba(94,200,122,0.2);
+}
+
+.timeline-card__dot--partial {
+  background: #F4B860;
+  box-shadow: 0 0 0 3px rgba(244,184,96,0.2);
+}
+
+/* Modal planning (variante plus haute) */
+.batch-modal--planning {
+  max-height: 82vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.batch-modal__subtitle {
+  font-size: 0.8rem;
+  font-weight: 400;
+  color: #7A7A9A;
+}
+
+.batch-modal__body--planning {
+  overflow-y: auto;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding-bottom: 8px;
+}
