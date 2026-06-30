@@ -38,8 +38,28 @@ export function useMenuDetail(menuId: string | undefined) {
       recetteResolue: s.recette ? recettesMap[s.recette] : undefined,
     }));
 
-    // Slots libres (sans jour assigné)
-    const slotsLibres = slotsResolus.filter((s) => !s.jour);
+    // Recettes qui ont déjà un slot assigné à un jour
+    const recettesAssignees = new Set(
+      slotsResolus.filter((s) => !!s.jour && !!s.recette).map((s) => s.recette as string)
+    );
+
+    // Nettoyer les slots libres doublonnés en base (recette déjà assignée à un jour)
+    const doublons = slotsResolus.filter(
+      (s) => !s.jour && s.recette && recettesAssignees.has(s.recette)
+    );
+    if (doublons.length > 0) {
+      const now = new Date();
+      await Promise.all(
+        doublons.map((s) =>
+          db.menuSlots.update(s.id, { archive: true, deletedAt: now, updatedAt: now })
+        )
+      );
+    }
+
+    // Slots libres (sans jour assigné), doublons exclus
+    const slotsLibres = slotsResolus.filter(
+      (s) => !s.jour && !(s.recette && recettesAssignees.has(s.recette))
+    );
 
     // Slots groupés par jour
     const slotsParJour = Object.fromEntries(
