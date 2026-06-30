@@ -4,7 +4,7 @@
  * Affiche date, recettes, et planning sauvegardé (si disponible).
  */
 
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useCallback } from 'react'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { db } from '../../../../core/db/database'
 import type { SessionPreparation, Recette } from '../../../../shared/types'
@@ -32,8 +32,8 @@ function formatDuree(min: number): string {
 
 function SessionHistorique({ session }: { session: SessionPreparation }) {
   const [ouvert, setOuvert] = useState(false)
-  const [conseilsOuverts, setConseilsOuverts] = useState(false)
   const [alertesOuvertes, setAlertesOuvertes] = useState(false)
+  const noop = useCallback(() => {}, [])
 
   const recettes = useLiveQuery(
     async () => {
@@ -92,12 +92,7 @@ function SessionHistorique({ session }: { session: SessionPreparation }) {
 
               <div className="planning-timeline">
                 {planning.timeline.map((bloc, i) => (
-                  <BlocTimelineItem
-                    key={i}
-                    bloc={bloc}
-                    recettesParId={recettesParId}
-                    /* pas de sessionId → mode lecture seule, pas de checkbox */
-                  />
+                  <BlocTimelineItem key={i} bloc={bloc} recettesParId={recettesParId} />
                 ))}
               </div>
 
@@ -110,20 +105,12 @@ function SessionHistorique({ session }: { session: SessionPreparation }) {
                 </div>
               )}
 
-              {planning.conseils.length > 0 && (
+              {/* conseils — rétrocompat ancien format */}
+              {(planning.conseils ?? []).length > 0 && (
                 <div className="planning-repliable" style={{ marginTop: 10 }}>
-                  <button
-                    className="planning-repliable__toggle"
-                    onClick={() => setConseilsOuverts(v => !v)}
-                  >
+                  <button className="planning-repliable__toggle" onClick={noop}>
                     <span>Conseils</span>
-                    <span className="planning-repliable__chevron">{conseilsOuverts ? '▲' : '▼'}</span>
                   </button>
-                  {conseilsOuverts && (
-                    <ul className="planning-repliable__liste">
-                      {planning.conseils.map((c, i) => <li key={i}>{c}</li>)}
-                    </ul>
-                  )}
                 </div>
               )}
 
@@ -133,7 +120,7 @@ function SessionHistorique({ session }: { session: SessionPreparation }) {
                     className="planning-repliable__toggle"
                     onClick={() => setAlertesOuvertes(v => !v)}
                   >
-                    <span>⚠️ Alertes équipement ({planning.alertesEquipement.length})</span>
+                    <span>Alertes équipement ({planning.alertesEquipement.length})</span>
                     <span className="planning-repliable__chevron">{alertesOuvertes ? '▲' : '▼'}</span>
                   </button>
                   {alertesOuvertes && (

@@ -631,13 +631,30 @@ export interface RoutineItem extends AuditWithDevice {
 
 // ─── PRÉPARATION HEBDOMADAIRE — F8 ───────────────────────────────────────────
 
+export interface IngredientAgrege {
+  produitId: string
+  nom: string
+  quantiteTotale: number
+  unite?: string
+  optionnel: boolean
+  recettesConcernees: { recetteId: string; recetteNom: string; quantite: number }[]
+  fait: boolean
+}
+
+export interface EtapePreparation {
+  id: string
+  description: string
+  recetteId?: string   // absent = action générale multi-recettes
+  fait: boolean
+}
+
 export interface TachePlanning {
-  recetteId: string
+  recetteIds: string[]   // tableau — une tâche batchée peut couvrir plusieurs recettes
   etapeId: string
   description: string
   type: 'actif' | 'passif'
   equipement: string[]
-  fait?: boolean  // coché pendant l'exécution réelle du batch cooking
+  fait?: boolean
 }
 
 export interface BlocTimeline {
@@ -655,12 +672,19 @@ export interface ConservationRecette {
 }
 
 export interface PlanningGenere {
+  // Phase 1 — Mise en place
+  listeCourses?: IngredientAgrege[]
+  preparationAmont?: EtapePreparation[]
+  // Phase 2 — Exécution
   dureeTotaleMinutes: number
   timeline: BlocTimeline[]
+  // Phase 3 — Clôture
   conservation: ConservationRecette[]
-  conseils: string[]
+  recapFinal?: string
+  // Meta
+  conseils?: string[]          // ancien format — rétrocompatibilité
   alertesEquipement: string[]
-  genereLe: string   // ISO timestamp
+  genereLe: string
 }
 
 export interface SessionPreparation extends AuditWithDevice {

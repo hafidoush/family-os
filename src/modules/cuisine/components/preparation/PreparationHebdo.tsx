@@ -12,8 +12,16 @@ import { useLiveQuery } from 'dexie-react-hooks'
 import { db } from '../../../../core/db/database'
 import { newEntity, withUpdate } from '../../../../core/db/helpers'
 import { hasOpenAIKey } from '../../../../core/ai/openaiService'
-import { genererPlanningSession, cocherTachePlanning } from '../../../../core/ai/batchPlanningService'
-import type { Recette, SessionPreparation, BlocTimeline, ConservationRecette, PlanningGenere } from '../../../../shared/types'
+import {
+  genererPlanningSession,
+  cocherTachePlanning,
+  cocherEtapePreparation,
+  cocherIngredientCourses,
+} from '../../../../core/ai/batchPlanningService'
+import type {
+  Recette, SessionPreparation, BlocTimeline, ConservationRecette, PlanningGenere,
+  IngredientAgrege, EtapePreparation,
+} from '../../../../shared/types'
 import { type BatchCategorie, BATCH_CATEGORIES, matchesBatchCategorie } from './batchTypes'
 import './PreparationHebdo.css'
 
@@ -96,10 +104,10 @@ const EQUIPEMENT_LABEL: Record<string, string> = {
 
 // ─── Sous-composants planning ──────────────────────────────────────────────────
 
-export function BlocTimelineItem({ bloc, recettesParId, sessionId }: {
+export function BlocTimelineItem({ bloc, recettesParId }: {
   bloc: BlocTimeline
   recettesParId: Map<string, string>
-  sessionId?: string  // absent = mode lecture seule (Historique)
+  // Lecture seule uniquement — utilisé par HistoriqueBatch
 }) {
   return (
     <div className="planning-bloc">
@@ -111,40 +119,23 @@ export function BlocTimelineItem({ bloc, recettesParId, sessionId }: {
       </div>
       <div className="planning-bloc__taches">
         {bloc.taches.map((t, i) => {
-          const handleToggle = sessionId
-            ? () => void cocherTachePlanning(sessionId, t.recetteId, t.etapeId, !t.fait)
-            : undefined
+          const noms = (t.recetteIds ?? []).map(id => recettesParId.get(id) ?? id).join(' · ')
           return (
             <div
-              key={`${t.recetteId}-${t.etapeId}-${i}`}
-              className={[
-                'planning-tache',
-                `planning-tache--${t.type}`,
-                t.fait ? 'planning-tache--fait' : '',
-              ].filter(Boolean).join(' ')}
+              key={`${t.etapeId}-${i}`}
+              className={['planning-tache', `planning-tache--${t.type}`, t.fait ? 'planning-tache--fait' : ''].filter(Boolean).join(' ')}
             >
               <div className="planning-tache__header">
-                {handleToggle && (
-                  <button
-                    className={`planning-tache__check${t.fait ? ' planning-tache__check--fait' : ''}`}
-                    onClick={handleToggle}
-                    aria-label={t.fait ? 'Marquer comme à faire' : 'Marquer comme fait'}
-                  >
-                    {t.fait ? '✓' : ''}
-                  </button>
-                )}
                 <span className={`planning-tache__badge planning-tache__badge--${t.type}`}>
                   {t.type === 'actif' ? '● Actif' : '○ Passif'}
                 </span>
-                <span className="planning-tache__recette">{recettesParId.get(t.recetteId) ?? t.recetteId}</span>
+                {noms && <span className="planning-tache__recette">{noms}</span>}
               </div>
               <p className="planning-tache__desc">{t.description}</p>
               {t.equipement.filter(e => e !== 'aucun').length > 0 && (
                 <div className="planning-tache__equip">
                   {t.equipement.filter(e => e !== 'aucun').map(e => (
-                    <span key={e} className="planning-tache__equip-badge">
-                      {EQUIPEMENT_LABEL[e] ?? e}
-                    </span>
+                    <span key={e} className="planning-tache__equip-badge">{EQUIPEMENT_LABEL[e] ?? e}</span>
                   ))}
                 </div>
               )}
@@ -179,20 +170,26 @@ export function ConservationCard({ item }: { item: ConservationRecette }) {
   )
 }
 
-// ─── Composant tâche partagé ──────────────────────────────────────────────────
+// ─── Composant tâche partagé (recetteIds[] + index-based cochage) ────────────
 
-function TacheItem({ tache, recettesParId, sessionId, tempsDebut }: {
-  tache: { recetteId: string; etapeId: string; description: string; type: 'actif' | 'passif'; equipement: string[]; fait?: boolean }
+function TacheItem({ tache, blocIndex, taskIndex, recettesParId, sessionId, tempsDebut }: {
+  tache: { recetteIds: string[]; etapeId: string; description: string; type: 'actif' | 'passif'; equipement: string[]; fait?: boolean }
+  blocIndex: number
+  taskIndex: number
   recettesParId: Map<string, string>
   sessionId: string
-  tempsDebut?: number   // défini dans la vue par recette (info secondaire)
+  tempsDebut?: number
 }) {
+  const nomsRecettes = tache.recetteIds
+    .map(id => recettesParId.get(id) ?? id)
+    .join(' · ')
+
   return (
     <div className={['planning-tache', `planning-tache--${tache.type}`, tache.fait ? 'planning-tache--fait' : ''].filter(Boolean).join(' ')}>
       <div className="planning-tache__header">
         <button
           className={`planning-tache__check${tache.fait ? ' planning-tache__check--fait' : ''}`}
-          onClick={() => void cocherTachePlanning(sessionId, tache.recetteId, tache.etapeId, !tache.fait)}
+          onClick={() => void cocherTachePlanning(sessionId, blocIndex, taskIndex, !tache.fait)}
           aria-label={tache.fait ? 'Marquer comme à faire' : 'Marquer comme fait'}
         >
           {tache.fait ? '✓' : ''}
@@ -200,7 +197,9 @@ function TacheItem({ tache, recettesParId, sessionId, tempsDebut }: {
         <span className={`planning-tache__badge planning-tache__badge--${tache.type}`}>
           {tache.type === 'actif' ? '● Actif' : '○ Passif'}
         </span>
-        <span className="planning-tache__recette">{recettesParId.get(tache.recetteId) ?? tache.recetteId}</span>
+        {nomsRecettes && (
+          <span className="planning-tache__recette">{nomsRecettes}</span>
+        )}
         {tempsDebut !== undefined && (
           <span className="planning-tache__temps-secondaire">{formatMinutes(tempsDebut)}</span>
         )}
@@ -226,16 +225,23 @@ function PlanningChrono({ planning, recettesParId, sessionId }: {
 }) {
   return (
     <div className="planning-chrono">
-      {planning.timeline.map((bloc, i) => (
-        <div key={i} className="planning-chrono__bloc">
+      {planning.timeline.map((bloc, bi) => (
+        <div key={bi} className="planning-chrono__bloc">
           <div className="planning-chrono__bloc-header">
             <span className="planning-chrono__plage">
               {formatMinutes(bloc.tempsDebut)} → {formatMinutes(bloc.tempsFin)}
             </span>
             <span className="planning-chrono__duree">{bloc.tempsFin - bloc.tempsDebut} min</span>
           </div>
-          {bloc.taches.map((t, j) => (
-            <TacheItem key={`${t.recetteId}-${t.etapeId}-${j}`} tache={t} recettesParId={recettesParId} sessionId={sessionId} />
+          {bloc.taches.map((t, ti) => (
+            <TacheItem
+              key={`${bi}-${ti}`}
+              tache={t}
+              blocIndex={bi}
+              taskIndex={ti}
+              recettesParId={recettesParId}
+              sessionId={sessionId}
+            />
           ))}
         </div>
       ))}
@@ -250,29 +256,116 @@ function PlanningParRecette({ planning, recettesParId, sessionId }: {
   recettesParId: Map<string, string>
   sessionId: string
 }) {
-  // Collecte toutes les tâches avec leur temps de début, dans l'ordre chronologique
-  const tachesAvecTemps = planning.timeline.flatMap(bloc =>
-    bloc.taches.map(t => ({ ...t, tempsDebut: bloc.tempsDebut }))
+  // Collecte toutes les tâches avec position et temps, dans l'ordre chronologique
+  type TacheAvecPos = {
+    tache: BlocTimeline['taches'][number]
+    blocIndex: number
+    taskIndex: number
+    tempsDebut: number
+  }
+
+  const tachesAvecPos: TacheAvecPos[] = planning.timeline.flatMap((bloc, bi) =>
+    bloc.taches.map((t, ti) => ({ tache: t, blocIndex: bi, taskIndex: ti, tempsDebut: bloc.tempsDebut }))
   )
 
-  // Regroupe par recetteId, en préservant l'ordre d'apparition
-  const parRecette = new Map<string, typeof tachesAvecTemps>()
-  for (const t of tachesAvecTemps) {
-    if (!parRecette.has(t.recetteId)) parRecette.set(t.recetteId, [])
-    parRecette.get(t.recetteId)!.push(t)
+  // Une tâche avec recetteIds = [A, B] apparaît dans le groupe A ET dans le groupe B
+  const parRecette = new Map<string, TacheAvecPos[]>()
+  for (const entry of tachesAvecPos) {
+    const ids = entry.tache.recetteIds.length > 0
+      ? entry.tache.recetteIds
+      : ['__sans_recette__']
+    for (const recetteId of ids) {
+      if (!parRecette.has(recetteId)) parRecette.set(recetteId, [])
+      parRecette.get(recetteId)!.push(entry)
+    }
+  }
+
+  // Affiche d'abord les recettes connues dans l'ordre de session.recetteIds
+  const recetteIdsOrdre = [...recettesParId.keys()]
+  const groupes: [string, TacheAvecPos[]][] = []
+  for (const id of recetteIdsOrdre) {
+    if (parRecette.has(id)) groupes.push([id, parRecette.get(id)!])
   }
 
   return (
     <div className="planning-par-recette">
-      {[...parRecette.entries()].map(([recetteId, taches]) => (
+      {groupes.map(([recetteId, entries]) => (
         <div key={recetteId} className="planning-recette-groupe">
           <h5 className="planning-recette-groupe__nom">{recettesParId.get(recetteId) ?? recetteId}</h5>
-          {taches.map((t, i) => (
-            <TacheItem key={`${t.etapeId}-${i}`} tache={t} recettesParId={recettesParId} sessionId={sessionId} tempsDebut={t.tempsDebut} />
+          {entries.map((entry, i) => (
+            <TacheItem
+              key={`${entry.blocIndex}-${entry.taskIndex}-${i}`}
+              tache={entry.tache}
+              blocIndex={entry.blocIndex}
+              taskIndex={entry.taskIndex}
+              recettesParId={recettesParId}
+              sessionId={sessionId}
+              tempsDebut={entry.tempsDebut}
+            />
           ))}
         </div>
       ))}
     </div>
+  )
+}
+
+// ─── Section liste de courses ─────────────────────────────────────────────────
+
+function SectionListeCourses({ items, sessionId }: {
+  items: IngredientAgrege[]
+  sessionId: string
+}) {
+  if (items.length === 0) return (
+    <p className="modal-section__vide">Aucun ingrédient renseigné sur ces recettes.</p>
+  )
+  return (
+    <ul className="courses-liste">
+      {items.map(item => (
+        <li
+          key={`${item.produitId}|${item.unite ?? ''}`}
+          className={`courses-item${item.fait ? ' courses-item--fait' : ''}${item.optionnel ? ' courses-item--optionnel' : ''}`}
+        >
+          <button
+            className={`courses-item__check${item.fait ? ' courses-item__check--fait' : ''}`}
+            onClick={() => void cocherIngredientCourses(sessionId, item.produitId, item.unite, !item.fait)}
+            aria-label={item.fait ? 'Décocher' : 'Cocher'}
+          >
+            {item.fait ? '✓' : ''}
+          </button>
+          <span className="courses-item__nom">{item.nom}</span>
+          <span className="courses-item__quantite">
+            {item.quantiteTotale % 1 === 0 ? item.quantiteTotale : item.quantiteTotale.toFixed(1)}
+            {item.unite ? ` ${item.unite}` : ''}
+          </span>
+          {item.optionnel && <span className="courses-item__opt">facultatif</span>}
+        </li>
+      ))}
+    </ul>
+  )
+}
+
+// ─── Section avant de commencer ───────────────────────────────────────────────
+
+function SectionPreparationAmont({ etapes, sessionId }: {
+  etapes: EtapePreparation[]
+  sessionId: string
+}) {
+  if (etapes.length === 0) return null
+  return (
+    <ul className="prep-amont-liste">
+      {etapes.map(e => (
+        <li key={e.id} className={`prep-amont-item${e.fait ? ' prep-amont-item--fait' : ''}`}>
+          <button
+            className={`prep-amont-item__check${e.fait ? ' prep-amont-item__check--fait' : ''}`}
+            onClick={() => void cocherEtapePreparation(sessionId, e.id, !e.fait)}
+            aria-label={e.fait ? 'Décocher' : 'Cocher'}
+          >
+            {e.fait ? '✓' : ''}
+          </button>
+          <span className="prep-amont-item__desc">{e.description}</span>
+        </li>
+      ))}
+    </ul>
   )
 }
 
@@ -317,6 +410,22 @@ function SessionDetailModal({ session, planningEnCours, onClose, onRelancerPlann
         </div>
 
         <div className="batch-modal__body batch-modal__body--session">
+
+          {/* Section liste de courses */}
+          {planning && (planning.listeCourses?.length ?? 0) > 0 && (
+            <div className="modal-section">
+              <h4 className="modal-section__title">Liste de courses</h4>
+              <SectionListeCourses items={planning.listeCourses!} sessionId={session.id} />
+            </div>
+          )}
+
+          {/* Section avant de commencer */}
+          {planning && (planning.preparationAmont?.length ?? 0) > 0 && (
+            <div className="modal-section">
+              <h4 className="modal-section__title">Avant de commencer</h4>
+              <SectionPreparationAmont etapes={planning.preparationAmont!} sessionId={session.id} />
+            </div>
+          )}
 
           {/* Section recettes */}
           <div className="modal-section">
@@ -387,12 +496,12 @@ function SessionDetailModal({ session, planningEnCours, onClose, onRelancerPlann
             </div>
           )}
 
-          {/* Section conseils */}
-          {planning && planning.conseils.length > 0 && (
+          {/* Section conseils — rétrocompat ancien format */}
+          {planning && (planning.conseils?.length ?? 0) > 0 && (
             <div className="modal-section">
               <h4 className="modal-section__title">Conseils</h4>
               <ul className="modal-conseils">
-                {planning.conseils.map((c, i) => <li key={i}>{c}</li>)}
+                {planning.conseils!.map((c, i) => <li key={i}>{c}</li>)}
               </ul>
             </div>
           )}
@@ -663,6 +772,7 @@ export function PreparationHebdo() {
   const [categorieChoisie, setCategorieChoisie] = useState<BatchCategorie | null>(null)
   const [planningEnCours, setPlanningEnCours] = useState<string | null>(null)
   const [modalSessionOuvert, setModalSessionOuvert] = useState(false)
+  const [recapFinalVisible, setRecapFinalVisible] = useState(false)
 
   const sessions = useLiveQuery(
     () => db.sessionsPreparation
@@ -777,7 +887,13 @@ export function PreparationHebdo() {
             session={sessionEnCours}
             planningEnCours={planningEnCours}
             onOuvrir={() => setModalSessionOuvert(true)}
-            onTerminer={() => handleTerminer(sessionEnCours)}
+            onTerminer={() => {
+              if (sessionEnCours.planning?.recapFinal) {
+                setRecapFinalVisible(true)
+              } else {
+                void handleTerminer(sessionEnCours)
+              }
+            }}
           />
           {modalSessionOuvert && (
             <SessionDetailModal
@@ -786,6 +902,30 @@ export function PreparationHebdo() {
               onClose={() => setModalSessionOuvert(false)}
               onRelancerPlanning={handleRelancerPlanning}
             />
+          )}
+          {recapFinalVisible && sessionEnCours.planning?.recapFinal && (
+            <div className="batch-overlay" onClick={() => setRecapFinalVisible(false)}>
+              <div className="batch-modal batch-modal--recap" onClick={e => e.stopPropagation()}>
+                <div className="batch-modal__header">
+                  <span className="batch-modal__title">Session terminée</span>
+                </div>
+                <div className="batch-modal__body batch-modal__body--recap">
+                  <p className="recap-final__texte">{sessionEnCours.planning.recapFinal}</p>
+                </div>
+                <div className="batch-modal__bottom">
+                  <button
+                    className="batch-cta"
+                    onClick={() => {
+                      setRecapFinalVisible(false)
+                      setModalSessionOuvert(false)
+                      void handleTerminer(sessionEnCours)
+                    }}
+                  >
+                    Fermer la session
+                  </button>
+                </div>
+              </div>
+            </div>
           )}
         </>
       )}
