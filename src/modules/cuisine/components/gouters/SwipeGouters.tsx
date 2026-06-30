@@ -362,10 +362,11 @@ function SwipeGoutersGame({ categorie, targetCount }: { categorie: BatchCategori
     if (initialized.current && (queue.length > 0 || selected.length > 0 || done)) return
     initialized.current = true
     setQueue([...allRecettes])
-    // Génère les URL blob pour les images
+    // Génère les URL pour les images : imageData (base64) en priorité, sinon Blob legacy
     const urls: Record<string, string> = {}
     allRecettes.forEach(r => {
-      if (r.image) urls[r.id] = URL.createObjectURL(r.image)
+      if (r.imageData) urls[r.id] = r.imageData
+      else if (r.image) urls[r.id] = URL.createObjectURL(r.image)
     })
     setImageUrls(urls)
   // eslint-disable-next-line react-hooks/exhaustive-deps
