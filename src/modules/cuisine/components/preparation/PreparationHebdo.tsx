@@ -179,127 +179,112 @@ export function ConservationCard({ item }: { item: ConservationRecette }) {
   )
 }
 
-// ─── Timeline condensée + modal détail (vue session active) ───────────────────
+// ─── Composant tâche partagé ──────────────────────────────────────────────────
 
-function BlocCard({ bloc, recettesParId, onClick }: {
-  bloc: BlocTimeline
-  recettesParId: Map<string, string>
-  onClick: () => void
-}) {
-  const nbFait = bloc.taches.filter(t => t.fait).length
-  const toutFait = nbFait === bloc.taches.length
-  const recettesUniques = [...new Set(bloc.taches.map(t => recettesParId.get(t.recetteId) ?? t.recetteId))]
-
-  return (
-    <button className="timeline-card" onClick={onClick}>
-      <div className="timeline-card__left">
-        <span className="timeline-card__plage">
-          {formatMinutes(bloc.tempsDebut)}<span className="timeline-card__arrow"> → </span>{formatMinutes(bloc.tempsFin)}
-        </span>
-        <span className="timeline-card__duree">({bloc.tempsFin - bloc.tempsDebut} min)</span>
-      </div>
-      <div className="timeline-card__center">
-        <span className="timeline-card__count">{bloc.taches.length} tâche{bloc.taches.length > 1 ? 's' : ''}</span>
-        <span className="timeline-card__recettes">{recettesUniques.join(' · ')}</span>
-      </div>
-      <div className="timeline-card__right">
-        {toutFait
-          ? <span className="timeline-card__dot timeline-card__dot--done" title="Tout fait" />
-          : nbFait > 0
-            ? <span className="timeline-card__dot timeline-card__dot--partial" title={`${nbFait}/${bloc.taches.length}`} />
-            : <span className="timeline-card__chevron">›</span>
-        }
-      </div>
-    </button>
-  )
-}
-
-function BlocDetailModal({ bloc, recettesParId, sessionId, onClose }: {
-  bloc: BlocTimeline
+function TacheItem({ tache, recettesParId, sessionId, tempsDebut }: {
+  tache: { recetteId: string; etapeId: string; description: string; type: 'actif' | 'passif'; equipement: string[]; fait?: boolean }
   recettesParId: Map<string, string>
   sessionId: string
-  onClose: () => void
+  tempsDebut?: number   // défini dans la vue par recette (info secondaire)
 }) {
   return (
-    <div className="batch-overlay" onClick={onClose}>
-      <div className="batch-modal batch-modal--planning" onClick={e => e.stopPropagation()}>
-        <div className="batch-modal__header">
-          <div>
-            <span className="batch-modal__title">
-              {formatMinutes(bloc.tempsDebut)} → {formatMinutes(bloc.tempsFin)}
-            </span>
-            <span className="batch-modal__subtitle"> · {bloc.tempsFin - bloc.tempsDebut} min</span>
-          </div>
-          <button className="batch-modal__close" onClick={onClose}>✕</button>
-        </div>
-        <div className="batch-modal__body batch-modal__body--planning">
-          {bloc.taches.map((t, i) => (
-            <div
-              key={`${t.recetteId}-${t.etapeId}-${i}`}
-              className={['planning-tache', `planning-tache--${t.type}`, t.fait ? 'planning-tache--fait' : ''].filter(Boolean).join(' ')}
-            >
-              <div className="planning-tache__header">
-                <button
-                  className={`planning-tache__check${t.fait ? ' planning-tache__check--fait' : ''}`}
-                  onClick={() => void cocherTachePlanning(sessionId, t.recetteId, t.etapeId, !t.fait)}
-                  aria-label={t.fait ? 'Marquer comme à faire' : 'Marquer comme fait'}
-                >
-                  {t.fait ? '✓' : ''}
-                </button>
-                <span className={`planning-tache__badge planning-tache__badge--${t.type}`}>
-                  {t.type === 'actif' ? '● Actif' : '○ Passif'}
-                </span>
-                <span className="planning-tache__recette">{recettesParId.get(t.recetteId) ?? t.recetteId}</span>
-              </div>
-              <p className="planning-tache__desc">{t.description}</p>
-              {t.equipement.filter(e => e !== 'aucun').length > 0 && (
-                <div className="planning-tache__equip">
-                  {t.equipement.filter(e => e !== 'aucun').map(e => (
-                    <span key={e} className="planning-tache__equip-badge">{EQUIPEMENT_LABEL[e] ?? e}</span>
-                  ))}
-                </div>
-              )}
-            </div>
+    <div className={['planning-tache', `planning-tache--${tache.type}`, tache.fait ? 'planning-tache--fait' : ''].filter(Boolean).join(' ')}>
+      <div className="planning-tache__header">
+        <button
+          className={`planning-tache__check${tache.fait ? ' planning-tache__check--fait' : ''}`}
+          onClick={() => void cocherTachePlanning(sessionId, tache.recetteId, tache.etapeId, !tache.fait)}
+          aria-label={tache.fait ? 'Marquer comme à faire' : 'Marquer comme fait'}
+        >
+          {tache.fait ? '✓' : ''}
+        </button>
+        <span className={`planning-tache__badge planning-tache__badge--${tache.type}`}>
+          {tache.type === 'actif' ? '● Actif' : '○ Passif'}
+        </span>
+        <span className="planning-tache__recette">{recettesParId.get(tache.recetteId) ?? tache.recetteId}</span>
+        {tempsDebut !== undefined && (
+          <span className="planning-tache__temps-secondaire">{formatMinutes(tempsDebut)}</span>
+        )}
+      </div>
+      <p className="planning-tache__desc">{tache.description}</p>
+      {tache.equipement.filter(e => e !== 'aucun').length > 0 && (
+        <div className="planning-tache__equip">
+          {tache.equipement.filter(e => e !== 'aucun').map(e => (
+            <span key={e} className="planning-tache__equip-badge">{EQUIPEMENT_LABEL[e] ?? e}</span>
           ))}
         </div>
-      </div>
-    </div>
-  )
-}
-
-function TimelineCondensee({ planning, recettesParId, sessionId }: {
-  planning: PlanningGenere
-  recettesParId: Map<string, string>
-  sessionId: string
-}) {
-  const [blocOuvert, setBlocOuvert] = useState<number | null>(null)
-
-  return (
-    <div className="timeline-condensee">
-      {planning.timeline.map((bloc, i) => (
-        <BlocCard key={i} bloc={bloc} recettesParId={recettesParId} onClick={() => setBlocOuvert(i)} />
-      ))}
-      {blocOuvert !== null && (
-        <BlocDetailModal
-          bloc={planning.timeline[blocOuvert]}
-          recettesParId={recettesParId}
-          sessionId={sessionId}
-          onClose={() => setBlocOuvert(null)}
-        />
       )}
     </div>
   )
 }
 
-// ─── Session en cours ─────────────────────────────────────────────────────────
+// ─── Vue chronologique (défaut — "quoi faire maintenant") ─────────────────────
 
-function SessionEnCours({ session, onTerminer, onRelancerPlanning }: {
+function PlanningChrono({ planning, recettesParId, sessionId }: {
+  planning: PlanningGenere
+  recettesParId: Map<string, string>
+  sessionId: string
+}) {
+  return (
+    <div className="planning-chrono">
+      {planning.timeline.map((bloc, i) => (
+        <div key={i} className="planning-chrono__bloc">
+          <div className="planning-chrono__bloc-header">
+            <span className="planning-chrono__plage">
+              {formatMinutes(bloc.tempsDebut)} → {formatMinutes(bloc.tempsFin)}
+            </span>
+            <span className="planning-chrono__duree">{bloc.tempsFin - bloc.tempsDebut} min</span>
+          </div>
+          {bloc.taches.map((t, j) => (
+            <TacheItem key={`${t.recetteId}-${t.etapeId}-${j}`} tache={t} recettesParId={recettesParId} sessionId={sessionId} />
+          ))}
+        </div>
+      ))}
+    </div>
+  )
+}
+
+// ─── Vue par recette (préparation mentale) ────────────────────────────────────
+
+function PlanningParRecette({ planning, recettesParId, sessionId }: {
+  planning: PlanningGenere
+  recettesParId: Map<string, string>
+  sessionId: string
+}) {
+  // Collecte toutes les tâches avec leur temps de début, dans l'ordre chronologique
+  const tachesAvecTemps = planning.timeline.flatMap(bloc =>
+    bloc.taches.map(t => ({ ...t, tempsDebut: bloc.tempsDebut }))
+  )
+
+  // Regroupe par recetteId, en préservant l'ordre d'apparition
+  const parRecette = new Map<string, typeof tachesAvecTemps>()
+  for (const t of tachesAvecTemps) {
+    if (!parRecette.has(t.recetteId)) parRecette.set(t.recetteId, [])
+    parRecette.get(t.recetteId)!.push(t)
+  }
+
+  return (
+    <div className="planning-par-recette">
+      {[...parRecette.entries()].map(([recetteId, taches]) => (
+        <div key={recetteId} className="planning-recette-groupe">
+          <h5 className="planning-recette-groupe__nom">{recettesParId.get(recetteId) ?? recetteId}</h5>
+          {taches.map((t, i) => (
+            <TacheItem key={`${t.etapeId}-${i}`} tache={t} recettesParId={recettesParId} sessionId={sessionId} tempsDebut={t.tempsDebut} />
+          ))}
+        </div>
+      ))}
+    </div>
+  )
+}
+
+// ─── Modal détail session ─────────────────────────────────────────────────────
+
+function SessionDetailModal({ session, planningEnCours, onClose, onRelancerPlanning }: {
   session: SessionPreparation
-  onTerminer: () => void
+  planningEnCours: string | null
+  onClose: () => void
   onRelancerPlanning: () => void
 }) {
-  const [conseilsOuverts, setConseilsOuverts] = useState(false)
-  const [alertesOuverts, setAlertesOuverts] = useState(false)
+  const [vuePlanning, setVuePlanning] = useState<'chrono' | 'recette'>('chrono')
 
   const recettes = useLiveQuery(
     async () => {
@@ -309,10 +294,6 @@ function SessionEnCours({ session, onTerminer, onRelancerPlanning }: {
     [session.recetteIds]
   )
 
-  const tempsTotalMin = (recettes ?? []).reduce((acc, r) => {
-    return acc + (r.tempsPreparation ?? 0) + (r.tempsCuisson ?? 0)
-  }, 0)
-
   const recettesParId = useMemo(() => {
     const map = new Map<string, string>()
     for (const r of recettes ?? []) map.set(r.id, r.nom)
@@ -320,116 +301,153 @@ function SessionEnCours({ session, onTerminer, onRelancerPlanning }: {
   }, [recettes])
 
   const planning = session.planning
+  const enGeneration = planningEnCours === session.id
+
+  const dateStr = new Date(session.dateSession + 'T00:00:00').toLocaleDateString('fr-FR', {
+    weekday: 'long', day: 'numeric', month: 'long',
+  })
 
   return (
-    <div className="prep-session">
-      <div className="prep-session__header">
-        <h3 className="prep-session__title">
-          Session du {new Date(session.dateSession + 'T00:00:00').toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' })}
-        </h3>
-        <span className={`prep-session__statut prep-session__statut--${session.statut}`}>
-          {session.statut === 'planifiee' ? 'Planifiée' : session.statut === 'en_cours' ? 'En cours' : 'Terminée'}
-        </span>
-      </div>
+    <div className="batch-overlay" onClick={onClose}>
+      <div className="batch-modal batch-modal--session" onClick={e => e.stopPropagation()}>
 
-      {/* Liste recettes (existante, conservée) */}
-      {tempsTotalMin > 0 && (
-        <div className="prep-session__meta">
-          <span>Temps total estimé : <strong>{formatDuree(tempsTotalMin)}</strong></span>
+        <div className="batch-modal__header">
+          <span className="batch-modal__title">Session du {dateStr}</span>
+          <button className="batch-modal__close" onClick={onClose}>✕</button>
         </div>
-      )}
 
-      <div className="prep-session__recettes">
-        {(recettes ?? []).map(r => (
-          <div key={r.id} className="prep-recette-item">
-            <span className="prep-recette-item__nom">{r.nom}</span>
-            <div className="prep-recette-item__details">
-              {(r.tempsPreparation || r.tempsCuisson) && (
-                <span>{formatDuree((r.tempsPreparation ?? 0) + (r.tempsCuisson ?? 0))}</span>
-              )}
-              {r.dureeConservation && (
-                <span>Conservation : {r.dureeConservation} j{r.congelable ? ' · congélable' : ''}</span>
-              )}
-              {r.modeConservation && (
-                <span>{r.modeConservation}</span>
-              )}
+        <div className="batch-modal__body batch-modal__body--session">
+
+          {/* Section recettes */}
+          <div className="modal-section">
+            <h4 className="modal-section__title">Recettes</h4>
+            <div className="modal-recettes">
+              {(recettes ?? []).map(r => (
+                <span key={r.id} className="modal-recette-chip">{r.nom}</span>
+              ))}
             </div>
           </div>
-        ))}
-      </div>
 
-      {/* Planning IA */}
-      {planning ? (
-        <div className="planning-section">
-          <div className="planning-section__header">
-            <h4 className="planning-section__title">Planning optimisé</h4>
-            <span className="planning-section__duree">
-              {formatDuree(planning.dureeTotaleMinutes)} au total
-            </span>
+          {/* Section planning */}
+          <div className="modal-section">
+            <div className="modal-section__header">
+              <h4 className="modal-section__title">
+                Planning
+                {planning && (
+                  <span className="modal-section__meta"> · {formatDuree(planning.dureeTotaleMinutes)}</span>
+                )}
+              </h4>
+              {planning && !enGeneration && (
+                <div className="planning-vue-toggle">
+                  <button
+                    className={`planning-vue-toggle__btn${vuePlanning === 'chrono' ? ' planning-vue-toggle__btn--active' : ''}`}
+                    onClick={() => setVuePlanning('chrono')}
+                  >Chronologique</button>
+                  <button
+                    className={`planning-vue-toggle__btn${vuePlanning === 'recette' ? ' planning-vue-toggle__btn--active' : ''}`}
+                    onClick={() => setVuePlanning('recette')}
+                  >Par recette</button>
+                </div>
+              )}
+            </div>
+
+            {enGeneration && (
+              <div className="planning-generation-banner">
+                <span className="planning-generation-banner__spinner" />
+                Génération du planning IA en cours…
+              </div>
+            )}
+
+            {!enGeneration && !planning && (
+              <div className="planning-manquant">
+                <p className="planning-manquant__texte">Planning non disponible</p>
+                {hasOpenAIKey() && (
+                  <button className="planning-manquant__btn" onClick={onRelancerPlanning}>
+                    Générer le planning IA
+                  </button>
+                )}
+              </div>
+            )}
+
+            {planning && vuePlanning === 'chrono' && (
+              <PlanningChrono planning={planning} recettesParId={recettesParId} sessionId={session.id} />
+            )}
+            {planning && vuePlanning === 'recette' && (
+              <PlanningParRecette planning={planning} recettesParId={recettesParId} sessionId={session.id} />
+            )}
           </div>
 
-          {/* Timeline condensée + modal détail */}
-          <TimelineCondensee planning={planning} recettesParId={recettesParId} sessionId={session.id} />
-
-          {/* Conservation */}
-          {planning.conservation.length > 0 && (
-            <div className="planning-conservation">
-              <h4 className="planning-conservation__title">Conservation de la semaine</h4>
+          {/* Section conservation */}
+          {planning && planning.conservation.length > 0 && (
+            <div className="modal-section">
+              <h4 className="modal-section__title">Conservation</h4>
               {planning.conservation.map(item => (
                 <ConservationCard key={item.recetteId} item={item} />
               ))}
             </div>
           )}
 
-          {/* Conseils */}
-          {planning.conseils.length > 0 && (
-            <div className="planning-repliable">
-              <button
-                className="planning-repliable__toggle"
-                onClick={() => setConseilsOuverts(v => !v)}
-              >
-                <span>Conseils</span>
-                <span className="planning-repliable__chevron">{conseilsOuverts ? '▲' : '▼'}</span>
-              </button>
-              {conseilsOuverts && (
-                <ul className="planning-repliable__liste">
-                  {planning.conseils.map((c, i) => <li key={i}>{c}</li>)}
-                </ul>
-              )}
+          {/* Section conseils */}
+          {planning && planning.conseils.length > 0 && (
+            <div className="modal-section">
+              <h4 className="modal-section__title">Conseils</h4>
+              <ul className="modal-conseils">
+                {planning.conseils.map((c, i) => <li key={i}>{c}</li>)}
+              </ul>
             </div>
           )}
 
           {/* Alertes équipement */}
-          {planning.alertesEquipement.length > 0 && (
-            <div className="planning-repliable planning-repliable--alerte">
-              <button
-                className="planning-repliable__toggle"
-                onClick={() => setAlertesOuverts(v => !v)}
-              >
-                <span>Alertes équipement ({planning.alertesEquipement.length})</span>
-                <span className="planning-repliable__chevron">{alertesOuverts ? '▲' : '▼'}</span>
-              </button>
-              {alertesOuverts && (
-                <ul className="planning-repliable__liste">
-                  {planning.alertesEquipement.map((a, i) => <li key={i}>{a}</li>)}
-                </ul>
-              )}
+          {planning && planning.alertesEquipement.length > 0 && (
+            <div className="modal-section modal-section--alerte">
+              <h4 className="modal-section__title">Alertes équipement</h4>
+              <ul className="modal-conseils">
+                {planning.alertesEquipement.map((a, i) => <li key={i}>{a}</li>)}
+              </ul>
             </div>
           )}
-        </div>
-      ) : (
-        <div className="planning-manquant">
-          <p className="planning-manquant__texte">Planning détaillé non disponible</p>
-          {hasOpenAIKey() && (
-            <button className="planning-manquant__btn" onClick={onRelancerPlanning}>
-              Générer le planning IA
-            </button>
-          )}
-        </div>
-      )}
 
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// ─── Carte session compacte ───────────────────────────────────────────────────
+
+function SessionCard({ session, planningEnCours, onOuvrir, onTerminer }: {
+  session: SessionPreparation
+  planningEnCours: string | null
+  onOuvrir: () => void
+  onTerminer: () => void
+}) {
+  const enGeneration = planningEnCours === session.id
+  const dateStr = new Date(session.dateSession + 'T00:00:00').toLocaleDateString('fr-FR', {
+    weekday: 'long', day: 'numeric', month: 'long',
+  })
+
+  return (
+    <div className="session-card">
+      <button className="session-card__body" onClick={onOuvrir}>
+        <div className="session-card__info">
+          <span className="session-card__date">Session du {dateStr}</span>
+          <span className="session-card__count">
+            {session.recetteIds.length} recette{session.recetteIds.length > 1 ? 's' : ''}
+          </span>
+        </div>
+        <div className="session-card__right">
+          {enGeneration ? (
+            <span className="session-card__badge session-card__badge--generating">Génération en cours…</span>
+          ) : session.planning ? (
+            <span className="session-card__badge session-card__badge--ready">Planning prêt</span>
+          ) : (
+            <span className="session-card__badge session-card__badge--planned">Planifiée</span>
+          )}
+          <span className="session-card__chevron">›</span>
+        </div>
+      </button>
       {session.statut !== 'terminee' && (
-        <button className="prep-btn prep-btn--primary" onClick={onTerminer}>
+        <button className="session-card__btn-terminer" onClick={onTerminer}>
           Marquer comme terminée
         </button>
       )}
@@ -643,7 +661,8 @@ type EtapePlanification = 'idle' | 'categorie' | 'recettes'
 export function PreparationHebdo() {
   const [etape, setEtape] = useState<EtapePlanification>('idle')
   const [categorieChoisie, setCategorieChoisie] = useState<BatchCategorie | null>(null)
-  const [planningEnCours, setPlanningEnCours] = useState<string | null>(null) // sessionId en cours de génération
+  const [planningEnCours, setPlanningEnCours] = useState<string | null>(null)
+  const [modalSessionOuvert, setModalSessionOuvert] = useState(false)
 
   const sessions = useLiveQuery(
     () => db.sessionsPreparation
@@ -754,17 +773,20 @@ export function PreparationHebdo() {
 
       {etape === 'idle' && sessionEnCours && (
         <>
-          {planningEnCours === sessionEnCours.id && (
-            <div className="planning-generation-banner">
-              <span className="planning-generation-banner__spinner" />
-              Génération du planning IA en cours…
-            </div>
-          )}
-          <SessionEnCours
+          <SessionCard
             session={sessionEnCours}
+            planningEnCours={planningEnCours}
+            onOuvrir={() => setModalSessionOuvert(true)}
             onTerminer={() => handleTerminer(sessionEnCours)}
-            onRelancerPlanning={handleRelancerPlanning}
           />
+          {modalSessionOuvert && (
+            <SessionDetailModal
+              session={sessionEnCours}
+              planningEnCours={planningEnCours}
+              onClose={() => setModalSessionOuvert(false)}
+              onRelancerPlanning={handleRelancerPlanning}
+            />
+          )}
         </>
       )}
 

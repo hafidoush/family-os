@@ -1102,134 +1102,289 @@
 }
 
 /* ════════════════════════════════════════════════════════════
-   TIMELINE CONDENSÉE — vue session active
+   CARTE SESSION COMPACTE
    ═══════════════════════════════════════════════════════════ */
 
-.timeline-condensee {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  margin-bottom: 4px;
+.session-card {
+  margin: 16px 16px 0;
+  border-radius: 18px;
+  border: 1.5px solid rgba(201,184,232,0.4);
+  background: rgba(255,255,255,0.78);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  overflow: hidden;
 }
 
-.timeline-card {
+.session-card__body {
   width: 100%;
   display: flex;
   align-items: center;
+  justify-content: space-between;
   gap: 12px;
-  padding: 12px 14px;
-  border-radius: 14px;
-  border: 1.5px solid rgba(201,184,232,0.35);
-  background: rgba(255,255,255,0.72);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
+  padding: 16px 18px;
+  background: none;
+  border: none;
   cursor: pointer;
-  text-align: left;
   font-family: inherit;
-  transition: background 0.15s, box-shadow 0.15s;
+  text-align: left;
 }
 
-.timeline-card:hover {
-  background: rgba(255,255,255,0.92);
-  box-shadow: 0 2px 12px rgba(100,80,140,0.10);
-}
-
-.timeline-card__left {
+.session-card__info {
   display: flex;
   flex-direction: column;
-  min-width: 88px;
-  flex-shrink: 0;
+  gap: 3px;
 }
 
-.timeline-card__plage {
-  font-size: 0.78rem;
+.session-card__date {
+  font-size: 0.9rem;
   font-weight: 700;
-  color: #4B4660;
-  white-space: nowrap;
-}
-
-.timeline-card__arrow {
-  color: #A89BC2;
-  font-weight: 400;
-}
-
-.timeline-card__duree {
-  font-size: 0.7rem;
-  color: #A89BC2;
-  margin-top: 2px;
-}
-
-.timeline-card__center {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  min-width: 0;
-}
-
-.timeline-card__count {
-  font-size: 0.78rem;
-  font-weight: 600;
   color: #1E1C2E;
+  text-transform: capitalize;
 }
 
-.timeline-card__recettes {
-  font-size: 0.72rem;
+.session-card__count {
+  font-size: 0.75rem;
   color: #7A7A9A;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
 }
 
-.timeline-card__right {
+.session-card__right {
   display: flex;
   align-items: center;
+  gap: 8px;
   flex-shrink: 0;
-  width: 20px;
-  justify-content: center;
 }
 
-.timeline-card__chevron {
-  font-size: 1.2rem;
+.session-card__badge {
+  font-size: 0.72rem;
+  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: 20px;
+  white-space: nowrap;
+}
+
+.session-card__badge--planned {
+  background: rgba(201,184,232,0.25);
+  color: #4B4660;
+}
+
+.session-card__badge--generating {
+  background: rgba(244,184,96,0.18);
+  color: #A0720A;
+  animation: pulse-badge 1.4s ease-in-out infinite;
+}
+
+.session-card__badge--ready {
+  background: rgba(94,200,122,0.15);
+  color: #2C7A46;
+}
+
+@keyframes pulse-badge {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.55; }
+}
+
+.session-card__chevron {
+  font-size: 1.3rem;
   color: #C9B8E8;
   line-height: 1;
 }
 
-.timeline-card__dot {
-  display: inline-block;
-  width: 10px;
-  height: 10px;
-  border-radius: 50%;
+.session-card__btn-terminer {
+  width: 100%;
+  padding: 12px 18px;
+  background: none;
+  border: none;
+  border-top: 1px solid rgba(201,184,232,0.25);
+  font-family: inherit;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #4B4660;
+  cursor: pointer;
+  text-align: center;
+  transition: background 0.15s;
 }
 
-.timeline-card__dot--done {
-  background: #5EC87A;
-  box-shadow: 0 0 0 3px rgba(94,200,122,0.2);
+.session-card__btn-terminer:hover {
+  background: rgba(201,184,232,0.12);
 }
 
-.timeline-card__dot--partial {
-  background: #F4B860;
-  box-shadow: 0 0 0 3px rgba(244,184,96,0.2);
-}
+/* ════════════════════════════════════════════════════════════
+   MODAL SESSION — variante grande
+   ═══════════════════════════════════════════════════════════ */
 
-/* Modal planning (variante plus haute) */
-.batch-modal--planning {
-  max-height: 82vh;
+.batch-modal--session {
+  max-height: 90vh;
   display: flex;
   flex-direction: column;
 }
 
-.batch-modal__subtitle {
-  font-size: 0.8rem;
-  font-weight: 400;
-  color: #7A7A9A;
-}
-
-.batch-modal__body--planning {
+.batch-modal__body--session {
   overflow-y: auto;
   flex: 1;
   display: flex;
   flex-direction: column;
-  gap: 12px;
-  padding-bottom: 8px;
+  gap: 0;
+  padding-bottom: 24px;
+}
+
+/* ── Sections du modal ── */
+.modal-section {
+  padding: 18px 20px;
+  border-bottom: 1px solid rgba(201,184,232,0.18);
+}
+
+.modal-section:last-child {
+  border-bottom: none;
+}
+
+.modal-section__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.modal-section__title {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: #4B4660;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin: 0 0 12px;
+}
+
+.modal-section__header .modal-section__title {
+  margin-bottom: 0;
+}
+
+.modal-section__meta {
+  font-size: 0.8rem;
+  font-weight: 400;
+  color: #A89BC2;
+  text-transform: none;
+  letter-spacing: 0;
+}
+
+.modal-section--alerte .modal-section__title {
+  color: #A05020;
+}
+
+/* ── Chips recettes ── */
+.modal-recettes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.modal-recette-chip {
+  font-size: 0.78rem;
+  font-weight: 500;
+  padding: 5px 12px;
+  border-radius: 20px;
+  background: rgba(201,184,232,0.2);
+  color: #4B4660;
+}
+
+/* ── Toggle vue planning ── */
+.planning-vue-toggle {
+  display: flex;
+  gap: 0;
+  background: rgba(201,184,232,0.18);
+  border-radius: 20px;
+  padding: 3px;
+  flex-shrink: 0;
+}
+
+.planning-vue-toggle__btn {
+  padding: 5px 12px;
+  border-radius: 16px;
+  border: none;
+  background: transparent;
+  font-family: inherit;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: #7A7A9A;
+  cursor: pointer;
+  transition: all 0.15s;
+  white-space: nowrap;
+}
+
+.planning-vue-toggle__btn--active {
+  background: white;
+  color: #1E1C2E;
+  box-shadow: 0 1px 6px rgba(100,80,140,0.12);
+}
+
+/* ── Vue chronologique ── */
+.planning-chrono {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.planning-chrono__bloc {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.planning-chrono__bloc-header {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  padding-bottom: 4px;
+  border-bottom: 1px solid rgba(201,184,232,0.2);
+  margin-bottom: 2px;
+}
+
+.planning-chrono__plage {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #4B4660;
+}
+
+.planning-chrono__duree {
+  font-size: 0.7rem;
+  color: #A89BC2;
+}
+
+/* ── Vue par recette ── */
+.planning-par-recette {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.planning-recette-groupe__nom {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: #1E1C2E;
+  margin: 0 0 8px;
+  padding-bottom: 4px;
+  border-bottom: 1px solid rgba(201,184,232,0.2);
+}
+
+/* ── Info temps secondaire (vue par recette) ── */
+.planning-tache__temps-secondaire {
+  margin-left: auto;
+  font-size: 0.68rem;
+  color: #A89BC2;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+/* ── Conseils / alertes dans modal ── */
+.modal-conseils {
+  margin: 0;
+  padding-left: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.modal-conseils li {
+  font-size: 0.82rem;
+  color: #4B4660;
+  line-height: 1.5;
 }
