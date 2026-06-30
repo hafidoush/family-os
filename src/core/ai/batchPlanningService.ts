@@ -256,7 +256,10 @@ export async function genererPlanningSession(sessionId: string): Promise<void> {
         fait: false,
       })),
       dureeTotaleMinutes: parsed.dureeTotaleMinutes,
-      timeline: parsed.timeline,
+      timeline: parsed.timeline.map(bloc => ({
+        ...bloc,
+        taches: bloc.taches.map(t => ({ ...t, fait: false })),
+      })),
       conservation: parsed.conservation ?? [],
       recapFinal: parsed.recapFinal ?? '',
       alertesEquipement: parsed.alertesEquipement ?? [],
