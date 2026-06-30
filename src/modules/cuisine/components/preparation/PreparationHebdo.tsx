@@ -12,14 +12,8 @@ import { useLiveQuery } from 'dexie-react-hooks'
 import { db } from '../../../../core/db/database'
 import { newEntity, withUpdate } from '../../../../core/db/helpers'
 import type { Recette, SessionPreparation } from '../../../../shared/types'
-import { type BatchCategorie, BATCH_CATEGORIES, typesForCategorie } from './batchTypes'
+import { type BatchCategorie, BATCH_CATEGORIES, matchesBatchCategorie } from './batchTypes'
 import './PreparationHebdo.css'
-
-// IDs de catégories connus (seed.ts)
-const CAT_IDS_GOUTER     = ['cat-recette-gouter', 'cat-recette-petit-dejeuner']
-const CAT_IDS_DESSERT    = ['cat-recette-dessert']
-const CAT_IDS_REPAS      = ['cat-recette-plat-principal', 'cat-recette-soupe', 'cat-recette-entree', 'cat-recette-sauce', 'cat-recette-legumes-accompagnement']
-const CAT_IDS_NON_REPAS  = [...CAT_IDS_GOUTER, ...CAT_IDS_DESSERT]
 
 const TYPES_PREP = [
   { key: 'gouter',         label: 'Goûters',          emoji: '🧁' },
@@ -190,28 +184,10 @@ function SelecteurRecettesModal({ categorie, onConfirmer, onAnnuler }: {
   const [cible, setCible] = useState(3)
 
   const catInfo = BATCH_CATEGORIES.find(c => c.key === categorie)!
-  const typesAutorises = typesForCategorie(categorie)
 
   const recettes = useLiveQuery(
     () => db.recettes
-      .filter(r => {
-        if (r.archive || r.deletedAt) return false
-        if (categorie === 'gouters_petitdej') {
-          return (
-            typesAutorises.includes(r.typePreparation as string | undefined | null) ||
-            CAT_IDS_GOUTER.includes(r.categorie)
-          )
-        }
-        if (categorie === 'desserts') {
-          return r.typePreparation === 'dessert' || CAT_IDS_DESSERT.includes(r.categorie)
-        }
-        // repas : plat explicite, ou catégorie repas, ou typePrep null et pas gouter/dessert
-        return (
-          r.typePreparation === 'plat' ||
-          CAT_IDS_REPAS.includes(r.categorie) ||
-          (r.typePreparation == null && !CAT_IDS_NON_REPAS.includes(r.categorie))
-        )
-      })
+      .filter(r => matchesBatchCategorie(r, categorie))
       .toArray()
       .then(list => list.sort((a, b) => (a.nom ?? '').localeCompare(b.nom ?? '', 'fr'))),
     [categorie]

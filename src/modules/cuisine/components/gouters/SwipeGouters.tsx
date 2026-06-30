@@ -18,12 +18,12 @@ import { db } from '../../../../core/db/database'
 import { newEntity } from '../../../../core/db/helpers'
 import type { Recette, SessionPreparation } from '../../../../shared/types'
 import { IconHeart, IconClose } from '@shared/components/ui/Icon/Icon'
-import { type BatchCategorie, BATCH_CATEGORIES, typesForCategorie, labelForCategorie } from '../preparation/batchTypes'
+import { type BatchCategorie, BATCH_CATEGORIES, labelForCategorie, matchesBatchCategorie } from '../preparation/batchTypes'
 import './SwipeGouters.css'
 
 // ─── Constantes ───────────────────────────────────────────────────────────────
 
-const TARGET_COUNT = 7          // nb de goûters à sélectionner
+const DEFAULT_TARGET = 5        // nb de recettes par défaut
 const SWIPE_THRESHOLD = 80      // px pour valider un swipe
 const TILT_FACTOR = 0.08        // rotation par pixel de déplacement (deg/px)
 
@@ -164,11 +164,13 @@ function SwipeCardComponent({ recette, onLike, onNope, imageUrl }: SwipeCardProp
 function ResultScreen({
   selected,
   categorie,
+  targetCount,
   onConfirm,
   onReset,
 }: {
   selected: Recette[]
   categorie: BatchCategorie
+  targetCount: number
   onConfirm: () => Promise<void>
   onReset: () => void
 }) {
@@ -188,7 +190,7 @@ function ResultScreen({
   return (
     <div className="swipe-result">
       <p className="swipe-result__title">
-        {catEmoji} Tes {TARGET_COUNT} {catLabel} de la semaine
+        {catEmoji} Tes {targetCount} {catLabel} de la semaine
       </p>
 
       <ul className="swipe-result__list" role="list">
@@ -265,7 +267,12 @@ function KidsCategoryPicker({ onChoisir }: { onChoisir: (cat: BatchCategorie) =>
 
 // ─── Écran d'accueil "mode enfants" ──────────────────────────────────────────
 
-function KidsIntro({ categorie, onStart }: { categorie: BatchCategorie; onStart: () => void }) {
+function KidsIntro({ categorie, targetCount, onTargetChange, onStart }: {
+  categorie: BatchCategorie
+  targetCount: number
+  onTargetChange: (n: number) => void
+  onStart: () => void
+}) {
   const cat = BATCH_CATEGORIES.find(c => c.key === categorie)!
   const label = labelForCategorie(categorie, true)
   return (
@@ -280,10 +287,37 @@ function KidsIntro({ categorie, onStart }: { categorie: BatchCategorie; onStart:
         </p>
         <p style={{ fontSize: '0.88rem', color: 'var(--color-muted)', lineHeight: 1.6 }}>
           Glisse vers la droite pour choisir,<br />
-          vers la gauche pour passer.<br />
-          Sélectionne 7 {label.toLowerCase()} pour la semaine.
+          vers la gauche pour passer.
         </p>
       </div>
+
+      {/* Stepper objectif */}
+      <div style={{
+        display: 'flex', alignItems: 'center', gap: 16,
+        background: 'rgba(201,184,232,0.15)', borderRadius: 16, padding: '12px 20px',
+      }}>
+        <span style={{ fontSize: '0.85rem', fontWeight: 600, color: '#4B4660' }}>Objectif</span>
+        <button
+          onClick={() => onTargetChange(Math.max(1, targetCount - 1))}
+          style={{
+            width: 32, height: 32, borderRadius: '50%', border: 'none', cursor: 'pointer',
+            background: '#4B4660', color: 'white', fontSize: '1.1rem', display: 'flex',
+            alignItems: 'center', justifyContent: 'center', lineHeight: 1,
+          }}
+        >−</button>
+        <span style={{ fontSize: '1rem', fontWeight: 700, color: '#1E1C2E', minWidth: 90, textAlign: 'center' }}>
+          {targetCount} recette{targetCount > 1 ? 's' : ''}
+        </span>
+        <button
+          onClick={() => onTargetChange(targetCount + 1)}
+          style={{
+            width: 32, height: 32, borderRadius: '50%', border: 'none', cursor: 'pointer',
+            background: '#4B4660', color: 'white', fontSize: '1.1rem', display: 'flex',
+            alignItems: 'center', justifyContent: 'center', lineHeight: 1,
+          }}
+        >+</button>
+      </div>
+
       <button
         onClick={onStart}
         style={{
@@ -301,19 +335,11 @@ function KidsIntro({ categorie, onStart }: { categorie: BatchCategorie; onStart:
 
 // ─── Jeu (rendu seulement une fois l'intro passée) ────────────────────────────
 
-function SwipeGoutersGame({ categorie }: { categorie: BatchCategorie }) {
-  const typesAutorises = typesForCategorie(categorie)
-
+function SwipeGoutersGame({ categorie, targetCount }: { categorie: BatchCategorie; targetCount: number }) {
   const allRecettes = useLiveQuery(
     () =>
       db.recettes
-        .filter(r => {
-          if (r.archive || r.deletedAt) return false
-          if (categorie === 'repas') {
-            return r.typePreparation === 'plat' || r.typePreparation == null
-          }
-          return typesAutorises.includes(r.typePreparation as string | undefined | null)
-        })
+        .filter(r => matchesBatchCategorie(r, categorie))
         .toArray()
         .then(list => list.sort(() => Math.random() - 0.5)),
     [categorie]
@@ -359,7 +385,7 @@ function SwipeGoutersGame({ categorie }: { categorie: BatchCategorie }) {
     const newSelected = [...selected, currentCard]
     setQueue(q => q.slice(0, -1))
     setSelected(newSelected)
-    if (newSelected.length >= TARGET_COUNT) {
+    if (newSelected.length >= targetCount) {
       setDone(true)
     }
   }, [currentCard, selected])
@@ -369,7 +395,7 @@ function SwipeGoutersGame({ categorie }: { categorie: BatchCategorie }) {
     setSkipped(s => [...s, currentCard])
     setQueue(q => q.slice(0, -1))
     // Si on arrive à la fin sans assez de sélections, remettre les skipped
-    if (queue.length === 1 && selected.length < TARGET_COUNT) {
+    if (queue.length === 1 && selected.length < targetCount) {
       setQueue([...skipped].sort(() => Math.random() - 0.5))
       setSkipped([])
     }
@@ -462,6 +488,7 @@ function SwipeGoutersGame({ categorie }: { categorie: BatchCategorie }) {
         <ResultScreen
           selected={selected}
           categorie={categorie}
+          targetCount={targetCount}
           onConfirm={handleConfirm}
           onReset={handleReset}
         />
@@ -469,7 +496,7 @@ function SwipeGoutersGame({ categorie }: { categorie: BatchCategorie }) {
     )
   }
 
-  const remaining = TARGET_COUNT - selected.length
+  const remaining = targetCount - selected.length
 
   return (
     <div className="swipe-gouters">
@@ -477,15 +504,15 @@ function SwipeGoutersGame({ categorie }: { categorie: BatchCategorie }) {
       <div className="swipe-gouters__header">
         <p className="swipe-gouters__title">Choisis tes {catLabel}</p>
         <p className="swipe-gouters__subtitle">
-          {remaining === TARGET_COUNT
-            ? `Sélectionne ${TARGET_COUNT} ${catLabel} pour la semaine`
+          {remaining === targetCount
+            ? `Sélectionne ${targetCount} ${catLabel} pour la semaine`
             : `Encore ${remaining} à choisir`}
         </p>
       </div>
 
       {/* Progression */}
-      <div className="swipe-gouters__progress" role="progressbar" aria-valuenow={selected.length} aria-valuemax={TARGET_COUNT}>
-        {Array.from({ length: TARGET_COUNT }).map((_, i) => (
+      <div className="swipe-gouters__progress" role="progressbar" aria-valuenow={selected.length} aria-valuemax={targetCount}>
+        {Array.from({ length: targetCount }).map((_, i) => (
           <div
             key={i}
             className={`swipe-progress-dot${i < selected.length ? ' swipe-progress-dot--filled' : ''}`}
@@ -547,11 +574,19 @@ function SwipeGoutersGame({ categorie }: { categorie: BatchCategorie }) {
 
 export function SwipeGouters() {
   const [categorie, setCategorie] = useState<BatchCategorie | null>(null)
+  const [targetCount, setTargetCount] = useState(DEFAULT_TARGET)
   const [started, setStarted] = useState(false)
 
   if (!categorie) return <KidsCategoryPicker onChoisir={setCategorie} />
-  if (!started) return <KidsIntro categorie={categorie} onStart={() => setStarted(true)} />
-  return <SwipeGoutersGame categorie={categorie} />
+  if (!started) return (
+    <KidsIntro
+      categorie={categorie}
+      targetCount={targetCount}
+      onTargetChange={setTargetCount}
+      onStart={() => setStarted(true)}
+    />
+  )
+  return <SwipeGoutersGame categorie={categorie} targetCount={targetCount} />
 }
 
 export default SwipeGouters

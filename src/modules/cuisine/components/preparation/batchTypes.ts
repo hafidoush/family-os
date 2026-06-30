@@ -1,5 +1,31 @@
 export type BatchCategorie = 'gouters_petitdej' | 'desserts' | 'repas'
 
+// IDs de catégories Dexie (seed.ts) — utilisés pour le filtre étendu
+export const CAT_IDS_GOUTER    = ['cat-recette-gouter', 'cat-recette-petit-dejeuner']
+export const CAT_IDS_DESSERT   = ['cat-recette-dessert']
+export const CAT_IDS_REPAS     = ['cat-recette-plat-principal', 'cat-recette-soupe', 'cat-recette-entree', 'cat-recette-sauce', 'cat-recette-legumes-accompagnement']
+export const CAT_IDS_NON_REPAS = [...CAT_IDS_GOUTER, ...CAT_IDS_DESSERT]
+
+export function matchesBatchCategorie(
+  r: { typePreparation?: string | null; categorie: string; archive?: boolean; deletedAt?: Date | string | null },
+  categorie: BatchCategorie
+): boolean {
+  if (r.archive || r.deletedAt) return false
+  const types = typesForCategorie(categorie)
+  if (categorie === 'gouters_petitdej') {
+    return types.includes(r.typePreparation as string | undefined | null) || CAT_IDS_GOUTER.includes(r.categorie)
+  }
+  if (categorie === 'desserts') {
+    return r.typePreparation === 'dessert' || CAT_IDS_DESSERT.includes(r.categorie)
+  }
+  // repas
+  return (
+    r.typePreparation === 'plat' ||
+    CAT_IDS_REPAS.includes(r.categorie) ||
+    (r.typePreparation == null && !CAT_IDS_NON_REPAS.includes(r.categorie))
+  )
+}
+
 export const BATCH_CATEGORIES: {
   key: BatchCategorie
   label: string
