@@ -356,6 +356,16 @@ export interface ElementReligion extends AuditWithDevice {
   archive: boolean
 }
 
+export type EquipementCuisine = 'four' | 'plaque' | 'robot' | 'plan_de_travail' | 'frigo' | 'aucun'
+
+export interface EtapeStructuree {
+  id: string                    // "etape-0", "etape-1"…
+  description: string           // texte original inchangé
+  dureeMinutes?: number
+  type: 'actif' | 'passif'
+  equipement: EquipementCuisine[]
+}
+
 export interface Recette extends AuditWithDevice {
   id: string
   nom: string
@@ -379,6 +389,9 @@ export interface Recette extends AuditWithDevice {
   dureeConservation?: number         // jours
   congelable?: boolean
   dernierePreparation?: string       // "YYYY-MM-DD"
+  // Cache IA — étapes structurées (généré une fois, réutilisé si etapes[] inchangé)
+  etapesStructurees?: EtapeStructuree[]
+  etapesStructureesHash?: string     // hash de JSON.stringify(etapes) au moment de la structuration
 }
 
 export interface RecetteIngredient extends AuditFields {
@@ -618,12 +631,45 @@ export interface RoutineItem extends AuditWithDevice {
 
 // ─── PRÉPARATION HEBDOMADAIRE — F8 ───────────────────────────────────────────
 
+export interface TachePlanning {
+  recetteId: string
+  etapeId: string
+  description: string
+  type: 'actif' | 'passif'
+  equipement: string[]
+  fait?: boolean  // coché pendant l'exécution réelle du batch cooking
+}
+
+export interface BlocTimeline {
+  tempsDebut: number
+  tempsFin: number
+  taches: TachePlanning[]
+}
+
+export interface ConservationRecette {
+  recetteId: string
+  recetteNom: string
+  modeConservation: string
+  dureeConservationJours?: number
+  conseil: string
+}
+
+export interface PlanningGenere {
+  dureeTotaleMinutes: number
+  timeline: BlocTimeline[]
+  conservation: ConservationRecette[]
+  conseils: string[]
+  alertesEquipement: string[]
+  genereLe: string   // ISO timestamp
+}
+
 export interface SessionPreparation extends AuditWithDevice {
   id: string
   dateSession: string              // "YYYY-MM-DD" — jour de préparation
   recetteIds: string[]             // Recette.id[] sélectionnées
   statut: 'planifiee' | 'en_cours' | 'terminee'
   notes?: string
+  planning?: PlanningGenere        // généré par IA après création, instantané immuable
 }
 
 // ── Types utilitaires ─────────────────────────────────────────────────────────

@@ -9,9 +9,16 @@
 
 import { useState } from 'react'
 import { PreparationHebdo } from './PreparationHebdo'
+import { HistoriqueBatch } from './HistoriqueBatch'
 import { SwipeGouters } from '../gouters/SwipeGouters'
 
-type SweetBatchMode = 'parent' | 'enfants'
+type SweetBatchMode = 'parent' | 'enfants' | 'historique'
+
+const MODES: { key: SweetBatchMode; label: string }[] = [
+  { key: 'parent',     label: 'Ma sélection' },
+  { key: 'enfants',    label: 'Mode enfants' },
+  { key: 'historique', label: 'Historique' },
+]
 
 export function SweetBatch() {
   const [mode, setMode] = useState<SweetBatchMode>('parent')
@@ -27,61 +34,38 @@ export function SweetBatch() {
         borderRadius: 24,
         padding: 4,
       }}>
-        <button
-          onClick={() => setMode('parent')}
-          style={{
-            flex: 1,
-            padding: '9px 0',
-            borderRadius: 20,
-            border: 'none',
-            cursor: 'pointer',
-            fontFamily: 'inherit',
-            fontSize: '0.85rem',
-            fontWeight: 600,
-            transition: 'all 0.2s ease',
-            background: mode === 'parent'
-              ? 'white'
-              : 'transparent',
-            color: mode === 'parent'
-              ? 'var(--color-text, #1A1A2E)'
-              : 'var(--color-muted, #7A7A9A)',
-            boxShadow: mode === 'parent'
-              ? '0 2px 10px rgba(100,80,140,0.12)'
-              : 'none',
-          }}
-        >
-          🧁 Ma sélection
-        </button>
-        <button
-          onClick={() => setMode('enfants')}
-          style={{
-            flex: 1,
-            padding: '9px 0',
-            borderRadius: 20,
-            border: 'none',
-            cursor: 'pointer',
-            fontFamily: 'inherit',
-            fontSize: '0.85rem',
-            fontWeight: 600,
-            transition: 'all 0.2s ease',
-            background: mode === 'enfants'
-              ? 'white'
-              : 'transparent',
-            color: mode === 'enfants'
-              ? 'var(--color-text, #1A1A2E)'
-              : 'var(--color-muted, #7A7A9A)',
-            boxShadow: mode === 'enfants'
-              ? '0 2px 10px rgba(100,80,140,0.12)'
-              : 'none',
-          }}
-        >
-          🧒 Mode enfants
-        </button>
+        {MODES.map(m => (
+          <button
+            key={m.key}
+            onClick={() => setMode(m.key)}
+            style={{
+              flex: 1,
+              padding: '9px 0',
+              borderRadius: 20,
+              border: 'none',
+              cursor: 'pointer',
+              fontFamily: 'inherit',
+              fontSize: '0.78rem',
+              fontWeight: 600,
+              transition: 'all 0.2s ease',
+              background: mode === m.key ? 'white' : 'transparent',
+              color: mode === m.key
+                ? 'var(--color-text, #1A1A2E)'
+                : 'var(--color-muted, #7A7A9A)',
+              boxShadow: mode === m.key
+                ? '0 2px 10px rgba(100,80,140,0.12)'
+                : 'none',
+            }}
+          >
+            {m.label}
+          </button>
+        ))}
       </div>
 
       {/* ── Contenu selon mode ── */}
-      {mode === 'parent'  && <PreparationHebdo />}
-      {mode === 'enfants' && <SwipeGouters />}
+      {mode === 'parent'     && <PreparationHebdo />}
+      {mode === 'enfants'    && <SwipeGouters />}
+      {mode === 'historique' && <HistoriqueBatch />}
     </div>
   )
 }

@@ -573,3 +573,530 @@
 }
 
 .batch-cta:not(:disabled):active { opacity: 0.85; }
+
+/* ─── Bannière génération en cours ──────────────────────────────────────────── */
+
+.planning-generation-banner {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0 16px 8px;
+  padding: 10px 14px;
+  border-radius: 12px;
+  background: rgba(201, 184, 232, 0.18);
+  font-size: 0.83rem;
+  color: #5B4F80;
+  font-weight: 500;
+}
+
+.planning-generation-banner__spinner {
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  border: 2px solid rgba(154, 92, 163, 0.25);
+  border-top-color: #9A5CA3;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+  flex-shrink: 0;
+}
+
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ─── Section planning ───────────────────────────────────────────────────────── */
+
+.planning-section {
+  margin-top: 20px;
+  border-top: 1px solid rgba(75, 70, 96, 0.08);
+  padding-top: 16px;
+}
+
+.planning-section__header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin-bottom: 14px;
+  gap: 8px;
+}
+
+.planning-section__title {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--color-text, #1A1A2E);
+  margin: 0;
+}
+
+.planning-section__duree {
+  font-size: 0.8rem;
+  color: #5B4F80;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+/* ─── Timeline ───────────────────────────────────────────────────────────────── */
+
+.planning-timeline {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.planning-bloc {
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.6);
+  border: 1px solid rgba(201, 184, 232, 0.25);
+  overflow: hidden;
+}
+
+.planning-bloc__temps {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  background: rgba(201, 184, 232, 0.15);
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #5B4F80;
+  border-bottom: 1px solid rgba(201, 184, 232, 0.2);
+}
+
+.planning-bloc__tiret {
+  color: rgba(91, 79, 128, 0.5);
+  font-weight: 400;
+}
+
+.planning-bloc__duree {
+  margin-left: auto;
+  font-weight: 500;
+  color: rgba(91, 79, 128, 0.7);
+}
+
+.planning-bloc__taches {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.planning-tache {
+  padding: 10px 14px;
+  border-bottom: 1px solid rgba(201, 184, 232, 0.12);
+}
+
+.planning-tache:last-child {
+  border-bottom: none;
+}
+
+.planning-tache--actif {
+  background: rgba(249, 115, 22, 0.04);
+}
+
+.planning-tache--passif {
+  background: rgba(100, 180, 100, 0.04);
+}
+
+.planning-tache--fait {
+  opacity: 0.55;
+}
+
+.planning-tache--fait .planning-tache__desc {
+  text-decoration: line-through;
+  color: var(--color-muted, #7A7A9A);
+}
+
+.planning-tache__check {
+  width: 22px;
+  height: 22px;
+  min-width: 22px;
+  border-radius: 6px;
+  border: 2px solid rgba(201, 184, 232, 0.6);
+  background: transparent;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: white;
+  cursor: pointer;
+  transition: all 0.12s ease;
+  flex-shrink: 0;
+}
+
+.planning-tache__check:hover {
+  border-color: #9A5CA3;
+  background: rgba(154, 92, 163, 0.08);
+}
+
+.planning-tache__check--fait {
+  background: #9A5CA3;
+  border-color: #9A5CA3;
+}
+
+.planning-tache__header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 4px;
+  flex-wrap: wrap;
+}
+
+.planning-tache__badge {
+  font-size: 0.68rem;
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: 99px;
+  white-space: nowrap;
+}
+
+.planning-tache__badge--actif {
+  background: rgba(249, 115, 22, 0.12);
+  color: #C2510A;
+}
+
+.planning-tache__badge--passif {
+  background: rgba(34, 160, 90, 0.12);
+  color: #1A7A48;
+}
+
+.planning-tache__recette {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #5B4F80;
+  opacity: 0.8;
+}
+
+.planning-tache__desc {
+  font-size: 0.84rem;
+  color: var(--color-text, #1A1A2E);
+  margin: 0 0 6px;
+  line-height: 1.45;
+}
+
+.planning-tache__equip {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.planning-tache__equip-badge {
+  font-size: 0.68rem;
+  padding: 2px 7px;
+  border-radius: 99px;
+  background: rgba(201, 184, 232, 0.2);
+  color: #5B4F80;
+  font-weight: 500;
+}
+
+/* ─── Conservation ───────────────────────────────────────────────────────────── */
+
+.planning-conservation {
+  margin-top: 20px;
+}
+
+.planning-conservation__title {
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: var(--color-text, #1A1A2E);
+  margin: 0 0 10px;
+}
+
+.planning-conservation-card {
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.65);
+  border: 1px solid rgba(201, 184, 232, 0.22);
+  padding: 12px 14px;
+  margin-bottom: 8px;
+}
+
+.planning-conservation-card__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 6px;
+  flex-wrap: wrap;
+}
+
+.planning-conservation-card__nom {
+  font-size: 0.86rem;
+  font-weight: 700;
+  color: var(--color-text, #1A1A2E);
+}
+
+.planning-conservation-card__meta {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.planning-conservation-card__mode,
+.planning-conservation-card__duree {
+  font-size: 0.72rem;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 99px;
+  background: rgba(201, 184, 232, 0.18);
+  color: #5B4F80;
+}
+
+.planning-conservation-card__conseil {
+  font-size: 0.81rem;
+  color: #4B4660;
+  margin: 0;
+  line-height: 1.5;
+}
+
+/* ─── Sections repliables (Conseils / Alertes) ───────────────────────────────── */
+
+.planning-repliable {
+  margin-top: 12px;
+  border-radius: 12px;
+  border: 1px solid rgba(201, 184, 232, 0.22);
+  overflow: hidden;
+}
+
+.planning-repliable--alerte {
+  border-color: rgba(249, 115, 22, 0.2);
+}
+
+.planning-repliable__toggle {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px;
+  background: rgba(255, 255, 255, 0.6);
+  border: none;
+  cursor: pointer;
+  font-size: 0.83rem;
+  font-weight: 600;
+  color: #4B4660;
+  font-family: inherit;
+  text-align: left;
+}
+
+.planning-repliable--alerte .planning-repliable__toggle {
+  color: #C2510A;
+  background: rgba(249, 115, 22, 0.04);
+}
+
+.planning-repliable__chevron {
+  font-size: 0.65rem;
+  opacity: 0.6;
+}
+
+.planning-repliable__liste {
+  margin: 0;
+  padding: 10px 14px 12px 28px;
+  background: rgba(255, 255, 255, 0.4);
+  border-top: 1px solid rgba(201, 184, 232, 0.15);
+}
+
+.planning-repliable__liste li {
+  font-size: 0.82rem;
+  color: #4B4660;
+  line-height: 1.5;
+  margin-bottom: 4px;
+}
+
+.planning-repliable__liste li:last-child { margin-bottom: 0; }
+
+/* ─── Planning manquant ──────────────────────────────────────────────────────── */
+
+.planning-manquant {
+  margin-top: 16px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  background: rgba(201, 184, 232, 0.1);
+  border: 1px dashed rgba(201, 184, 232, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.planning-manquant__texte {
+  margin: 0;
+  font-size: 0.82rem;
+  color: #7A7A9A;
+}
+
+.planning-manquant__btn {
+  border: none;
+  border-radius: 99px;
+  padding: 7px 14px;
+  background: linear-gradient(135deg, #9A5CA3, #C9B8E8);
+  color: white;
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+  white-space: nowrap;
+}
+
+.planning-manquant__btn:active { opacity: 0.85; }
+
+/* ─── Historique Batch ───────────────────────────────────────────────────────── */
+
+.histo-module {
+  padding: 0 0 24px;
+}
+
+.histo-header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  padding: 16px 16px 8px;
+}
+
+.histo-title {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--color-text, #1A1A2E);
+  margin: 0;
+}
+
+.histo-count {
+  font-size: 0.78rem;
+  color: var(--color-muted, #7A7A9A);
+  font-weight: 500;
+}
+
+.histo-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 0 12px;
+}
+
+.histo-session {
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.65);
+  border: 1px solid rgba(201, 184, 232, 0.22);
+  overflow: hidden;
+}
+
+.histo-session__header {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px 16px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  text-align: left;
+  font-family: inherit;
+}
+
+.histo-session__header:active {
+  background: rgba(201, 184, 232, 0.1);
+}
+
+.histo-session__header-left {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  flex: 1;
+  min-width: 0;
+}
+
+.histo-session__date {
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: var(--color-text, #1A1A2E);
+  text-transform: capitalize;
+}
+
+.histo-session__notes {
+  font-size: 0.75rem;
+  color: #5B4F80;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.histo-session__count {
+  font-size: 0.75rem;
+  color: var(--color-muted, #7A7A9A);
+  font-weight: 500;
+}
+
+.histo-session__chevron {
+  font-size: 0.65rem;
+  color: var(--color-muted, #7A7A9A);
+  flex-shrink: 0;
+}
+
+.histo-session__body {
+  padding: 0 14px 16px;
+  border-top: 1px solid rgba(201, 184, 232, 0.15);
+}
+
+.histo-session__recettes {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 12px 0 8px;
+}
+
+.histo-recette-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.histo-recette-item__nom {
+  font-size: 0.84rem;
+  color: var(--color-text, #1A1A2E);
+  font-weight: 500;
+}
+
+.histo-recette-item__meta {
+  font-size: 0.72rem;
+  color: var(--color-muted, #7A7A9A);
+}
+
+.histo-session__empty,
+.histo-session__no-planning {
+  font-size: 0.8rem;
+  color: var(--color-muted, #7A7A9A);
+  margin: 8px 0 0;
+  font-style: italic;
+}
+
+.histo-planning {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid rgba(201, 184, 232, 0.12);
+}
+
+.histo-planning__title {
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: var(--color-text, #1A1A2E);
+  margin: 0 0 10px;
+}
+
+.histo-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  padding: 48px 24px;
+  text-align: center;
+  color: var(--color-muted, #7A7A9A);
+  font-size: 0.9rem;
+}
+
+.histo-empty__icon {
+  font-size: 2.5rem;
+}
+
+.histo-empty__sub {
+  font-size: 0.8rem;
+  margin: 0;
+  opacity: 0.75;
+}

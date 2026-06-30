@@ -16,6 +16,8 @@ import {
 import { useLiveQuery } from 'dexie-react-hooks'
 import { db } from '../../../../core/db/database'
 import { newEntity } from '../../../../core/db/helpers'
+import { hasOpenAIKey } from '../../../../core/ai/openaiService'
+import { genererPlanningSession } from '../../../../core/ai/batchPlanningService'
 import type { Recette, SessionPreparation } from '../../../../shared/types'
 import { IconHeart, IconClose } from '@shared/components/ui/Icon/Icon'
 import { type BatchCategorie, BATCH_CATEGORIES, labelForCategorie, matchesBatchCategorie } from '../preparation/batchTypes'
@@ -176,7 +178,6 @@ function ResultScreen({
 }) {
   const [saving, setSaving] = useState(false)
   const catLabel = labelForCategorie(categorie, true).toLowerCase()
-  const catEmoji = BATCH_CATEGORIES.find(c => c.key === categorie)?.emoji ?? '🎉'
 
   const handleConfirm = async () => {
     setSaving(true)
@@ -190,21 +191,18 @@ function ResultScreen({
   return (
     <div className="swipe-result">
       <p className="swipe-result__title">
-        {catEmoji} Tes {targetCount} {catLabel} de la semaine
+        Tes {targetCount} {catLabel} de la semaine
       </p>
 
       <ul className="swipe-result__list" role="list">
         {selected.map((r, i) => (
           <li key={r.id} className="swipe-result__item">
-            <span className="swipe-result__item-emoji">
-              {TYPE_EMOJI[r.typePreparation ?? 'gouter'] ?? '🧁'}
-            </span>
             <div>
               <div className="swipe-result__item-nom">{i + 1}. {r.nom}</div>
               {r.dureeConservation && (
                 <div className="swipe-result__item-meta">
-                  🗓 Se conserve {r.dureeConservation} j
-                  {r.congelable ? ' · ❄️ congélable' : ''}
+                  Se conserve {r.dureeConservation} j
+                  {r.congelable ? ' · congélable' : ''}
                 </div>
               )}
             </div>
@@ -218,7 +216,7 @@ function ResultScreen({
           onClick={handleConfirm}
           disabled={saving}
         >
-          {saving ? 'Planification…' : `${catEmoji} Planifier le batch cooking`}
+          {saving ? 'Planification…' : 'Planifier le batch cooking'}
         </button>
         <button className="swipe-result__btn-secondary" onClick={onReset}>
           Recommencer la sélection
@@ -236,7 +234,6 @@ function KidsCategoryPicker({ onChoisir }: { onChoisir: (cat: BatchCategorie) =>
       display: 'flex', flexDirection: 'column', alignItems: 'center',
       gap: 16, padding: '32px 20px', textAlign: 'center',
     }}>
-      <span style={{ fontSize: '3rem' }}>🧒</span>
       <p style={{ fontSize: '1.1rem', fontWeight: 700, color: 'var(--color-text)', margin: 0 }}>
         Qu'est-ce qu'on prépare ?
       </p>
@@ -253,7 +250,6 @@ function KidsCategoryPicker({ onChoisir }: { onChoisir: (cat: BatchCategorie) =>
               textAlign: 'left',
             }}
           >
-            <span style={{ fontSize: '2rem', flexShrink: 0 }}>{cat.emoji}</span>
             <div>
               <div style={{ fontSize: '1rem', fontWeight: 700, color: 'var(--color-text)' }}>{cat.labelKids}</div>
               <div style={{ fontSize: '0.78rem', color: 'var(--color-muted)', marginTop: 2 }}>{cat.descriptionKids}</div>
@@ -280,7 +276,6 @@ function KidsIntro({ categorie, targetCount, onTargetChange, onStart }: {
       display: 'flex', flexDirection: 'column', alignItems: 'center',
       gap: 20, padding: '40px 24px', textAlign: 'center',
     }}>
-      <span style={{ fontSize: '3.5rem' }}>{cat.emoji}</span>
       <div>
         <p style={{ fontSize: '1.2rem', fontWeight: 700, color: 'var(--color-text)', marginBottom: 6 }}>
           {label}
@@ -327,7 +322,7 @@ function KidsIntro({ categorie, targetCount, onTargetChange, onStart }: {
           boxShadow: '0 4px 18px rgba(154,92,163,0.3)',
         }}
       >
-        C'est parti 🎉
+        C'est parti
       </button>
     </div>
   )
@@ -420,15 +415,20 @@ function SwipeGoutersGame({ categorie, targetCount }: { categorie: BatchCategori
 
   const handleConfirm = async () => {
     const dateSession = new Date().toISOString().split('T')[0]
-    await db.sessionsPreparation.add(
-      newEntity<SessionPreparation>({
-        dateSession,
-        recetteIds: selected.map(r => r.id),
-        statut: 'planifiee',
-        notes: `${labelForCategorie(categorie)} de la semaine — sélectionnés par les enfants`,
-      })
-    )
+    const entity = newEntity<SessionPreparation>({
+      dateSession,
+      recetteIds: selected.map(r => r.id),
+      statut: 'planifiee',
+      notes: `${labelForCategorie(categorie)} de la semaine — sélectionnés par les enfants`,
+    })
+    await db.sessionsPreparation.add(entity)
     setSessionCreated(true)
+    // Génération du planning en arrière-plan
+    if (hasOpenAIKey()) {
+      void genererPlanningSession(entity.id).catch(err => {
+        console.error('[BatchPlanning] Erreur génération planning (mode enfants)', err)
+      })
+    }
   }
 
   const handleReset = () => {
@@ -446,7 +446,6 @@ function SwipeGoutersGame({ categorie, targetCount }: { categorie: BatchCategori
     return (
       <div className="swipe-gouters">
         <div className="swipe-gouters__empty">
-          <span className="swipe-gouters__empty-icon">⏳</span>
           Chargement des recettes…
         </div>
       </div>
@@ -457,7 +456,7 @@ function SwipeGoutersGame({ categorie, targetCount }: { categorie: BatchCategori
     return (
       <div className="swipe-gouters">
         <div className="swipe-gouters__empty">
-          <span className="swipe-gouters__empty-icon">{catEmoji}</span>
+          <span className="swipe-gouters__empty-icon" />
           Aucune recette dans cette catégorie.<br />
           {categorie === 'repas'
             ? 'Ajoute des recettes avec le type "Plat principal".'
@@ -471,9 +470,8 @@ function SwipeGoutersGame({ categorie, targetCount }: { categorie: BatchCategori
     return (
       <div className="swipe-gouters">
         <div className="swipe-gouters__empty">
-          <span className="swipe-gouters__empty-icon">✅</span>
           Session batch cooking planifiée.<br />
-          Retrouve-la dans l'onglet Hebdo.
+          Retrouve-la dans l'onglet Ma sélection.
           <br /><br />
           <button className="swipe-result__btn-secondary" onClick={handleReset}>
             Nouvelle sélection
@@ -534,7 +532,6 @@ function SwipeGoutersGame({ categorie, targetCount }: { categorie: BatchCategori
         </div>
       ) : (
         <div className="swipe-gouters__empty" style={{ width: 300 }}>
-          <span className="swipe-gouters__empty-icon">🔄</span>
           On recommence depuis le début…
         </div>
       )}
