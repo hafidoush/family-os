@@ -7,7 +7,7 @@
  * - Suivi conservation
  */
 
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { db } from '../../../../core/db/database'
 import { newEntity, withUpdate } from '../../../../core/db/helpers'
@@ -15,7 +15,11 @@ import type { Recette, SessionPreparation } from '../../../../shared/types'
 import { type BatchCategorie, BATCH_CATEGORIES, typesForCategorie } from './batchTypes'
 import './PreparationHebdo.css'
 
-// ─── Types de préparation (pour l'affichage des icônes dans la grille) ────────
+// IDs de catégories connus (seed.ts)
+const CAT_IDS_GOUTER     = ['cat-recette-gouter', 'cat-recette-petit-dejeuner']
+const CAT_IDS_DESSERT    = ['cat-recette-dessert']
+const CAT_IDS_REPAS      = ['cat-recette-plat-principal', 'cat-recette-soupe', 'cat-recette-entree', 'cat-recette-sauce', 'cat-recette-legumes-accompagnement']
+const CAT_IDS_NON_REPAS  = [...CAT_IDS_GOUTER, ...CAT_IDS_DESSERT]
 
 const TYPES_PREP = [
   { key: 'gouter',         label: 'Goûters',          emoji: '🧁' },
@@ -24,6 +28,52 @@ const TYPES_PREP = [
   { key: 'snack',          label: 'Snacks',             emoji: '🥜' },
   { key: 'plat',           label: 'Plats préparés',    emoji: '🍲' },
 ] as const
+
+// ─── Vignette recette (style menu) ───────────────────────────────────────────
+
+function RecetteThumb({ recette, selected, onToggle }: {
+  recette: Recette
+  selected: boolean
+  onToggle: (id: string) => void
+}) {
+  const [imageUrl, setImageUrl] = useState<string | null>(null)
+
+  useEffect(() => {
+    if (recette.imageData) { setImageUrl(recette.imageData); return }
+    if (!recette.image) { setImageUrl(null); return }
+    const url = URL.createObjectURL(recette.image)
+    setImageUrl(url)
+    return () => URL.revokeObjectURL(url)
+  }, [recette.imageData, recette.image])
+
+  return (
+    <button
+      className={`batch-thumb${selected ? ' batch-thumb--selected' : ''}`}
+      onClick={() => onToggle(recette.id)}
+    >
+      {imageUrl
+        ? <img src={imageUrl} alt={recette.nom} loading="lazy" />
+        : <div className="batch-thumb__placeholder">
+            {TYPES_PREP.find(t => t.key === recette.typePreparation)?.emoji ?? '🍽️'}
+          </div>
+      }
+      <div className="batch-thumb__glass" />
+      {selected && (
+        <div className="batch-thumb__check">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+            <path d="M5 13l4 4L19 7" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
+          </svg>
+        </div>
+      )}
+      <div className="batch-thumb__footer">
+        <span className="batch-thumb__nom">{recette.nom}</span>
+        {recette.dureeConservation && (
+          <span className="batch-thumb__conservation">🗓 {recette.dureeConservation}j</span>
+        )}
+      </div>
+    </button>
+  )
+}
 
 // ─── Session en cours ─────────────────────────────────────────────────────────
 
@@ -91,63 +141,82 @@ function SessionEnCours({ session, onTerminer }: {
   )
 }
 
-// ─── Sélecteur de catégorie batch ────────────────────────────────────────────
+// ─── Modal sélecteur de catégorie ────────────────────────────────────────────
 
-function SelecteurCategorie({ onChoisir, onAnnuler }: {
+function SelecteurCategorieModal({ onChoisir, onAnnuler }: {
   onChoisir: (cat: BatchCategorie) => void
   onAnnuler: () => void
 }) {
   return (
-    <div className="prep-selecteur">
-      <p className="prep-categorie__intro">Que souhaites-tu préparer ?</p>
-      <div className="prep-categorie-grid">
-        {BATCH_CATEGORIES.map(cat => (
-          <button
-            key={cat.key}
-            className="prep-categorie-card"
-            onClick={() => onChoisir(cat.key)}
-          >
-            <span className="prep-categorie-card__emoji">{cat.emoji}</span>
-            <span className="prep-categorie-card__label">{cat.label}</span>
-            <span className="prep-categorie-card__desc">{cat.description}</span>
-          </button>
-        ))}
-      </div>
-      <div className="prep-selecteur__actions" style={{ marginTop: 12 }}>
-        <button className="prep-btn prep-btn--cancel" onClick={onAnnuler}>Annuler</button>
+    <div className="batch-overlay" onClick={onAnnuler}>
+      <div className="batch-modal" onClick={e => e.stopPropagation()}>
+        <div className="batch-modal__header">
+          <span className="batch-modal__title">Que prépares-tu ?</span>
+          <button className="batch-modal__close" onClick={onAnnuler}>✕</button>
+        </div>
+
+        <div className="batch-modal__body">
+          <div className="prep-categorie-grid">
+            {BATCH_CATEGORIES.map(cat => (
+              <button
+                key={cat.key}
+                className="prep-categorie-card"
+                onClick={() => onChoisir(cat.key)}
+              >
+                <span className="prep-categorie-card__emoji">{cat.emoji}</span>
+                <div>
+                  <span className="prep-categorie-card__label">{cat.label}</span>
+                  <span className="prep-categorie-card__desc">{cat.description}</span>
+                </div>
+              </button>
+            ))}
+          </div>
+        </div>
       </div>
     </div>
   )
 }
 
-// ─── Sélecteur de recettes ────────────────────────────────────────────────────
+// ─── Modal sélecteur de recettes ─────────────────────────────────────────────
 
-function SelecteurRecettes({ categorie, onConfirmer, onAnnuler }: {
+function SelecteurRecettesModal({ categorie, onConfirmer, onAnnuler }: {
   categorie: BatchCategorie
   onConfirmer: (ids: string[]) => void
   onAnnuler: () => void
 }) {
   const [selectionnes, setSelectionnes] = useState<string[]>([])
+  const [recherche, setRecherche] = useState('')
+  const [filtreSous, setFiltreSous] = useState<string | 'toutes'>('toutes')
+  const [cible, setCible] = useState(3)
 
-  const typesAutorises = typesForCategorie(categorie)
   const catInfo = BATCH_CATEGORIES.find(c => c.key === categorie)!
+  const typesAutorises = typesForCategorie(categorie)
 
   const recettes = useLiveQuery(
     () => db.recettes
       .filter(r => {
         if (r.archive || r.deletedAt) return false
-        if (categorie === 'repas') {
-          // Repas : typePreparation = 'plat' ou non défini
-          return r.typePreparation === 'plat' || r.typePreparation == null
+        if (categorie === 'gouters_petitdej') {
+          return (
+            typesAutorises.includes(r.typePreparation as string | undefined | null) ||
+            CAT_IDS_GOUTER.includes(r.categorie)
+          )
         }
-        return typesAutorises.includes(r.typePreparation as string | undefined)
+        if (categorie === 'desserts') {
+          return r.typePreparation === 'dessert' || CAT_IDS_DESSERT.includes(r.categorie)
+        }
+        // repas : plat explicite, ou catégorie repas, ou typePrep null et pas gouter/dessert
+        return (
+          r.typePreparation === 'plat' ||
+          CAT_IDS_REPAS.includes(r.categorie) ||
+          (r.typePreparation == null && !CAT_IDS_NON_REPAS.includes(r.categorie))
+        )
       })
       .toArray()
-      .then(list => list.sort((a, b) => (a.nom ?? "").localeCompare(b.nom ?? ""))),
+      .then(list => list.sort((a, b) => (a.nom ?? '').localeCompare(b.nom ?? '', 'fr'))),
     [categorie]
   )
 
-  // Sous-filtres selon la catégorie
   const sousFiltresDisponibles = useMemo(() => {
     if (categorie === 'gouters_petitdej') {
       return TYPES_PREP.filter(t => ['gouter', 'petit_dejeuner', 'snack'].includes(t.key))
@@ -155,13 +224,13 @@ function SelecteurRecettes({ categorie, onConfirmer, onAnnuler }: {
     return []
   }, [categorie])
 
-  const [filtreSous, setFiltreSous] = useState<string | 'toutes'>('toutes')
-
   const filtrees = useMemo(() =>
-    (recettes ?? []).filter(r =>
-      filtreSous === 'toutes' || r.typePreparation === filtreSous
-    ),
-    [recettes, filtreSous]
+    (recettes ?? []).filter(r => {
+      if (filtreSous !== 'toutes' && r.typePreparation !== filtreSous) return false
+      if (recherche && !r.nom.toLowerCase().includes(recherche.toLowerCase())) return false
+      return true
+    }),
+    [recettes, filtreSous, recherche]
   )
 
   const toggle = (id: string) => {
@@ -174,82 +243,117 @@ function SelecteurRecettes({ categorie, onConfirmer, onAnnuler }: {
   const tempsTotalMin = selectedRecettes.reduce((acc, r) =>
     acc + (r.tempsPreparation ?? 0) + (r.tempsCuisson ?? 0), 0)
 
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => { if (e.key === 'Escape') onAnnuler() }
+    window.addEventListener('keydown', handler)
+    return () => window.removeEventListener('keydown', handler)
+  }, [onAnnuler])
+
   return (
-    <div className="prep-selecteur">
-      <div className="prep-selecteur__cat-header">
-        <span className="prep-selecteur__cat-emoji">{catInfo.emoji}</span>
-        <span className="prep-selecteur__cat-label">{catInfo.label}</span>
-        <button className="prep-selecteur__cat-back" onClick={onAnnuler}>← Changer</button>
-      </div>
+    <div className="batch-overlay" onClick={onAnnuler}>
+      <div className="batch-modal batch-modal--recettes" onClick={e => e.stopPropagation()}>
 
-      {sousFiltresDisponibles.length > 0 && (
-        <div className="prep-selecteur__filtres">
-          <button
-            className={`prep-filtre${filtreSous === 'toutes' ? ' prep-filtre--active' : ''}`}
-            onClick={() => setFiltreSous('toutes')}
-          >Tous</button>
-          {sousFiltresDisponibles.map(t => (
-            <button
-              key={t.key}
-              className={`prep-filtre${filtreSous === t.key ? ' prep-filtre--active' : ''}`}
-              onClick={() => setFiltreSous(t.key)}
-            >
-              {t.emoji} {t.label}
-            </button>
-          ))}
-        </div>
-      )}
+        {/* Header */}
+        <div className="batch-modal__header">
+          <div className="batch-modal__header-top">
+            <button className="batch-modal__back" onClick={onAnnuler}>←</button>
+            <span className="batch-modal__title">{catInfo.emoji} {catInfo.label}</span>
+            <button className="batch-modal__close" onClick={onAnnuler}>✕</button>
+          </div>
 
-      {recettes !== undefined && filtrees.length === 0 && (
-        <p className="prep-empty">
-          {categorie === 'repas'
-            ? 'Aucun plat trouvé. Ajoute des recettes avec le type "Plat principal".'
-            : 'Aucune recette dans cette catégorie. Modifie tes recettes pour leur assigner un type.'}
-        </p>
-      )}
+          {/* Stepper cible */}
+          <div className="batch-cible">
+            <span className="batch-cible__label">Objectif</span>
+            <div className="batch-cible__stepper">
+              <button
+                className="batch-cible__btn"
+                onClick={() => setCible(c => Math.max(1, c - 1))}
+              >−</button>
+              <span className="batch-cible__val">{cible} recette{cible > 1 ? 's' : ''}</span>
+              <button
+                className="batch-cible__btn"
+                onClick={() => setCible(c => c + 1)}
+              >+</button>
+            </div>
+          </div>
 
-      <div className="prep-recettes-grid">
-        {filtrees.map(r => {
-          const typeInfo = TYPES_PREP.find(t => t.key === r.typePreparation)
-          return (
-            <button
-              key={r.id}
-              className={`prep-recette-card${selectionnes.includes(r.id) ? ' prep-recette-card--selected' : ''}`}
-              onClick={() => toggle(r.id)}
-            >
-              <span className="prep-recette-card__emoji">{typeInfo?.emoji ?? (categorie === 'repas' ? '🍽' : '🧁')}</span>
-              <span className="prep-recette-card__nom">{r.nom}</span>
-              {r.dureeConservation && (
-                <span className="prep-recette-card__conservation">
-                  🗓 {r.dureeConservation}j
-                </span>
-              )}
-              {selectionnes.includes(r.id) && (
-                <span className="prep-recette-card__check">✓</span>
-              )}
-            </button>
-          )
-        })}
-      </div>
+          {/* Recherche */}
+          <input
+            className="batch-search"
+            placeholder="Rechercher une recette…"
+            value={recherche}
+            onChange={e => setRecherche(e.target.value)}
+          />
 
-      {selectionnes.length > 0 && (
-        <div className="prep-recap">
-          <span>{selectionnes.length} recette{selectionnes.length > 1 ? 's' : ''} sélectionnée{selectionnes.length > 1 ? 's' : ''}</span>
-          {tempsTotalMin > 0 && (
-            <span>⏱ ~{Math.floor(tempsTotalMin / 60) > 0 ? `${Math.floor(tempsTotalMin / 60)}h` : ''}{tempsTotalMin % 60 > 0 ? `${tempsTotalMin % 60}min` : ''}</span>
+          {/* Sous-filtres */}
+          {sousFiltresDisponibles.length > 0 && (
+            <div className="batch-chips">
+              <button
+                className={`batch-chip${filtreSous === 'toutes' ? ' batch-chip--active' : ''}`}
+                onClick={() => setFiltreSous('toutes')}
+              >Tous</button>
+              {sousFiltresDisponibles.map(t => (
+                <button
+                  key={t.key}
+                  className={`batch-chip${filtreSous === t.key ? ' batch-chip--active' : ''}`}
+                  onClick={() => setFiltreSous(t.key)}
+                >
+                  {t.emoji} {t.label}
+                </button>
+              ))}
+            </div>
+          )}
+
+          {/* Progression */}
+          {selectionnes.length > 0 && (
+            <div className="batch-progress">
+              <div
+                className="batch-progress__bar"
+                style={{ width: `${Math.min(100, (selectionnes.length / cible) * 100)}%` }}
+              />
+              <span className="batch-progress__label">
+                {selectionnes.length}/{cible}
+                {tempsTotalMin > 0 && ` · ⏱ ${Math.floor(tempsTotalMin / 60) > 0 ? `${Math.floor(tempsTotalMin / 60)}h` : ''}${tempsTotalMin % 60 > 0 ? `${tempsTotalMin % 60}min` : ''}`}
+              </span>
+            </div>
           )}
         </div>
-      )}
 
-      <div className="prep-selecteur__actions">
-        <button className="prep-btn prep-btn--cancel" onClick={onAnnuler}>Annuler</button>
-        <button
-          className="prep-btn prep-btn--primary"
-          onClick={() => onConfirmer(selectionnes)}
-          disabled={selectionnes.length === 0}
-        >
-          Planifier ({selectionnes.length})
-        </button>
+        {/* Grille recettes */}
+        <div className="batch-modal__scroll">
+          {recettes !== undefined && filtrees.length === 0 ? (
+            <p className="batch-empty">
+              {categorie === 'repas'
+                ? 'Aucun plat trouvé. Ajoute des recettes avec le type "Plat" depuis la bibliothèque.'
+                : 'Aucune recette dans cette catégorie. Ajoute des recettes avec le type Goûter ou Petits-déjeuners.'}
+            </p>
+          ) : (
+            <div className="batch-grid">
+              {filtrees.map(r => (
+                <RecetteThumb
+                  key={r.id}
+                  recette={r}
+                  selected={selectionnes.includes(r.id)}
+                  onToggle={toggle}
+                />
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* CTA bas */}
+        <div className="batch-modal__bottom">
+          <button
+            className="batch-cta"
+            onClick={() => onConfirmer(selectionnes)}
+            disabled={selectionnes.length === 0}
+          >
+            {selectionnes.length === 0
+              ? 'Sélectionne des recettes'
+              : `Planifier · ${selectionnes.length} recette${selectionnes.length > 1 ? 's' : ''}`}
+          </button>
+        </div>
+
       </div>
     </div>
   )
@@ -310,16 +414,12 @@ export function PreparationHebdo() {
     }))
   }
 
-  const catInfo = categorieChoisie ? BATCH_CATEGORIES.find(c => c.key === categorieChoisie) : null
-
   return (
     <div className="prep-module">
       <div className="prep-header">
         <div>
           <h2 className="prep-title">Batch cooking</h2>
-          <p className="prep-subtitle">
-            {catInfo ? `${catInfo.emoji} ${catInfo.label}` : 'Goûters, desserts, repas maison'}
-          </p>
+          <p className="prep-subtitle">Goûters, desserts, repas maison</p>
         </div>
         {etape === 'idle' && !sessionEnCours && (
           <button className="prep-btn-new" onClick={() => setEtape('categorie')}>
@@ -328,15 +428,16 @@ export function PreparationHebdo() {
         )}
       </div>
 
+      {/* Modals flottantes */}
       {etape === 'categorie' && (
-        <SelecteurCategorie
+        <SelecteurCategorieModal
           onChoisir={handleChoisirCategorie}
           onAnnuler={handleAnnuler}
         />
       )}
 
       {etape === 'recettes' && categorieChoisie && (
-        <SelecteurRecettes
+        <SelecteurRecettesModal
           categorie={categorieChoisie}
           onConfirmer={handlePlanifier}
           onAnnuler={() => setEtape('categorie')}
