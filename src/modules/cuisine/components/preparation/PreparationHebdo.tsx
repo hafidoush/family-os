@@ -602,6 +602,18 @@ export function PreparationHebdo() {
     if (sessionEnCours) void lancerGenerationPlanning(sessionEnCours.id)
   }, [sessionEnCours, lancerGenerationPlanning])
 
+  // Génération automatique si une session sans planning apparaît (ex : créée depuis le mode enfants)
+  useEffect(() => {
+    if (
+      sessionEnCours &&
+      !sessionEnCours.planning &&
+      planningEnCours !== sessionEnCours.id &&
+      hasOpenAIKey()
+    ) {
+      void lancerGenerationPlanning(sessionEnCours.id)
+    }
+  }, [sessionEnCours?.id, !!sessionEnCours?.planning]) // eslint-disable-line react-hooks/exhaustive-deps
+
   return (
     <div className="prep-module">
       <div className="prep-header">

@@ -64,7 +64,7 @@ export function SweetBatch() {
 
       {/* ── Contenu selon mode ── */}
       {mode === 'parent'     && <PreparationHebdo />}
-      {mode === 'enfants'    && <SwipeGouters />}
+      {mode === 'enfants'    && <SwipeGouters onSessionCreated={() => setMode('parent')} />}
       {mode === 'historique' && <HistoriqueBatch />}
     </div>
   )

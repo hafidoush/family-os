@@ -330,7 +330,11 @@ function KidsIntro({ categorie, targetCount, onTargetChange, onStart }: {
 
 // ─── Jeu (rendu seulement une fois l'intro passée) ────────────────────────────
 
-function SwipeGoutersGame({ categorie, targetCount }: { categorie: BatchCategorie; targetCount: number }) {
+function SwipeGoutersGame({ categorie, targetCount, onSessionCreated }: {
+  categorie: BatchCategorie
+  targetCount: number
+  onSessionCreated?: () => void
+}) {
   const allRecettes = useLiveQuery(
     () =>
       db.recettes
@@ -346,7 +350,6 @@ function SwipeGoutersGame({ categorie, targetCount }: { categorie: BatchCategori
   const [selected, setSelected] = useState<Recette[]>([])      // choisies
   const [imageUrls, setImageUrls] = useState<Record<string, string>>({})
   const [done, setDone] = useState(false)
-  const [sessionCreated, setSessionCreated] = useState(false)
 
   // Initialise la queue quand les recettes arrivent (ou quand elles passent de vide à non-vide)
   const initialized = useRef(false)
@@ -422,8 +425,9 @@ function SwipeGoutersGame({ categorie, targetCount }: { categorie: BatchCategori
       notes: `${labelForCategorie(categorie)} de la semaine — sélectionnés par les enfants`,
     })
     await db.sessionsPreparation.add(entity)
-    setSessionCreated(true)
-    // Génération du planning en arrière-plan
+    // Bascule immédiatement vers "Ma sélection" où la bannière de chargement est visible
+    onSessionCreated?.()
+    // Génération du planning en arrière-plan (lancée après la bascule)
     if (hasOpenAIKey()) {
       void genererPlanningSession(entity.id).catch(err => {
         console.error('[BatchPlanning] Erreur génération planning (mode enfants)', err)
@@ -437,7 +441,6 @@ function SwipeGoutersGame({ categorie, targetCount }: { categorie: BatchCategori
     setSkipped([])
     setSelected([])
     setDone(false)
-    setSessionCreated(false)
   }
 
   // ── États spéciaux ──
@@ -461,21 +464,6 @@ function SwipeGoutersGame({ categorie, targetCount }: { categorie: BatchCategori
           {categorie === 'repas'
             ? 'Ajoute des recettes avec le type "Plat principal".'
             : `Ajoute des recettes avec le type "${catLabel}".`}
-        </div>
-      </div>
-    )
-  }
-
-  if (sessionCreated) {
-    return (
-      <div className="swipe-gouters">
-        <div className="swipe-gouters__empty">
-          Session batch cooking planifiée.<br />
-          Retrouve-la dans l'onglet Ma sélection.
-          <br /><br />
-          <button className="swipe-result__btn-secondary" onClick={handleReset}>
-            Nouvelle sélection
-          </button>
         </div>
       </div>
     )
@@ -570,7 +558,7 @@ function SwipeGoutersGame({ categorie, targetCount }: { categorie: BatchCategori
 
 // ─── Composant exporté avec sélection catégorie + intro ──────────────────────
 
-export function SwipeGouters() {
+export function SwipeGouters({ onSessionCreated }: { onSessionCreated?: () => void } = {}) {
   const [categorie, setCategorie] = useState<BatchCategorie | null>(null)
   const [targetCount, setTargetCount] = useState(DEFAULT_TARGET)
   const [started, setStarted] = useState(false)
@@ -584,7 +572,7 @@ export function SwipeGouters() {
       onStart={() => setStarted(true)}
     />
   )
-  return <SwipeGoutersGame categorie={categorie} targetCount={targetCount} />
+  return <SwipeGoutersGame categorie={categorie} targetCount={targetCount} onSessionCreated={onSessionCreated} />
 }
 
 export default SwipeGouters
