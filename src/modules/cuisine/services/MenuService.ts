@@ -98,10 +98,37 @@ export const MenuService = {
   /**
    * Ajoute une recette (ou une description libre) au menu.
    * Le jour est optionnel — si absent, la recette est "prévue dans la semaine".
+   * Si la recette est déjà dans le menu (slot libre existant), on déplace ce slot
+   * vers le jour demandé plutôt que de créer un doublon.
    */
   async addSlot(input: AddSlotInput): Promise<MenuSlot> {
     if (!input.recetteId && !input.descriptionLibre) {
       throw new Error('Un slot doit avoir une recette ou une description libre');
+    }
+
+    // Anti-doublon : si la recette existe déjà dans ce menu, on met à jour le slot libre
+    if (input.recetteId) {
+      const existingSlot = await db.menuSlots
+        .filter(
+          (s) =>
+            s.menu === input.menuId &&
+            s.recette === input.recetteId &&
+            !s.archive &&
+            !s.deletedAt
+        )
+        .first();
+
+      if (existingSlot) {
+        // Si un jour est demandé, on l'assigne ; sinon on laisse le slot tel quel
+        if (input.jour) {
+          await db.menuSlots.update(existingSlot.id, {
+            jour: input.jour,
+            repas: input.repas ?? existingSlot.repas,
+            updatedAt: new Date(),
+          });
+        }
+        return { ...existingSlot, jour: input.jour ?? existingSlot.jour };
+      }
     }
 
     const slot = newEntity<MenuSlot>({
