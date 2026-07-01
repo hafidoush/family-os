@@ -303,6 +303,22 @@
 
 .import-row .import-field { flex: 1; margin-bottom: 0; }
 
+/* ── Groupes sous-préparations ── */
+.import-ing-groupe {
+  display: flex;
+  flex-direction: column;
+}
+.import-ing-groupe__titre {
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: var(--color-lavande, #7C6FAF);
+  margin: 10px 0 6px;
+  padding-bottom: 4px;
+  border-bottom: 1px solid color-mix(in srgb, var(--color-lavande, #7C6FAF) 35%, transparent);
+}
+
 /* ── Ingrédients ── */
 .import-ingredient-row {
   display: flex; align-items: center;

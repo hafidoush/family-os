@@ -6,7 +6,6 @@ import { useTodayEvents, useWeekEvents } from '../hooks/useTodayEvents';
 import { toISODate }         from '../../../shared/utils/formatDate';
 import { db }                from '../../../core/db/database';
 import { MenageModal }        from './WidgetMenage';
-import { ActivitesModal }     from './WidgetActivites';
 import { useTachesDuJourEngine } from '../../menage/hooks/useTachesDuJourEngine';
 import type { FrequenceTache } from '@shared/types/entities';
 import './WidgetProgrammeDuJour.css';
@@ -345,9 +344,17 @@ export function WidgetProgrammeDuJour() {
     )}
 
     {activitesModalOpen && (
-      <ActivitesModal
+      <PreviewModal
+        color="#6F7ED6"
+        modalBg="linear-gradient(160deg, #EEF0FF 0%, #F5F3FF 100%)"
+        title="Activités du jour"
+        meta={totalActiv === 0 ? 'Journée tranquille' : `${faitesActiv}/${totalActiv} réalisée${faitesActiv !== 1 ? 's' : ''}`}
+        progPct={pctActivites}
+        items={activitesItems}
+        ctaLabel="Voir les activités"
+        emptyText="Aucune activité planifiée aujourd'hui"
+        onCta={() => { setActivitesModalOpen(false); navigate('/enfants'); }}
         onClose={() => { setActivitesModalOpen(false); setPretActivites(!!localStorage.getItem(todayPretKey())); }}
-        onPret={() => setPretActivites(true)}
       />
     )}
 

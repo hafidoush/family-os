@@ -544,44 +544,74 @@ export function ImportRecetteSheet({ onClose, onSuccess }: Props) {
             Ingrédients — {ingredients.filter(i => i.produitId).length}/{ingredients.length} liés au catalogue
           </p>
 
-          {ingredients.map(ing => {
-            const hasValue    = ing.nomLibre.trim().length > 0
-            const isMatched   = hasValue && !!ing.produitId
-            const isUnmatched = hasValue && !ing.produitId
+          {(() => {
+            // Regrouper par sous-préparation
+            const groupes: Array<{ nom: string | null; items: typeof ingredients }> = []
+            const seen = new Map<string, typeof ingredients>()
+            for (const ing of ingredients) {
+              const key = ing.groupe ?? ''
+              if (!seen.has(key)) {
+                seen.set(key, [])
+                groupes.push({ nom: ing.groupe ?? null, items: seen.get(key)! })
+              }
+              seen.get(key)!.push(ing)
+            }
+            const avecGroupes = groupes.some(g => g.nom !== null)
+
+            const renderRow = (ing: typeof ingredients[0]) => {
+              const hasValue    = ing.nomLibre.trim().length > 0
+              const isMatched   = hasValue && !!ing.produitId
+              const isUnmatched = hasValue && !ing.produitId
+              return (
+                <div
+                  key={ing._key}
+                  className={`import-ingredient-row${isMatched ? ' import-ingredient-row--matched' : isUnmatched ? ' import-ingredient-row--unmatched' : ''}`}
+                >
+                  <span className="import-ingredient__status">
+                    {isMatched ? '✓' : isUnmatched ? <IconShieldWarning size={14} /> : null}
+                  </span>
+                  <IngredientNomInput
+                    value={ing.nomLibre}
+                    produitId={ing.produitId}
+                    tousLesProduits={tousLesProduits}
+                    onChange={(nomLibre, produitId) => updateIngredient(ing._key, { nomLibre, produitId })}
+                  />
+                  <input
+                    className="import-ingredient__qte"
+                    type="number" min="0" step="0.5"
+                    value={ing.quantite ?? ''}
+                    onChange={e => updateIngredient(ing._key, { quantite: parseFloat(e.target.value) || undefined })}
+                    placeholder="Qté"
+                  />
+                  <input
+                    className="import-ingredient__unite"
+                    value={ing.unite ?? ''}
+                    onChange={e => updateIngredient(ing._key, { unite: e.target.value || undefined })}
+                    placeholder="g, ml…"
+                  />
+                  <button
+                    className="import-ingredient__remove"
+                    onClick={() => removeIngredient(ing._key)}
+                  ><IconClose size={14} /></button>
+                </div>
+              )
+            }
+
+            if (!avecGroupes) return <>{ingredients.map(renderRow)}</>
+
             return (
-            <div
-              key={ing._key}
-              className={`import-ingredient-row${isMatched ? ' import-ingredient-row--matched' : isUnmatched ? ' import-ingredient-row--unmatched' : ''}`}
-            >
-              <span className="import-ingredient__status">
-                {isMatched ? '✓' : isUnmatched ? <IconShieldWarning size={14} /> : null}
-              </span>
-              <IngredientNomInput
-                value={ing.nomLibre}
-                produitId={ing.produitId}
-                tousLesProduits={tousLesProduits}
-                onChange={(nomLibre, produitId) => updateIngredient(ing._key, { nomLibre, produitId })}
-              />
-              <input
-                className="import-ingredient__qte"
-                type="number" min="0" step="0.5"
-                value={ing.quantite ?? ''}
-                onChange={e => updateIngredient(ing._key, { quantite: parseFloat(e.target.value) || undefined })}
-                placeholder="Qté"
-              />
-              <input
-                className="import-ingredient__unite"
-                value={ing.unite ?? ''}
-                onChange={e => updateIngredient(ing._key, { unite: e.target.value || undefined })}
-                placeholder="g, ml…"
-              />
-              <button
-                className="import-ingredient__remove"
-                onClick={() => removeIngredient(ing._key)}
-              ><IconClose size={14} /></button>
-            </div>
+              <>
+                {groupes.map((g, gi) => (
+                  <div key={gi} className="import-ing-groupe">
+                    {g.nom && (
+                      <p className="import-ing-groupe__titre">{g.nom}</p>
+                    )}
+                    {g.items.map(renderRow)}
+                  </div>
+                ))}
+              </>
             )
-          })}
+          })()}
 
           <button
             className="import-add-btn"

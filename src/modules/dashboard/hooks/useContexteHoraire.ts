@@ -121,15 +121,26 @@ export function useContexteHoraire(): ContexteHoraire {
       .toArray()
     if (!menus.length) return []
     const menu = menus.find(m => m.valide) ?? menus.sort((a, b) => (b.dateDebut ?? '').localeCompare(a.dateDebut ?? ''))[0]
+    // Slots libres (pas encore placés sur un jour)
     const slots = await db.menuSlots
       .where('menu').equals(menu.id)
       .filter(s => !s.deletedAt && (s.jour == null) && (!!s.recette || !!s.descriptionLibre))
       .toArray()
     if (!slots.length) return []
-    const ids = [...new Set(slots.map(s => s.recette).filter(Boolean) as string[])]
+
+    // Exclure les recettes déjà assignées à un jour dans ce menu
+    const assignedSlots = await db.menuSlots
+      .where('menu').equals(menu.id)
+      .filter(s => !s.deletedAt && !!s.jour && !!s.recette)
+      .toArray()
+    const assignedRecetteIds = new Set(assignedSlots.map(s => s.recette).filter(Boolean))
+    const slotsNonPlaces = slots.filter(s => !s.recette || !assignedRecetteIds.has(s.recette))
+    if (!slotsNonPlaces.length) return []
+
+    const ids = [...new Set(slotsNonPlaces.map(s => s.recette).filter(Boolean) as string[])]
     const recettes = ids.length ? await db.recettes.where('id').anyOf(ids).toArray() : []
     const recMap = new Map(recettes.map(r => [r.id, r]))
-    return slots.map(s => ({
+    return slotsNonPlaces.map(s => ({
       id: s.id,
       nom: s.recette ? (recMap.get(s.recette)?.nom ?? s.descriptionLibre ?? '—') : (s.descriptionLibre ?? '—'),
       recetteId: s.recette ?? undefined,
