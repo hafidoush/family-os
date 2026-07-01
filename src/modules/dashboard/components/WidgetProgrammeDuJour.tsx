@@ -5,6 +5,7 @@ import { useTodayActivites } from '../hooks/useTodayActivites';
 import { useTodayEvents, useWeekEvents } from '../hooks/useTodayEvents';
 import { toISODate }         from '../../../shared/utils/formatDate';
 import { db }                from '../../../core/db/database';
+import { withUpdate }         from '../../../core/db/helpers';
 import { MenageModal }        from './WidgetMenage';
 import { useTachesDuJourEngine } from '../../menage/hooks/useTachesDuJourEngine';
 import type { FrequenceTache } from '@shared/types/entities';
@@ -26,7 +27,7 @@ interface PreviewItem {
 }
 
 function PreviewModal({
-  color, modalBg, title, meta, progPct, items, ctaLabel, emptyText, onCta, onClose,
+  color, modalBg, title, meta, progPct, items, ctaLabel, emptyText, onCta, onClose, onToggle,
 }: {
   color: string;
   modalBg: string;
@@ -38,6 +39,7 @@ function PreviewModal({
   emptyText: string;
   onCta: () => void;
   onClose: () => void;
+  onToggle?: (id: string) => void;
 }) {
   const scrollRef = useRef<HTMLDivElement>(null);
   const [scrolled, setScrolled] = useState(false);
@@ -80,7 +82,12 @@ function PreviewModal({
                 <p className="wm-modal__empty">{emptyText}</p>
               ) : (
                 items.map(item => (
-                  <div key={item.id} className={`wm-modal__task${item.done ? ' done' : ''}`} style={{ cursor: 'default' }}>
+                  <div
+                    key={item.id}
+                    className={`wm-modal__task${item.done ? ' done' : ''}`}
+                    style={{ cursor: onToggle ? 'pointer' : 'default' }}
+                    onClick={() => onToggle?.(item.id)}
+                  >
                     <span
                       className="wm-modal__task-check"
                       style={item.done
@@ -197,6 +204,22 @@ export function WidgetProgrammeDuJour() {
   const activDureeMin = activites
     .filter(a => a.statut !== 'realisee')
     .reduce((s, a) => s + ((a.activite as { dureeEstimee?: number } | undefined)?.dureeEstimee ?? 15), 0);
+
+  // Toggle cocher/décocher une activité depuis la modal
+  const handleToggleActivite = useCallback(async (itemId: string) => {
+    if (itemId.endsWith('_p')) {
+      const realId = itemId.slice(0, -2)
+      const item = progActivites.find(a => String(a.id) === realId)
+      if (!item) return
+      const newStatut = item.statutRealisation === 'realise' ? 'planifie' : 'realise'
+      await db.activitesProgramme.update(realId, withUpdate({ statutRealisation: newStatut }))
+    } else {
+      const item = activites.find(a => String(a.id) === itemId)
+      if (!item) return
+      const newStatut = item.statut === 'realisee' ? 'planifiee' : 'realisee'
+      await db.planificationsActivites.update(itemId, withUpdate({ statut: newStatut }))
+    }
+  }, [activites, progActivites])
 
   // Items pour les modals
   const activitesItems: PreviewItem[] = [
@@ -353,6 +376,7 @@ export function WidgetProgrammeDuJour() {
         items={activitesItems}
         ctaLabel="Voir les activités"
         emptyText="Aucune activité planifiée aujourd'hui"
+        onToggle={handleToggleActivite}
         onCta={() => { setActivitesModalOpen(false); navigate('/enfants'); }}
         onClose={() => { setActivitesModalOpen(false); setPretActivites(!!localStorage.getItem(todayPretKey())); }}
       />
